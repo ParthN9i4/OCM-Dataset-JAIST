@@ -250,13 +250,13 @@ HTML = f"""<!DOCTYPE html>
         <td><strong>Internal (ours)</strong></td>
         <td>89 074</td><td>2025</td>
         <td>Impregnation only</td>
-        <td>~12 %</td>
+        <td>5.25 %</td>
       </tr>
       <tr class="warn">
         <td><strong>Literature</strong></td>
         <td>3 852</td><td>≤ 2019</td>
         <td>Impregnation, Sol-gel, Precipitation, Therm. decomp., …</td>
-        <td>~22 %</td>
+        <td>8.67 % (publication bias)</td>
       </tr>
     </tbody>
   </table>
@@ -441,7 +441,7 @@ HTML = f"""<!DOCTYPE html>
   <p>We swept τ₁ ∈ {{0.05, 0.10, 0.20, 0.30, 0.40}} to find the optimal filter aggressiveness:</p>
 
   {img("fig_direction_a_sweep.png",
-       "CV RMSE vs DRST threshold τ₁. Too low keeps OOD samples; too high discards useful literature. Optimal τ₁ ≈ 0.20.")}
+       "CV RMSE vs DRST threshold τ₁. Too low keeps OOD samples; too high discards useful literature. Optimal τ₁ = 0.30 (782 samples, RMSE 1.9066).")}
 
   <h3>Prior quality</h3>
   {img("fig_direction_a_prior_quality.png",
@@ -452,8 +452,33 @@ HTML = f"""<!DOCTYPE html>
 <div class="section">
   <h2>10 · Results — All Methods Compared</h2>
 
+  <div class="cards">
+    <div class="card green-l">
+      <h4>Baseline RMSE</h4>
+      <p><strong style="font-size:1.6rem;color:#2E7D32">2.133</strong> Y(C₂) %</p>
+    </div>
+    <div class="card green-l">
+      <h4>Best RMSE (Direction A)</h4>
+      <p><strong style="font-size:1.6rem;color:#2E7D32">1.907</strong> Y(C₂) %</p>
+    </div>
+    <div class="card green-l">
+      <h4>Accuracy gain</h4>
+      <p><strong style="font-size:1.6rem;color:#2E7D32">−10.6 %</strong> RMSE reduction</p>
+    </div>
+    <div class="card green-l">
+      <h4>OOD improvement</h4>
+      <p><strong style="font-size:1.6rem;color:#2E7D32">6.53 → 3.60</strong> (−45 %)</p>
+    </div>
+  </div>
+
   {img("fig_results_comparison.png",
        "5-fold CV RMSE on internal data across all methods. Lower is better. Two-stage fine-tuning with Direction A bias correction achieves the best accuracy.")}
+
+  <div class="callout orange">
+    <strong>Important:</strong> all naïve augmentation methods (merge, prep filter, DRST direct, KMM) made
+    accuracy worse than baseline. Literature noise enters as training labels and degrades the model.
+    Only the two-stage approach avoids this.
+  </div>
 
   <h3>Summary table</h3>
   <table>
@@ -461,17 +486,20 @@ HTML = f"""<!DOCTYPE html>
       <tr>
         <th>Method</th>
         <th>CV RMSE ↓</th>
+        <th>vs Baseline</th>
         <th>OOD RMSE ↓</th>
         <th>Notes</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td>Baseline (internal only)</td><td>reference</td><td>poor</td><td>No OOD coverage</td></tr>
-      <tr class="warn"><td>Naïve merge</td><td>+worse</td><td>moderate</td><td>Accuracy degrades</td></tr>
-      <tr><td>Method A — Prep filter</td><td>≈ baseline</td><td>moderate</td><td>Simple, safe</td></tr>
-      <tr><td>Method B — DRST</td><td>slight ↑</td><td>better</td><td>Feature-space filtering</td></tr>
-      <tr><td>Method C — KMM</td><td>slight ↑</td><td>better</td><td>Per-sample weighting</td></tr>
-      <tr class="best"><td>Method D — Two-stage + Dir A + bias corr.</td><td><strong>best</strong></td><td><strong>best</strong></td><td>Recommended</td></tr>
+      <tr><td>Baseline (internal only)</td><td>2.133</td><td>—</td><td>6.53</td><td>No literature knowledge</td></tr>
+      <tr class="warn"><td>Naïve merge (all literature)</td><td>2.241</td><td>+5.1 % ↑ worse</td><td>—</td><td>Literature noise contaminates labels</td></tr>
+      <tr class="warn"><td>Prep filter (Impreg only)</td><td>2.214</td><td>+3.8 % ↑ worse</td><td>5.95</td><td>Even matching prep doesn't fix bias</td></tr>
+      <tr class="warn"><td>DRST filtering (τ=0.4)</td><td>2.163</td><td>+1.4 % ↑ worse</td><td>6.29</td><td>Filtering alone is insufficient</td></tr>
+      <tr class="warn"><td>KMM weighted</td><td>2.261</td><td>+6.0 % ↑ worse</td><td>6.09</td><td>Per-sample weights still feed noisy labels</td></tr>
+      <tr><td>Two-stage fine-tuning (base)</td><td>1.932</td><td>−9.4 %</td><td>3.60</td><td>Literature as feature, not label</td></tr>
+      <tr><td>Two-stage + bias correction</td><td>1.918</td><td>−10.1 %</td><td>3.60</td><td>Quantile-normalised Stage 1 targets</td></tr>
+      <tr class="best"><td><strong>Two-stage + Dir A + bias corr.</strong></td><td><strong>1.907</strong></td><td><strong>−10.6 %</strong></td><td><strong>3.60</strong></td><td><strong>Recommended — best overall</strong></td></tr>
     </tbody>
   </table>
 </div>
@@ -487,11 +515,22 @@ HTML = f"""<!DOCTYPE html>
   i.e. the hardest possible test of generalisation.</p>
 
   {img("fig_ood_robustness.png",
-       "OOD RMSE comparison. Two-stage fine-tuning achieves the lowest OOD error, confirming it distils transferable knowledge rather than just memorising in-distribution patterns.")}
+       "OOD RMSE on non-Impregnation literature (2 139 samples). Baseline: 6.53. Two-stage fine-tuning: 3.60 — a 45 % reduction. Prep-filter, DRST, and KMM all remain above 6.0.")}
+
+  <table>
+    <thead><tr><th>Method</th><th>OOD RMSE</th><th>vs Baseline</th></tr></thead>
+    <tbody>
+      <tr><td>Baseline (ours only)</td><td>6.53</td><td>—</td></tr>
+      <tr class="warn"><td>DRST filtering</td><td>6.29</td><td>−3.7 %</td></tr>
+      <tr class="warn"><td>KMM weighted</td><td>6.09</td><td>−6.7 %</td></tr>
+      <tr class="warn"><td>Prep filter</td><td>5.95</td><td>−8.9 %</td></tr>
+      <tr class="best"><td><strong>Two-stage fine-tuning</strong></td><td><strong>3.60</strong></td><td><strong>−44.9 %</strong></td></tr>
+    </tbody>
+  </table>
 
   <div class="callout green">
-    Only the two-stage approach improves <em>both</em> in-distribution accuracy and OOD robustness
-    simultaneously. Every other method trades one for the other.
+    Only the two-stage approach improves <em>both</em> in-distribution accuracy (−10.6 %) and OOD
+    robustness (−45 %) simultaneously. Every other method trades one for the other.
   </div>
 </div>
 
@@ -519,38 +558,142 @@ HTML = f"""<!DOCTYPE html>
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════ SHAP -->
+<div class="section">
+  <h2>13 · SHAP Analysis — What Has the Model Learned Chemically?</h2>
+
+  <p>SHAP (SHapley Additive exPlanations) assigns each feature a contribution to each individual prediction.
+  Unlike gain-based feature importance, SHAP values are directional — we can see not just <em>which</em>
+  features matter but <em>how</em> high vs. low values shift the prediction.</p>
+
+  <div class="callout">
+    <strong>Why this matters:</strong> before trusting model recommendations for lab experiments, we need
+    to verify that the model has learned chemically plausible patterns — not spurious correlations.
+  </div>
+
+  <h3>Global feature importance (SHAP bar chart)</h3>
+  {img("fig_shap_bar.png",
+       "Mean |SHAP| values — overall feature importance. The literature prior (lit_prior_prediction) dominates, confirming Stage 1 learned genuine OCM patterns. Temperature and key elements follow.")}
+
+  <h3>Beeswarm — feature values vs. impact on prediction</h3>
+  {img("fig_shap_beeswarm.png",
+       "SHAP beeswarm plot. Each dot is one sample; colour = feature value (red=high, blue=low). Positive SHAP → pushes prediction up. Ba, Mn, La, Ce all show positive impact at high loadings — consistent with known high-performance OCM catalyst systems.")}
+
+  <h3>Dependence plot — temperature effect</h3>
+  {img("fig_shap_dependence.png",
+       "SHAP dependence plots for the top individual element features. Higher loadings of Ba and Mn consistently increase predicted Y(C₂), matching the known chemistry of Mn–Na–W–O and Ba–based OCM catalysts.")}
+
+  <h3>Parity plot &amp; residual analysis</h3>
+  {img("fig_parity_residuals.png",
+       "Parity plot (predicted vs actual Y(C₂)) with residuals by decile. The model performs well at low-to-moderate yields but systematically under-predicts at high Y(C₂) > 15 %. This ceiling effect reflects missing reaction-condition features (GHSV, CH₄/O₂ ratio, pressure).")}
+
+  <div class="callout orange">
+    <strong>Honest limitation:</strong> residual analysis reveals that the model under-predicts by
+    −4 to −6 % Y(C₂) at the high end (15–22 % range). This is the expected consequence of missing
+    GHSV / CH₄:O₂ features, which dominate performance in that regime. Adding these columns would
+    likely close this gap substantially.
+  </div>
+
+  <h3>Chemistry validation summary</h3>
+  <table>
+    <thead><tr><th>Finding</th><th>Chemically expected?</th></tr></thead>
+    <tbody>
+      <tr><td>Ba, Mn high loadings → positive SHAP</td><td>Yes — Ba-Mn-O and Mn-Na-W-O are top OCM families</td></tr>
+      <tr><td>La, Ce positive at moderate loadings</td><td>Yes — rare-earth promoters improve selectivity</td></tr>
+      <tr><td>Temperature has non-linear SHAP</td><td>Yes — OCM optimal ~750–850 °C, too high burns C₂</td></tr>
+      <tr><td>Literature prior ranked #1 feature</td><td>Expected — Stage 1 pre-training was successful</td></tr>
+      <tr class="warn"><td>Under-prediction at high Y(C₂)</td><td>Flags missing GHSV/CH₄:O₂ features — key limitation</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ LIMITATIONS -->
+<div class="section">
+  <h2>14 · Honest Limitations</h2>
+
+  <div class="callout orange">
+    The 10.6 % RMSE improvement is real, but intellectual honesty requires acknowledging what the
+    model cannot yet do.
+  </div>
+
+  <table>
+    <thead><tr><th>Limitation</th><th>Impact</th><th>Potential fix</th></tr></thead>
+    <tbody>
+      <tr class="warn">
+        <td><strong>No GHSV, CH₄/O₂ ratio, or pressure features</strong></td>
+        <td>These reaction-condition variables dominate Y(C₂) at the high end. The model under-predicts
+            by −4.2 % (RMSE 4.70) for Y(C₂) &gt; 15 %. ~29 % of variance unexplained.</td>
+        <td>Add these columns to the dataset for future experiments</td>
+      </tr>
+      <tr>
+        <td><strong>OOD validation uses literature as proxy</strong></td>
+        <td>True robustness is unproven; we have not tested on new catalysts synthesised after 2025.</td>
+        <td>Prospective validation: run model suggestions in lab</td>
+      </tr>
+      <tr>
+        <td><strong>Literature pool is small (3 852 samples)</strong></td>
+        <td>40 years of OCM literature compressed to 3 852 rows. Transfer signal is weak relative to
+            our 89 074 internal samples.</td>
+        <td>Systematic text-mining / database scraping for more literature data</td>
+      </tr>
+      <tr>
+        <td><strong>Model does not yet suggest what to synthesise</strong></td>
+        <td>Current model is predictive only — it cannot rank candidate formulations or propose
+            experiment sequences.</td>
+        <td>Active learning wrapper (Direction B)</td>
+      </tr>
+      <tr>
+        <td><strong>Overall R² = 0.77</strong></td>
+        <td>23 % of variance in Y(C₂) is unexplained. For high-Y(C₂) catalysts the model is
+            unreliable.</td>
+        <td>Primarily solved by adding missing reaction-condition features</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
 <!-- ═══════════════════════════════════════════════════════════ CONCLUSION -->
 <div class="section">
-  <h2>13 · Conclusion &amp; Recommendations</h2>
+  <h2>15 · Conclusion &amp; Next Steps</h2>
 
   <div class="callout green">
     <strong>Recommendation:</strong> adopt <em>Two-Stage Fine-Tuning with Direction A (DRST-filtered prior)
     + bias correction</em> as the production pipeline.
+    Baseline RMSE 2.133 → best RMSE 1.907 (−10.6 %); OOD RMSE 6.53 → 3.60 (−45 %).
   </div>
 
   <h3>Why this approach wins</h3>
   <ul>
     <li><strong>No target contamination</strong> — literature Y(C₂) values never appear as training labels in Stage 2.</li>
     <li><strong>Automatic prior correction</strong> — Stage 2 learns to up-weight or ignore the prior wherever it is wrong.</li>
-    <li><strong>Best of both worlds</strong> — highest in-distribution CV accuracy <em>and</em> best OOD robustness.</li>
+    <li><strong>Best of both worlds</strong> — highest in-distribution CV accuracy <em>and</em> best OOD robustness simultaneously.</li>
     <li><strong>Scalable</strong> — adding more literature data only improves Stage 1; Stage 2 is unchanged.</li>
   </ul>
 
-  <h3>Design principles that generalise</h3>
-  <ol>
-    <li><strong>Filter before transfer</strong> — remove the most OOD samples first (preparation filter or DRST).</li>
-    <li><strong>Per-sample decisions</strong> — individual weights (KMM) beat scalar multipliers.</li>
-    <li><strong>Knowledge distillation</strong> — use literature to build features, not to supply labels.</li>
-    <li><strong>Validate on internal data</strong> — never let the external set influence hyperparameter selection.</li>
-  </ol>
+  <h3>Proposed next steps — choose one</h3>
+  <div class="cards">
+    <div class="card">
+      <h4>Option A — Interpretability</h4>
+      <p>Deepen SHAP analysis: parity plots by catalyst family, element interaction plots.
+         Validate that the model's chemistry matches expert knowledge. <em>1–2 weeks.</em></p>
+    </div>
+    <div class="card">
+      <h4>Option B — Recommendations</h4>
+      <p>Active learning wrapper: rank candidate formulations by predicted Y(C₂) and uncertainty.
+         The model starts suggesting the next experiment to run. <em>2–3 weeks.</em></p>
+    </div>
+    <div class="card">
+      <h4>Option C — Better features</h4>
+      <p>Add ionic radius, electronegativity, acid-base descriptors to all samples; re-run pipeline.
+         Likely the highest-impact accuracy improvement. <em>1 week feature engineering.</em></p>
+    </div>
+  </div>
 
-  <h3>Practical next steps</h3>
-  <ul>
-    <li>Tune Stage 2 hyperparameters (LightGBM) with Optuna on the full internal fold.</li>
-    <li>Add multiple meta-features (one per literature subset or preparation method) instead of a single prior.</li>
-    <li>Investigate Gaussian Process for the Stage 2 model to obtain uncertainty estimates.</li>
-    <li>Curate the high-Y(C₂) literature entries (≥ 30 %) for active learning seed experiments.</li>
-  </ul>
+  <div class="callout">
+    <strong>Design principles that generalise:</strong> (1) filter before transfer — remove OOD samples first;
+    (2) per-sample decisions beat scalar multipliers; (3) knowledge distillation — use literature to build
+    features, not to supply labels; (4) validate on internal data only.
+  </div>
 </div>
 
 <footer>

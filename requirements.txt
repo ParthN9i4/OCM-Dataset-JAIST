@@ -8,3 +8,4 @@ xgboost>=2.0
 scipy>=1.11
 jupyter>=1.0
 nbconvert>=7.0
+shap>=0.44
