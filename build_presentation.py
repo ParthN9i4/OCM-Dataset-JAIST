@@ -519,9 +519,58 @@ HTML = f"""<!DOCTYPE html>
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════ SHAP -->
+<div class="section">
+  <h2>13 · SHAP Analysis — What Has the Model Learned Chemically?</h2>
+
+  <p>SHAP (SHapley Additive exPlanations) assigns each feature a contribution to each individual prediction.
+  Unlike gain-based feature importance, SHAP values are directional — we can see not just <em>which</em>
+  features matter but <em>how</em> high vs. low values shift the prediction.</p>
+
+  <div class="callout">
+    <strong>Why this matters:</strong> before trusting model recommendations for lab experiments, we need
+    to verify that the model has learned chemically plausible patterns — not spurious correlations.
+  </div>
+
+  <h3>Global feature importance (SHAP bar chart)</h3>
+  {img("fig_shap_bar.png",
+       "Mean |SHAP| values — overall feature importance. The literature prior (lit_prior_prediction) dominates, confirming Stage 1 learned genuine OCM patterns. Temperature and key elements follow.")}
+
+  <h3>Beeswarm — feature values vs. impact on prediction</h3>
+  {img("fig_shap_beeswarm.png",
+       "SHAP beeswarm plot. Each dot is one sample; colour = feature value (red=high, blue=low). Positive SHAP → pushes prediction up. Ba, Mn, La, Ce all show positive impact at high loadings — consistent with known high-performance OCM catalyst systems.")}
+
+  <h3>Dependence plot — temperature effect</h3>
+  {img("fig_shap_dependence.png",
+       "SHAP dependence plots for the top individual element features. Higher loadings of Ba and Mn consistently increase predicted Y(C₂), matching the known chemistry of Mn–Na–W–O and Ba–based OCM catalysts.")}
+
+  <h3>Parity plot &amp; residual analysis</h3>
+  {img("fig_parity_residuals.png",
+       "Parity plot (predicted vs actual Y(C₂)) with residuals by decile. The model performs well at low-to-moderate yields but systematically under-predicts at high Y(C₂) > 15 %. This ceiling effect reflects missing reaction-condition features (GHSV, CH₄/O₂ ratio, pressure).")}
+
+  <div class="callout orange">
+    <strong>Honest limitation:</strong> residual analysis reveals that the model under-predicts by
+    −4 to −6 % Y(C₂) at the high end (15–22 % range). This is the expected consequence of missing
+    GHSV / CH₄:O₂ features, which dominate performance in that regime. Adding these columns would
+    likely close this gap substantially.
+  </div>
+
+  <h3>Chemistry validation summary</h3>
+  <table>
+    <thead><tr><th>Finding</th><th>Chemically expected?</th></tr></thead>
+    <tbody>
+      <tr><td>Ba, Mn high loadings → positive SHAP</td><td>Yes — Ba-Mn-O and Mn-Na-W-O are top OCM families</td></tr>
+      <tr><td>La, Ce positive at moderate loadings</td><td>Yes — rare-earth promoters improve selectivity</td></tr>
+      <tr><td>Temperature has non-linear SHAP</td><td>Yes — OCM optimal ~750–850 °C, too high burns C₂</td></tr>
+      <tr><td>Literature prior ranked #1 feature</td><td>Expected — Stage 1 pre-training was successful</td></tr>
+      <tr class="warn"><td>Under-prediction at high Y(C₂)</td><td>Flags missing GHSV/CH₄:O₂ features — key limitation</td></tr>
+    </tbody>
+  </table>
+</div>
+
 <!-- ═══════════════════════════════════════════════════════════ CONCLUSION -->
 <div class="section">
-  <h2>13 · Conclusion &amp; Recommendations</h2>
+  <h2>14 · Conclusion &amp; Recommendations</h2>
 
   <div class="callout green">
     <strong>Recommendation:</strong> adopt <em>Two-Stage Fine-Tuning with Direction A (DRST-filtered prior)
