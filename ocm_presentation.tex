@@ -141,13 +141,23 @@
   \small
   \begin{itemize}
     \item \badge{red}{1.\ Label shift} \ Literature mean is 3.42 pp higher
-      ($t = -32.2$, $p < 10^{-200}$) — a real systematic offset, not noise.
+      ($t = -32.2$, $p < 10^{-200}$) — a systematic offset from publication
+      bias and optimised operating conditions (Fanelli, 2012, \textit{PLOS ONE}).
     \item \badge{red}{2.\ Covariate shift} \ 78.5\% of literature samples
-      describe chemistry our lab has never tested.
-    \item \badge{red}{3.\ Publication bias} \ Papers report only successful
-      runs — the literature distribution is \emph{skewed} (over-represents
-      high yields, omits failures), not just shifted.
+      describe chemistry our lab has never tested
+      (Pan \& Yang, 2010, \textit{IEEE TKDE}).
+    \item \badge{red}{3.\ Publication bias} \ Literature is \emph{skewed}, not
+      just shifted — failed experiments are rarely reported, over-weighting
+      high yields and distorting the distribution shape.
   \end{itemize}
+
+  \vspace{4pt}
+  \colorbox{lightgray}{\parbox{0.93\linewidth}{\scriptsize
+    \textbf{Why ML?} The catalyst search space (65 elements $\times$ varying
+    loadings $\times$ temperature) is too large to screen physically.
+    A surrogate model guides experiments toward high-yield compositions
+    (Lookman et al., 2019, \textit{npj Comput.\ Mater.}).
+  }}
 
 \end{frame}
 
@@ -277,14 +287,17 @@
           \item One labelled \textbf{5.2\%} (our lab)
           \item One labelled \textbf{8.7\%} (literature)
         \end{itemize}
-        No feature explains the gap — flow rate, gas ratio, etc.
+        No feature explains the gap — flow rate, gas ratio, pressure
         are absent. The model hedges and predicts both badly.
       \end{block}
 
       \vspace{6pt}
       \colorbox{lightgray}{\parbox{\linewidth}{\small
         The 3.42 pp offset is a \emph{systematic signal} the model
-        cannot account for — and incorrectly tries to fit.\\[4pt]
+        cannot account for and incorrectly tries to fit.\\[2pt]
+        Ben-David et al.\ (2010, \textit{Mach.\ Learn.}): when source
+        and target distributions differ significantly, naive combination
+        can perform \emph{worse} than target-only training.\\[4pt]
         $\Rightarrow$ \textbf{We need to be much more selective.}
       }}
     \end{column}
@@ -310,14 +323,15 @@
     \begin{column}{0.44\textwidth}
       \textbf{How it works}
       \begin{enumerate}\small
-        \item Train logistic classifier:\\
+        \item Train \textit{logistic classifier}
+          (finds a boundary in element-space):\\
           our $=1$, literature $=0$
         \item Score each lit sample: $P(\text{ours} \mid x)$
         \item Keep only samples scoring $\geq \tau$
       \end{enumerate}
 
-      \vspace{6pt}
-      \textbf{Threshold sweep}
+      \vspace{4pt}
+      \textbf{Threshold sweep} (Stone 1974 CV selection)
       \begin{tabular}{lcr}
         \toprule
         $\tau$ & kept & CV RMSE \\
@@ -330,10 +344,13 @@
         \bottomrule
       \end{tabular}
 
-      \vspace{6pt}
+      \vspace{4pt}
       \colorbox{lightgray}{\parbox{\linewidth}{\scriptsize
-        \textbf{Unsolved:} hard cutoff is arbitrary — a sample at
-        0.29 is fully discarded; 0.31 gets full weight.
+        \textbf{Literature:} Density-ratio selective transfer —
+        Huang et al.\ (2006, \textit{NeurIPS}); Sugiyama et al.\
+        (2007, \textit{JMLR}).\\[2pt]
+        \textbf{Unsolved:} hard cutoff is arbitrary — 0.29 is
+        fully discarded; 0.31 gets full weight.
       }}
     \end{column}
 
@@ -354,11 +371,13 @@
       \textbf{How it works}
       \begin{itemize}\small
         \item Each lit sample gets a weight $w_i \in [0, 10]$
-        \item Solve: $\min \frac{1}{2} w^\top K_{ss} w - \kappa^\top w$
-        \item RBF kernel $\sigma$ via median heuristic
+        \item \textit{RBF kernel} measures chemical similarity:
+          $K(x,x')=\exp\!\bigl(-\|x-x'\|^2/2\sigma^2\bigr)$
+        \item Solve QP: $\min \frac{1}{2} w^\top K_{ss} w - \kappa^\top w$
+        \item $\sigma$ via median heuristic (data-driven, no tuning)
       \end{itemize}
 
-      \vspace{6pt}
+      \vspace{4pt}
       \textbf{Result}
       \begin{tabular}{lr}
         \toprule
@@ -371,10 +390,12 @@
         \bottomrule
       \end{tabular}
 
-      \vspace{6pt}
+      \vspace{4pt}
       \colorbox{lightgray}{\parbox{\linewidth}{\scriptsize
+        \textbf{Literature:} Huang et al.\ (2006, \textit{NeurIPS});
+        Gretton et al.\ (2009, \textit{Dataset Shift in ML}).\\[2pt]
         \textbf{Reassuring:} two unrelated methods flag the same 78.5\%
-        of samples as low-value $\Rightarrow$ real signal, not artifact.\\[2pt]
+        of samples $\Rightarrow$ real signal, not artifact.\\[2pt]
         \textbf{Still unsolved:} literature labels remain in training,
         so the 3.42 pp offset still bleeds in.
       }}
@@ -421,8 +442,13 @@
   \vspace{6pt}
   \small
   \textbf{Key property:} Stage 2 \emph{never sees literature labels}.
-  The prior enters as one input feature, so the 3.42 pp offset becomes
-  a calibration problem Stage 2 can learn — not a corruption of the loss.
+  The 3.42 pp offset affects the \emph{value} of the 68th feature —
+  which Stage 2 can calibrate — not the training loss (which it cannot fix).
+  This is \emph{feature-based transfer learning}
+  (Pan \& Yang, 2010, \textit{IEEE TKDE}): source knowledge enters as a
+  feature rather than as additional training labels.
+  Stage 1 uses XGBoost (Chen \& Guestrin, 2016) for conservative behaviour
+  on 782 samples; Stage 2 uses LightGBM (Ke et al., 2017) for speed on 89k rows.
 
 \end{frame}
 
@@ -506,7 +532,9 @@
 
       \vspace{4pt}
       \scriptsize Root cause: GHSV, CH$_4$/O$_2$ ratio, and pressure
-      are absent from the dataset.
+      are absent from the dataset.\\[3pt]
+      \textbf{SHAP reference:} Lundberg \& Lee (2017, \textit{NeurIPS});
+      Shapley values from cooperative game theory (Shapley, 1953).
     \end{column}
 
   \end{columns}
