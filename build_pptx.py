@@ -192,20 +192,27 @@ add_text(s,
 # Three differences
 diffs = [
     ("1. Label shift",
-     "Literature mean is 3.42 pp higher (t = −32.2, p < 10⁻²⁰⁰) — a real systematic offset, not noise.",
+     "Literature mean is 3.42 pp higher (t = −32.2, p < 10⁻²⁰⁰) — systematic offset from publication bias and optimised conditions (Fanelli, 2012).",
      RED),
     ("2. Covariate shift",
-     "78.5% of literature samples describe chemistry our lab has never tested.",
+     "78.5% of literature samples describe chemistry our lab has never tested (Pan & Yang, 2010, IEEE TKDE).",
      AMBER),
     ("3. Publication bias",
-     "Papers report only successful runs — the literature distribution is skewed, not just shifted.",
+     "Literature is skewed, not just shifted — failed experiments are rarely reported, over-weighting high yields.",
      ACCENT),
 ]
 for i, (head, body, color) in enumerate(diffs):
-    y0 = Inches(4.5) + Inches(i * 0.7)
+    y0 = Inches(4.5) + Inches(i * 0.62)
     badge(s, head, Inches(0.4), y0, Inches(2.7), Inches(0.42), color, size=12)
     add_text(s, body, Inches(3.25), y0 + Inches(0.04),
-             Inches(9.7), Inches(0.4), size=12, color=DGRAY)
+             Inches(9.7), Inches(0.4), size=11, color=DGRAY)
+
+# Why ML? callout
+callout(s,
+        "Why ML? The catalyst search space (65 elements × varying loadings × temperature) is too large to screen physically. "
+        "A surrogate model guides experiments toward high-yield compositions (Lookman et al., 2019, npj Comput. Mater.).",
+        Inches(0.4), Inches(6.42), Inches(12.5), Inches(0.68),
+        fill=LIGHT, border=NAVY, text_color=DGRAY, size=10, italic=False)
 
 # ════════════════════════════════════════════════════════════════════════════
 # SLIDE 3 — Visual evidence
@@ -379,10 +386,12 @@ add_text(s,
          size=12, color=DGRAY)
 
 callout(s,
-        "The 3.42 pp offset is a SYSTEMATIC signal the model cannot account for — and incorrectly tries to fit.\n\n⇒ We need to be much more selective.",
-        Inches(7.0), Inches(4.55), Inches(6.0), Inches(1.6),
+        "The 3.42 pp offset is a SYSTEMATIC signal the model cannot account for — and incorrectly tries to fit.\n"
+        "Ben-David et al. (2010, Mach. Learn.): when source and target distributions differ significantly, naive combination can perform WORSE than target-only training.\n\n"
+        "⇒ We need to be much more selective.",
+        Inches(7.0), Inches(4.35), Inches(6.0), Inches(1.9),
         fill=RGBColor(0xFF, 0xF0, 0xD8), border=AMBER,
-        text_color=RGBColor(0x6B, 0x3A, 0x00), size=12, italic=False)
+        text_color=RGBColor(0x6B, 0x3A, 0x00), size=11, italic=False)
 
 # ════════════════════════════════════════════════════════════════════════════
 # SLIDE 6 — DRST
@@ -402,14 +411,19 @@ add_rect(s, Inches(7.8), Inches(1.25), Inches(5.2), Inches(0.42), fill=NAVY)
 add_text(s, "How it works", Inches(7.95), Inches(1.28),
          Inches(4.9), Inches(0.36), size=13, bold=True, color=WHITE)
 bullets(s, [
-    "Train logistic classifier:  ours=1, lit=0",
+    "Train logistic classifier (finds element-space boundary):  ours=1, lit=0",
     "Score each lit sample:  P(ours | x)",
     "Keep samples scoring ≥ τ",
 ], Inches(7.85), Inches(1.75), Inches(5.1), Inches(0.4), size=11, spacing=0.4)
+callout(s,
+        "Logistic regression = finds a hyperplane in 67-dimensional feature space that best separates our samples from literature. "
+        "Ref: Huang et al. (2006, NeurIPS); Sugiyama et al. (2007, JMLR).",
+        Inches(7.8), Inches(3.0), Inches(5.2), Inches(0.65),
+        fill=RGBColor(0xE8, 0xF5, 0xFF), border=ACCENT, text_color=DGRAY, size=9, italic=False)
 
-# Sweep table
+# Sweep table (shifted down to make room for callout above)
 add_text(s, "Threshold sweep",
-         Inches(7.8), Inches(3.2), Inches(5.2), Inches(0.4),
+         Inches(7.8), Inches(3.75), Inches(5.2), Inches(0.4),
          size=13, bold=True, color=NAVY)
 sweep_rows = [
     ("τ = 0.10", "1168 kept", "2.068", False),
@@ -417,16 +431,16 @@ sweep_rows = [
     ("τ = 0.30", "782 kept",  "2.019", True),
     ("τ = 0.40", "543 kept",  "2.045", False),
 ]
-add_rect(s, Inches(7.8), Inches(3.65), Inches(5.2), Inches(0.4), fill=NAVY)
+add_rect(s, Inches(7.8), Inches(4.2), Inches(5.2), Inches(0.4), fill=NAVY)
 for j, (h, x, w) in enumerate(zip(["τ", "kept", "RMSE"],
                                     [Inches(7.95), Inches(9.3), Inches(11.4)],
                                     [Inches(1.3), Inches(2.0), Inches(1.5)])):
-    add_text(s, h, x, Inches(3.68), w, Inches(0.34),
+    add_text(s, h, x, Inches(4.23), w, Inches(0.34),
              size=11, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
 for i, (tau, kept, rmse, best) in enumerate(sweep_rows):
-    y0 = Inches(4.05) + Inches(i * 0.42)
+    y0 = Inches(4.6) + Inches(i * 0.4)
     bg = RGBColor(0xE8, 0xF5, 0xE9) if best else LIGHT
-    add_rect(s, Inches(7.8), y0, Inches(5.2), Inches(0.42), fill=bg, line=LGRAY)
+    add_rect(s, Inches(7.8), y0, Inches(5.2), Inches(0.4), fill=bg, line=LGRAY)
     add_text(s, tau, Inches(7.95), y0 + Inches(0.04), Inches(1.3), Inches(0.34),
              size=11, bold=best, color=GDARK if best else BLACK, align=PP_ALIGN.CENTER)
     add_text(s, kept, Inches(9.3), y0 + Inches(0.04), Inches(2.0), Inches(0.34),
@@ -436,7 +450,7 @@ for i, (tau, kept, rmse, best) in enumerate(sweep_rows):
 
 callout(s,
         "Unsolved: hard cutoff is arbitrary — a sample at 0.29 is fully discarded; 0.31 gets full weight.",
-        Inches(7.8), Inches(6.05), Inches(5.2), Inches(0.85),
+        Inches(7.8), Inches(6.25), Inches(5.2), Inches(0.75),
         fill=RGBColor(0xFF, 0xF0, 0xD8), border=AMBER,
         text_color=RGBColor(0x6B, 0x3A, 0x00), size=10)
 
@@ -456,13 +470,19 @@ add_text(s, "How it works", Inches(8.35), Inches(1.28),
          Inches(4.5), Inches(0.36), size=13, bold=True, color=WHITE)
 bullets(s, [
     "Each lit sample gets weight wᵢ ∈ [0, 10]",
+    "RBF kernel similarity: K(x,x′) = exp(−‖x−x′‖²/2σ²)",
     "Solve QP:  ½ wᵀK_ss w − κᵀw",
-    "RBF kernel σ via median heuristic",
-], Inches(8.25), Inches(1.75), Inches(4.7), Inches(0.4), size=11, spacing=0.42)
+    "σ via median heuristic (parameter-free)",
+], Inches(8.25), Inches(1.75), Inches(4.7), Inches(0.4), size=11, spacing=0.38)
+callout(s,
+        "RBF kernel = chemical similarity based on distance in element-composition space. "
+        "Ref: Huang et al. (2006, NeurIPS); Gretton et al. (2009, Dataset Shift in ML).",
+        Inches(8.2), Inches(3.35), Inches(4.8), Inches(0.62),
+        fill=RGBColor(0xE8, 0xF5, 0xFF), border=ACCENT, text_color=DGRAY, size=9, italic=False)
 
-# Result table
+# Result table (shifted down to make room for callout above)
 add_text(s, "Result",
-         Inches(8.2), Inches(3.2), Inches(4.8), Inches(0.4),
+         Inches(8.2), Inches(4.08), Inches(4.8), Inches(0.4),
          size=13, bold=True, color=NAVY)
 results_rows = [
     ("KMM CV RMSE",        "2.035"),
@@ -471,18 +491,18 @@ results_rows = [
     ("Agreement w/ DRST",  "r = 0.79"),
 ]
 for i, (k, v) in enumerate(results_rows):
-    y0 = Inches(3.62) + Inches(i * 0.45)
+    y0 = Inches(4.5) + Inches(i * 0.4)
     bg = LIGHT if i % 2 == 0 else WHITE
-    add_rect(s, Inches(8.2), y0, Inches(4.8), Inches(0.45), fill=bg, line=LGRAY)
-    add_text(s, k, Inches(8.35), y0 + Inches(0.06), Inches(3.0), Inches(0.36),
+    add_rect(s, Inches(8.2), y0, Inches(4.8), Inches(0.4), fill=bg, line=LGRAY)
+    add_text(s, k, Inches(8.35), y0 + Inches(0.05), Inches(3.0), Inches(0.34),
              size=11, color=DGRAY)
-    add_text(s, v, Inches(11.4), y0 + Inches(0.06), Inches(1.5), Inches(0.36),
+    add_text(s, v, Inches(11.4), y0 + Inches(0.05), Inches(1.5), Inches(0.34),
              size=11, bold=True, color=BLACK, align=PP_ALIGN.CENTER)
 
 callout(s,
-        "Reassuring: two unrelated methods flag the same 78.5% of samples ⇒ real signal.\n"
+        "Reassuring: two unrelated methods flag the same 78.5% of samples ⇒ real signal, not artifact.\n"
         "Still unsolved: literature labels remain in training, so the 3.42 pp offset still bleeds in.",
-        Inches(8.2), Inches(5.55), Inches(4.8), Inches(1.4),
+        Inches(8.2), Inches(6.2), Inches(4.8), Inches(0.85),
         fill=LIGHT, border=ACCENT, text_color=DGRAY, size=10)
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -556,15 +576,18 @@ line = s.shapes.add_connector(1,
 line.line.color.rgb = AMBER; line.line.width = Pt(2.5)
 
 # Key property callout
-add_rect(s, Inches(0.4), Inches(6.0), Inches(12.5), Inches(1.0),
+add_rect(s, Inches(0.4), Inches(5.65), Inches(12.5), Inches(1.45),
          fill=LIGHT, line=NAVY)
-add_text(s, "Key property",
-         Inches(0.55), Inches(6.08), Inches(12.2), Inches(0.4),
+add_text(s, "Key property — feature-based transfer learning  (Pan & Yang, 2010, IEEE TKDE)",
+         Inches(0.55), Inches(5.72), Inches(12.2), Inches(0.4),
          size=13, bold=True, color=NAVY)
 add_text(s,
-         "Stage 2 NEVER sees literature labels. The prior enters as one input feature, so the 3.42 pp offset becomes a calibration problem Stage 2 can learn — not a corruption of the loss.",
-         Inches(0.55), Inches(6.45), Inches(12.2), Inches(0.5),
-         size=11, color=DGRAY)
+         "Stage 2 NEVER sees literature labels. The 3.42 pp offset affects the VALUE of the 68th feature — which Stage 2 can calibrate: "
+         "\"when expert says X, my lab gets ~X − 3.4\". It does NOT corrupt the training loss (which it could not fix). "
+         "Stage 1 uses XGBoost (Chen & Guestrin, 2016) for conservative behaviour on 782 samples; "
+         "Stage 2 uses LightGBM (Ke et al., 2017) for efficiency on 89,074 rows.",
+         Inches(0.55), Inches(6.12), Inches(12.2), Inches(0.9),
+         size=10, color=DGRAY)
 
 # ════════════════════════════════════════════════════════════════════════════
 # SLIDE 9 — Results
@@ -680,9 +703,10 @@ for i, (rng, rmse, bad) in enumerate(res_rows):
              size=11, bold=bad, color=fc, align=PP_ALIGN.CENTER)
 
 add_text(s,
-         "Root cause: GHSV, CH₄/O₂ ratio, pressure absent from dataset.",
-         Inches(7.3), Inches(6.55), Inches(5.7), Inches(0.4),
-         size=10, italic=True, color=DGRAY)
+         "Root cause: GHSV, CH₄/O₂ ratio, pressure absent from dataset. "
+         "SHAP reference: Lundberg & Lee (2017, NeurIPS); Shapley (1953).",
+         Inches(7.3), Inches(6.45), Inches(5.7), Inches(0.55),
+         size=9, italic=True, color=DGRAY)
 
 # ════════════════════════════════════════════════════════════════════════════
 # SLIDE 11 — Limitations & Next Steps
