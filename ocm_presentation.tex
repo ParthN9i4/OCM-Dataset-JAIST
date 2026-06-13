@@ -1,8 +1,8 @@
 % OCM Dataset Integration — LaTeX Beamer Presentation
-% Compile with: pdflatex ocm_presentation.tex
-% Requires: beamer, booktabs, graphicx, xcolor, tikz, fontenc, inputenc
+% Compile with: pdflatex ocm_presentation.tex  (run twice for slide counters)
+% Requires: beamer, booktabs, graphicx, xcolor, tikz, helvet, fontenc, inputenc
 %
-% Structure: 12 slides mirroring the 8-chapter walkthrough notebook narrative.
+% Structure: 15 slides mirroring the 9-chapter walkthrough notebook narrative.
 
 \documentclass[aspectratio=169,12pt]{beamer}
 
@@ -31,7 +31,7 @@
 \setbeamercolor{alerted text}{fg=accent}
 \setbeamercolor{background canvas}{bg=white}
 \setbeamercolor{framesubtitle}{bg=navyblue, fg=white!65}
-\setbeamerfont{framesubtitle}{size=\footnotesize, shape=\itshape}
+\setbeamerfont{framesubtitle}{size=\scriptsize, shape=\itshape}
 
 \setbeamerfont{frametitle}{size=\large, series=\bfseries}
 \setbeamerfont{title}{size=\LARGE, series=\bfseries}
@@ -70,6 +70,9 @@
 % ── Packages ───────────────────────────────────────────────────────────────────
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{microtype}
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{tikz}
@@ -80,9 +83,16 @@
 \usepackage{multirow}
 \usepackage{amsmath}
 
-% Convenience: coloured badge
+% Minimal coloured badge — triangle + text, no filled box
 \newcommand{\badge}[2]{%
-  \colorbox{#1}{\color{white}\footnotesize\bfseries\,#2\,}}
+  {\footnotesize\bfseries\textcolor{#1}{$\blacktriangleright$\,#2}}}
+
+% Minimal sidenote — left accent rule, no grey fill
+\newcommand{\sidenote}[1]{%
+  \vspace{4pt}%
+  \noindent\textcolor{accent}{\rule{2pt}{0.9em}}\hspace{7pt}%
+  \parbox[t]{0.90\linewidth}{\scriptsize\color{darkgray}#1}%
+  \vspace{2pt}}
 
 % ── Meta ───────────────────────────────────────────────────────────────────────
 \title{Integrating OCM Literature Data\\into Lab-Scale ML Models}
@@ -136,81 +146,97 @@
 
   \end{columns}
 
-  \vspace{6pt}
+  \vspace{5pt}
   \textbf{Central question:} Can we use literature to improve our model
   \emph{without hurting it}? Three separate problems make this non-trivial:
 
-  \vspace{4pt}
+  \vspace{3pt}
   \small
   \begin{itemize}
-    \item \badge{red}{1.\ Label shift} \ Literature mean is 3.42 pp higher
-      ($t = -32.2$, $p < 10^{-200}$) — a systematic offset from publication
-      bias and optimised operating conditions.
-    \item \badge{red}{2.\ Covariate shift} \ 78.5\% of literature samples
+    \item \badge{red}{Label shift} \ Literature mean is 3.42 pp higher
+      ($t = -32.2$, $p < 10^{-200}$) — systematic offset from publication bias
+      and optimised operating conditions.
+    \item \badge{red}{Covariate shift} \ 78.5\% of literature samples
       describe chemistry our lab has never tested.
-    \item \badge{red}{3.\ Publication bias} \ Literature is \emph{skewed}, not
-      just shifted — failed experiments are rarely reported, over-weighting
-      high yields and distorting the distribution shape.
+    \item \badge{red}{Publication bias} \ Literature is \emph{skewed}, not
+      just shifted — failed experiments are rarely reported, distorting the shape.
   \end{itemize}
 
-  \vspace{4pt}
-  \colorbox{lightgray}{\parbox{0.93\linewidth}{\scriptsize
-    \textbf{Why ML?} The catalyst search space (65 elements $\times$ varying
+  \sidenote{Why ML? The catalyst search space (65 elements $\times$ varying
     loadings $\times$ temperature) is too large to screen physically.
-    A surrogate model guides experiments toward high-yield compositions.
-  }}
+    A surrogate model guides experiments toward high-yield compositions.}
 
 \end{frame}
 
-% ── Slide 3 — Chapter 2: Setup / Visual evidence ──────────────────────────────
-\begin{frame}{Setup — Visualising the Two Shifts}
+% ── Slide 3 — Chapter 2a: Label Shift & PCA ───────────────────────────────────
+\begin{frame}{Setup — Label Shift \& Covariate Shift}
   \framesubtitle{Chapter 2}
 
   \begin{columns}[T]
 
-    \begin{column}{0.62\textwidth}
+    \begin{column}{0.72\textwidth}
       \includegraphics[width=\linewidth]{fig_walkthrough_label_pca.png}
-
-      \vspace{6pt}
-      \includegraphics[width=\linewidth]{fig_element_usage.png}
     \end{column}
 
-    \begin{column}{0.34\textwidth}
+    \begin{column}{0.25\textwidth}
       \vspace{6pt}
-      \textbf{Top: label \& covariate shift}
-      \begin{itemize}\small
+      \footnotesize
+      \textbf{Left — yield distributions}
+      \begin{itemize}\scriptsize
+        \item Blue (ours): peaks 3–4\%
+        \item Orange (lit): peaks 8–9\%
         \item Red band = 3.42 pp mean gap
-        \item Orange tail = publication-bias skew
-        \item PCA: orange spreads outside the blue cluster
+        \item Heavier orange tail = publication-bias skew
       \end{itemize}
 
-      \vspace{6pt}
-      \textbf{Bottom: which elements differ?}
-      \begin{itemize}\small
-        \item Our palette and literature's overlap only partially
-        \item Different active phases and promoters appear
-        \item Concrete chemistry, not abstract distance
+      \vspace{8pt}
+      \textbf{Right — PCA (67 features → 2D)}
+      \begin{itemize}\scriptsize
+        \item Orange outside blue = \textbf{78.5\%} of literature is foreign chemistry
       \end{itemize}
-
-      \vspace{6pt}
-      \colorbox{lightgray}{\parbox{\linewidth}{\scriptsize
-        These three figures jointly forecast that naive concatenation
-        will harm the model — confirmed in slide 6.
-      }}
     \end{column}
 
   \end{columns}
 
 \end{frame}
 
-% ── Slide 4 — Chapter 3: How We Measure Success ───────────────────────────────
+% ── Slide 4 — Chapter 2b: Element usage ───────────────────────────────────────
+\begin{frame}{Setup — Which Elements Differ?}
+  \framesubtitle{Chapter 2}
+
+  \begin{columns}[T]
+
+    \begin{column}{0.72\textwidth}
+      \includegraphics[width=\linewidth]{fig_element_usage.png}
+    \end{column}
+
+    \begin{column}{0.25\textwidth}
+      \vspace{6pt}
+      \footnotesize
+      \textbf{Top-15 elements by frequency}
+      \begin{itemize}\scriptsize
+        \item Each bar = fraction of experiments using that element
+        \item Our palette and literature's differ substantially
+        \item Different active phases and promoters appear
+      \end{itemize}
+
+      \vspace{8pt}
+      \sidenote{Concrete chemistry, not just abstract distance —
+        different elements dominate each dataset.}
+    \end{column}
+
+  \end{columns}
+
+\end{frame}
+
+% ── Slide 5 — Chapter 3: How We Measure Success ───────────────────────────────
 \begin{frame}{How We Measure Success — Asymmetric 5-Fold CV}
   \framesubtitle{Chapter 3}
 
   \begin{columns}[T]
 
     \begin{column}{0.55\textwidth}
-      \vspace{6pt}
+      \vspace{4pt}
       \textbf{Validation rule}
       \begin{itemize}
         \item Our 89,074 samples split into 5 folds
@@ -219,14 +245,13 @@
         \item Literature \emph{never} appears in validation
       \end{itemize}
 
-      \vspace{8pt}
+      \vspace{6pt}
       \textbf{Why asymmetric?}
       \begin{itemize}
-        \item The question is: ``how well does the model predict
+        \item The question: ``how well does the model predict
           \emph{our} experiments?''
         \item Mixing literature into validation would dilute the answer
-        \item Same CV harness is used for all 5 methods — only the
-          training data changes
+        \item Same CV harness for all 5 methods — only training data changes
       \end{itemize}
     \end{column}
 
@@ -250,7 +275,7 @@
 
 \end{frame}
 
-% ── Slide 5 — Chapter 4: Baseline + Naive Merge ───────────────────────────────
+% ── Slide 6 — Chapter 4: Baseline + Naive Merge ───────────────────────────────
 \begin{frame}{Baseline + Why Naive Merging Fails}
   \framesubtitle{Chapter 4}
 
@@ -265,10 +290,10 @@
         Baseline (our data only) & \textbf{2.133} \\
         \bottomrule
       \end{tabular}
-      \vspace{6pt}\\
+      \vspace{4pt}\\
       \footnotesize Number every method must beat.
 
-      \vspace{14pt}
+      \vspace{12pt}
       \textbf{Step 2 — try the obvious}
       \begin{tabular}{lr}
         \toprule
@@ -279,7 +304,7 @@
         Naive merge (3{,}852 lit rows) & \textbf{2.248} \\
         \bottomrule
       \end{tabular}
-      \vspace{4pt}\\
+      \vspace{3pt}\\
       \textcolor{red}{$+5.4\%$ worse than baseline.}
     \end{column}
 
@@ -295,39 +320,35 @@
         are absent. The model hedges and predicts both badly.
       \end{block}
 
-      \vspace{6pt}
-      \colorbox{lightgray}{\parbox{\linewidth}{\small
-        The 3.42 pp offset is a \emph{systematic signal} the model
-        cannot account for and incorrectly tries to fit. Mixing the
-        two datasets can perform \emph{worse} than using ours alone.\\[4pt]
-        $\Rightarrow$ \textbf{We need to be much more selective.}
-      }}
+      \vspace{4pt}
+      \sidenote{The 3.42 pp offset is a \emph{systematic signal} the model
+        cannot account for and incorrectly tries to fit.
+        $\Rightarrow$ \textbf{We need to be much more selective.}}
     \end{column}
 
   \end{columns}
 
 \end{frame}
 
-% ── Slide 6 — Chapter 5: DRST ─────────────────────────────────────────────────
+% ── Slide 7 — Chapter 5: DRST ─────────────────────────────────────────────────
 \begin{frame}{DRST — Filtering by Chemical Similarity}
   \framesubtitle{Chapter 5}
 
   \begin{columns}[T]
 
-    \begin{column}{0.52\textwidth}
+    \begin{column}{0.60\textwidth}
       \includegraphics[width=\linewidth]{fig_drst_scores.png}
 
-      \vspace{4pt}
+      \vspace{3pt}
       \footnotesize
       Histogram of $P(\text{ours} \mid x)$ for every literature sample.
       Dashed lines = candidate thresholds.
     \end{column}
 
-    \begin{column}{0.44\textwidth}
+    \begin{column}{0.36\textwidth}
       \textbf{How it works}
       \begin{enumerate}\footnotesize
-        \item Train \textit{logistic classifier}
-          (element-space boundary): our $=1$, lit $=0$
+        \item Train logistic classifier: our $=1$, lit $=0$
         \item Score each lit sample: $P(\text{ours} \mid x)$
         \item Keep only samples scoring $\geq \tau$
       \end{enumerate}
@@ -337,7 +358,7 @@
       \footnotesize
       \begin{tabular}{lcr}
         \toprule
-        $\tau$ & kept & CV RMSE \\
+        $\tau$ & kept & RMSE \\
         \midrule
         0.10 & 1168 & 2.068 \\
         0.20 &  987 & 2.034 \\
@@ -348,34 +369,31 @@
       \end{tabular}
 
       \vspace{4pt}
-      \colorbox{lightgray}{\parbox{\linewidth}{\scriptsize
-        \textbf{Unsolved:} the hard cutoff is arbitrary — a sample at
-        0.29 is fully discarded; 0.31 gets full weight.
-      }}
+      \sidenote{\textbf{Unsolved:} hard cutoff is arbitrary —
+        0.29 fully discarded; 0.31 gets full weight.}
     \end{column}
 
   \end{columns}
 
 \end{frame}
 
-% ── Slide 7 — Chapter 6: KMM ──────────────────────────────────────────────────
+% ── Slide 8 — Chapter 6: KMM ──────────────────────────────────────────────────
 \begin{frame}{KMM — Soft Weights Instead of a Hard Filter}
   \framesubtitle{Chapter 6}
 
   \begin{columns}[T]
 
-    \begin{column}{0.55\textwidth}
+    \begin{column}{0.65\textwidth}
       \includegraphics[width=\linewidth]{fig_kmm_weights.png}
     \end{column}
 
-    \begin{column}{0.42\textwidth}
+    \begin{column}{0.32\textwidth}
       \textbf{How it works}
       \begin{itemize}\footnotesize
-        \item Each lit sample gets a weight $w_i \in [0, 10]$
-        \item RBF kernel similarity:
-          $K(x,x')=\exp\!\bigl(-\|x-x'\|^2/2\sigma^2\bigr)$
+        \item Each lit sample gets weight $w_i \in [0, 10]$
+        \item RBF kernel: $K(x,x')=\exp(-\|x-x'\|^2/2\sigma^2)$
         \item Solve QP: $\min \tfrac{1}{2} w^\top K_{ss} w - \kappa^\top w$
-        \item $\sigma$ via median heuristic — no manual tuning
+        \item $\sigma$ via median heuristic (no tuning)
       \end{itemize}
 
       \vspace{4pt}
@@ -383,29 +401,23 @@
       \footnotesize
       \begin{tabular}{lr}
         \toprule
-        Metric & Value \\
-        \midrule
-        KMM CV RMSE & \textbf{2.035} \\
-        $\Delta$ vs baseline & \textcolor{darkgray}{$-4.6\%$} \\
+        KMM RMSE & \textbf{2.035} \\
+        vs baseline & $-4.6\%$ \\
         Near-zero weights & 78.5\% \\
-        Agreement w/ DRST & \textbf{$r = 0.79$} \\
+        Agreement w/ DRST & $r = 0.79$ \\
         \bottomrule
       \end{tabular}
 
       \vspace{4pt}
-      \colorbox{lightgray}{\parbox{\linewidth}{\scriptsize
-        \textbf{Reassuring:} two unrelated methods flag the same 78.5\%
-        of samples $\Rightarrow$ real signal, not artifact.\\[2pt]
-        \textbf{Still unsolved:} literature labels remain in training,
-        so the 3.42 pp offset still bleeds in.
-      }}
+      \sidenote{Two unrelated methods flag the same 78.5\% —
+        real signal. Both still use labels; offset bleeds in.}
     \end{column}
 
   \end{columns}
 
 \end{frame}
 
-% ── Slide 8 — Chapter 7: Prior Feature Transfer Pipeline ──────────────────────
+% ── Slide 9 — Chapter 7: Prior Feature Transfer Pipeline ──────────────────────
 \begin{frame}{Prior Feature Transfer — The Winning Pipeline}
   \framesubtitle{Chapter 7}
 
@@ -440,45 +452,44 @@
 
   \end{tikzpicture}
 
-  \vspace{6pt}
+  \vspace{4pt}
   \small
   \textbf{Key property:} Stage 2 \emph{never sees literature labels}.
   The 3.42 pp offset affects the \emph{value} of the 68th feature —
-  which Stage 2 can calibrate (``when the expert says 8, my lab gets $\sim$4.5'') —
-  not the training loss, which it could not fix. A corrupted label can't be
-  un-corrupted; a feature value is just another thing to learn around.
-  Stage 1 uses XGBoost (conservative on 782 samples); Stage 2 uses LightGBM
-  (fast on 89k rows).
+  which Stage 2 can calibrate — not the training loss.
+  A corrupted label cannot be un-corrupted; a feature value is just another
+  thing to learn around.
 
 \end{frame}
 
-% ── Slide 9 — Chapter 8a: Results ─────────────────────────────────────────────
+% ── Slide 10 — Chapter 8a: Results ────────────────────────────────────────────
 \begin{frame}{Results — All Five Methods at a Glance}
   \framesubtitle{Chapter 8}
 
   \begin{columns}[T]
 
-    \begin{column}{0.55\textwidth}
+    \begin{column}{0.62\textwidth}
       \includegraphics[width=\linewidth]{fig_walkthrough_results.png}
     \end{column}
 
-    \begin{column}{0.42\textwidth}
+    \begin{column}{0.35\textwidth}
       \vspace{2pt}
+      \footnotesize
       \textbf{Cross-validation (our data)}
       \begin{tabular}{lc}
         \toprule
-        Method & CV RMSE \\
+        Method & RMSE \\
         \midrule
-        Naive merge        & 2.248 \textcolor{red}{$+5.4\%$} \\
-        Baseline           & 2.133 \\
-        KMM weighted       & 2.035 \\
-        DRST ($\tau=0.30$) & 2.019 \\
+        Naive merge & 2.248 \textcolor{red}{$\uparrow$} \\
+        Baseline    & 2.133 \\
+        KMM         & 2.035 \\
+        DRST        & 2.019 \\
         \rowcolor{green!15}
-        \textbf{Prior FT}  & \textbf{1.907} \badge{green}{$-10.6\%$} \\
+        \textbf{Prior FT} & \textbf{1.907} \badge{green}{$-10.6\%$} \\
         \bottomrule
       \end{tabular}
 
-      \vspace{10pt}
+      \vspace{6pt}
       \textbf{OOD robustness}
       \begin{tabular}{lc}
         \toprule
@@ -490,36 +501,59 @@
         \bottomrule
       \end{tabular}
 
-      \vspace{6pt}
-      \scriptsize OOD: 2{,}139 non-Impregnation lit samples, unseen.
+      \vspace{4pt}
+      \scriptsize OOD: 2{,}139 unseen non-Impregnation samples.
     \end{column}
 
   \end{columns}
 
 \end{frame}
 
-% ── Slide 10 — Chapter 8b: SHAP ───────────────────────────────────────────────
-\begin{frame}{SHAP — Did the Model Learn Real Chemistry?}
+% ── Slide 11 — Chapter 8b: SHAP beeswarm (full-width) ────────────────────────
+\begin{frame}{SHAP — Feature Importance Beeswarm}
+  \framesubtitle{Chapter 8}
+
+  \begin{columns}[T]
+
+    \begin{column}{0.75\textwidth}
+      \includegraphics[width=\linewidth]{fig_shap_beeswarm.png}
+    \end{column}
+
+    \begin{column}{0.22\textwidth}
+      \vspace{4pt}
+      \scriptsize
+      \textbf{How to read}
+      \begin{itemize}\scriptsize
+        \item Rows = features, sorted by mean $|\text{SHAP}|$
+        \item Each dot = one sample
+        \item Horizontal = effect on prediction
+        \item Colour = feature value\\ (red = high, blue = low)
+      \end{itemize}
+    \end{column}
+
+  \end{columns}
+
+\end{frame}
+
+% ── Slide 12 — Chapter 8c: SHAP findings ─────────────────────────────────────
+\begin{frame}{SHAP — What the Model Learned}
   \framesubtitle{Chapter 8}
 
   \begin{columns}[T]
 
     \begin{column}{0.50\textwidth}
-      \includegraphics[width=\linewidth]{fig_shap_beeswarm.png}
-    \end{column}
-
-    \begin{column}{0.46\textwidth}
-      \vspace{4pt}
-      \textbf{Top findings (3{,}000-sample subsample)}
+      \textbf{Top findings}
       \begin{itemize}\small
         \item \textbf{\#1:} \texttt{lit\_prior\_prediction} — transfer
           learning is genuinely used, not dead weight
         \item \textbf{Temperature} — strong positive; higher $T \to$ more C$_2$
-        \item \textbf{Ba, Mn, La, Ce} — known OCM active phases / promoters
+        \item \textbf{Ba, Mn, La, Ce} — known OCM active phases / promoters;
+          all net-positive
         \item \textbf{Li, K} — mixed / suppressive
       \end{itemize}
+    \end{column}
 
-      \vspace{8pt}
+    \begin{column}{0.46\textwidth}
       \textbf{Residual pattern (ceiling effect)}
       \begin{tabular}{lc}
         \toprule
@@ -532,17 +566,17 @@
         \bottomrule
       \end{tabular}
 
-      \vspace{4pt}
-      \scriptsize Root cause: GHSV, CH$_4$/O$_2$ ratio, and pressure
-      are absent from the dataset — a data limit, not a model failure.
+      \vspace{5pt}
+      \sidenote{Root cause: GHSV, CH$_4$/O$_2$ ratio, and pressure are absent
+        from the dataset — a data limit, not a model failure.}
     \end{column}
 
   \end{columns}
 
 \end{frame}
 
-% ── Slide 11 — Chapter 9a: Critical Analysis ──────────────────────────────────
-\begin{frame}{Critical Analysis — Per-Method Review}
+% ── Slide 13 — Chapter 9a: Critical Analysis ──────────────────────────────────
+\begin{frame}[allowframebreaks]{Critical Analysis — Per-Method Review}
   \framesubtitle{Chapter 9}
 
   \begin{columns}[T]
@@ -559,7 +593,7 @@
         DRST & Hard cliff; discards $\sim$80\%; $\tau$ tuned on the reported CV \\[2pt]
         KMM & $O(n^2)$ kernel; $\sigma$-sensitive; labels still in loss; ties DRST \\[2pt]
         \rowcolor{green!12}
-        Prior FT & Best — but Stage-1 on 782 rows $\to$ high variance; two models \\
+        Prior FT & Best — Stage-1 on 782 rows $\to$ high variance; two models \\
         \bottomrule
       \end{tabular}
     \end{column}
@@ -571,23 +605,21 @@
         \item All methods evaluated on our-data CV only; OOD tested for Prior FT alone
         \item Point predictions — no uncertainty estimates to guide experiment selection
         \item Y$>$15\% ceiling is \emph{data}-bound (missing GHSV, CH$_4$:O$_2$,
-          pressure), not model-bound — no algorithm can fix a missing column
+          pressure), not model-bound
       \end{itemize}
 
-      \vspace{8pt}
-      \colorbox{lightgray}{\parbox{\linewidth}{\scriptsize
-        \textbf{Key insight:} the ceiling effect and much of the label shift share
-        the same root cause — missing operating-condition features.
-        Fix the data; the models follow.
-      }}
+      \vspace{6pt}
+      \sidenote{\textbf{Key insight:} the ceiling effect and much of the label shift
+        share the same root cause — missing operating-condition features.
+        Fix the data; the models follow.}
     \end{column}
 
   \end{columns}
 
 \end{frame}
 
-% ── Slide 12 — Chapter 9b: What's Next ───────────────────────────────────────
-\begin{frame}{What's Next — Priority-Ordered}
+% ── Slide 14 — Chapter 9b: What's Next ───────────────────────────────────────
+\begin{frame}[allowframebreaks]{What's Next — Priority-Ordered}
   \framesubtitle{Chapter 9}
 
   \begin{columns}[T]
@@ -625,18 +657,18 @@
 
 \end{frame}
 
-% ── Slide 13 — Closing ────────────────────────────────────────────────────────
+% ── Slide 15 — Summary ────────────────────────────────────────────────────────
 \begin{frame}{Summary}
 
   \centering
-  \vspace{6pt}
+  \vspace{4pt}
   \begin{tikzpicture}
     \node[draw=navyblue, line width=1pt, rounded corners=6pt,
           fill=lightgray, text width=0.85\paperwidth, align=left,
-          inner sep=14pt] {%
+          inner sep=12pt] {%
       \small
       \textbf{What we asked:} Can published OCM literature improve
-      a lab-data model without harming it? \\[8pt]
+      a lab-data model without harming it? \\[6pt]
       \textbf{What we learned:}
       \begin{itemize}\small
         \item Naive merging \emph{harms} accuracy (\textcolor{red}{$+5.4\%$ RMSE}).
@@ -647,12 +679,12 @@
           Ba, Mn, La, Ce — and the literature prior — drive predictions.
       \end{itemize}
       \textbf{Next step that matters most:} add GHSV and CH$_4$:O$_2$
-      to the feature set — the high-yield ceiling effect is data-bound,
+      to the feature set — the high-yield ceiling is data-bound,
       not model-bound.
     };
   \end{tikzpicture}
 
-  \vspace{14pt}
+  \vspace{10pt}
   \textcolor{darkgray}{Thank you — questions welcome.}
 
 \end{frame}
