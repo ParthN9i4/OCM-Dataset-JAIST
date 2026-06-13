@@ -90,14 +90,18 @@ def nav_bar(slide, current, total):
              Inches(0.2), H - Inches(0.36), W - Inches(0.4), Inches(0.34),
              size=9, color=RGBColor(0xCC, 0xCC, 0xCC))
 
-def slide_title_bar(slide, title, subtitle=None):
-    bar_h = Inches(0.95) if not subtitle else Inches(1.2)
+def slide_title_bar(slide, title, subtitle=None, chapter=None):
+    has_sub = bool(subtitle) or bool(chapter)
+    bar_h = Inches(1.2) if has_sub else Inches(0.95)
     add_rect(slide, 0, 0, W, bar_h, fill=NAVY)
     add_text(slide, title, Inches(0.4), Inches(0.18), W - Inches(0.8), Inches(0.55),
              size=22, bold=True, color=WHITE)
-    if subtitle:
-        add_text(slide, subtitle, Inches(0.4), Inches(0.7), W - Inches(0.8), Inches(0.45),
-                 size=12, color=RGBColor(0xBB, 0xCC, 0xEE), italic=True)
+    if has_sub:
+        sub_text = subtitle or ""
+        if chapter:
+            sub_text = (chapter + "   |   " + sub_text) if sub_text else chapter
+        add_text(slide, sub_text, Inches(0.4), Inches(0.72), W - Inches(0.8), Inches(0.4),
+                 size=11, color=RGBColor(0xBB, 0xCC, 0xEE), italic=True)
 
 def bullets(slide, items, x, y, w, h, size=12, spacing=0.34, color=BLACK):
     for i, item in enumerate(items):
@@ -117,7 +121,7 @@ def callout(slide, text, x, y, w, h, fill=LIGHT, border=ACCENT,
              w - Inches(0.24), h - Inches(0.16),
              size=size, color=text_color, italic=italic)
 
-TOTAL = 12
+TOTAL = 13
 
 # ════════════════════════════════════════════════════════════════════════════
 # SLIDE 1 — Title
@@ -150,7 +154,7 @@ nav_bar(s, 1, TOTAL)
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "The Problem — Two Datasets, Three Systematic Differences")
+slide_title_bar(s, "The Problem — Two Datasets, Three Systematic Differences", chapter="Chapter 1")
 nav_bar(s, 2, TOTAL)
 
 # Left dataset card
@@ -219,7 +223,7 @@ callout(s,
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "Visualising the Gap — Label Shift, Covariate Shift, Chemistry")
+slide_title_bar(s, "Setup — Visualising the Two Shifts", chapter="Chapter 2")
 nav_bar(s, 3, TOTAL)
 
 # Top figure
@@ -257,7 +261,7 @@ callout(s,
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "How We Measure Success — Asymmetric 5-Fold CV")
+slide_title_bar(s, "How We Measure Success — Asymmetric 5-Fold CV", chapter="Chapter 3")
 nav_bar(s, 4, TOTAL)
 
 # Left: rule + reasoning
@@ -318,7 +322,7 @@ callout(s,
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "Baseline + Why Naive Merging Fails")
+slide_title_bar(s, "Baseline + Why Naive Merging Fails", chapter="Chapter 4")
 nav_bar(s, 5, TOTAL)
 
 # Left: Step 1 + Step 2 tables
@@ -398,7 +402,7 @@ callout(s,
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "DRST — Filtering by Chemical Similarity")
+slide_title_bar(s, "DRST — Filtering by Chemical Similarity", chapter="Chapter 5")
 nav_bar(s, 6, TOTAL)
 
 add_img(s, "fig_drst_scores.png", Inches(0.3), Inches(1.25), Inches(7.2))
@@ -459,7 +463,7 @@ callout(s,
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "KMM — Soft Weights Instead of a Hard Filter")
+slide_title_bar(s, "KMM — Soft Weights Instead of a Hard Filter", chapter="Chapter 6")
 nav_bar(s, 7, TOTAL)
 
 add_img(s, "fig_kmm_weights.png", Inches(0.3), Inches(1.25), Inches(7.6))
@@ -510,7 +514,7 @@ callout(s,
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "Prior Feature Transfer — The Winning Pipeline")
+slide_title_bar(s, "Prior Feature Transfer — The Winning Pipeline", chapter="Chapter 7")
 nav_bar(s, 8, TOTAL)
 
 # Stage labels
@@ -594,7 +598,7 @@ add_text(s,
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "Results — All Five Methods at a Glance")
+slide_title_bar(s, "Results — All Five Methods at a Glance", chapter="Chapter 8")
 nav_bar(s, 9, TOTAL)
 
 add_img(s, "fig_walkthrough_results.png", Inches(0.3), Inches(1.25), Inches(7.6))
@@ -660,7 +664,7 @@ add_text(s, "OOD: 2,139 non-Impregnation lit samples, unseen.",
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "SHAP — Did the Model Learn Real Chemistry?")
+slide_title_bar(s, "SHAP — Did the Model Learn Real Chemistry?", chapter="Chapter 8")
 nav_bar(s, 10, TOTAL)
 
 add_img(s, "fig_shap_beeswarm.png", Inches(0.3), Inches(1.25), Inches(6.8))
@@ -709,83 +713,112 @@ add_text(s,
          size=9, italic=True, color=DGRAY)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 11 — Critical Analysis & Next Steps
+# SLIDE 11 — Chapter 9a: Critical Analysis (per-method)
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "Critical Analysis & Next Steps")
+slide_title_bar(s, "Critical Analysis — Per-Method Review", chapter="Chapter 9")
 nav_bar(s, 11, TOTAL)
 
 # Left: per-method critique table
 add_text(s, "Honest critique of each method",
-         Inches(0.4), Inches(1.2), Inches(7.0), Inches(0.4),
+         Inches(0.4), Inches(1.35), Inches(7.0), Inches(0.4),
          size=14, bold=True, color=NAVY)
-add_rect(s, Inches(0.4), Inches(1.65), Inches(7.0), Inches(0.4), fill=NAVY)
-add_text(s, "Method", Inches(0.5), Inches(1.68), Inches(1.8), Inches(0.34),
+add_rect(s, Inches(0.4), Inches(1.82), Inches(7.0), Inches(0.4), fill=NAVY)
+add_text(s, "Method", Inches(0.5), Inches(1.85), Inches(1.8), Inches(0.34),
          size=11, bold=True, color=WHITE)
-add_text(s, "Main limitation", Inches(2.3), Inches(1.68), Inches(5.0), Inches(0.34),
+add_text(s, "Main limitation", Inches(2.35), Inches(1.85), Inches(4.9), Inches(0.34),
          size=11, bold=True, color=WHITE)
 crit_rows = [
-    ("Naive merge", "Negative control only — harms the model", False),
-    ("DRST", "Hard cliff; discards ~80% of lit; τ tuned on the reported CV", False),
-    ("KMM", "Slow n×n kernel; σ-sensitive; still uses labels; ties DRST", False),
-    ("Prior FT", "Best — but Stage-1 on 782 rows → high variance; two models", True),
+    ("Naive merge", "Negative control — makes the model worse", False),
+    ("DRST", "Hard cliff; discards ~80%; τ tuned on the reported CV", False),
+    ("KMM", "O(n²) kernel; σ-sensitive; labels still in loss; ties DRST", False),
+    ("Prior FT", "Best — Stage-1 on 782 rows → high variance; two models", True),
 ]
-y = 2.05
+y = 2.22
 for meth, lim, best in crit_rows:
-    h = 0.62 if len(lim) > 45 else 0.5
-    bg = RGBColor(0xE8, 0xF5, 0xE9) if best else (LIGHT)
+    h = 0.58
+    bg = RGBColor(0xE8, 0xF5, 0xE9) if best else LIGHT
     add_rect(s, Inches(0.4), Inches(y), Inches(7.0), Inches(h), fill=bg, line=LGRAY)
-    add_text(s, meth, Inches(0.5), Inches(y + 0.04), Inches(1.8), Inches(0.5),
+    add_text(s, meth, Inches(0.5), Inches(y + 0.05), Inches(1.8), Inches(h - 0.08),
              size=10, bold=True, color=GDARK if best else BLACK)
-    add_text(s, lim, Inches(2.3), Inches(y + 0.04), Inches(5.0), Inches(h - 0.05),
+    add_text(s, lim, Inches(2.35), Inches(y + 0.05), Inches(4.9), Inches(h - 0.08),
              size=10, color=GDARK if best else DGRAY)
-    y += h + 0.05
+    y += h + 0.04
 
-# Cross-cutting limits
+# Right: cross-cutting limits
+add_rect(s, Inches(7.7), Inches(1.35), Inches(5.3), Inches(0.42), fill=ACCENT)
 add_text(s, "Cross-cutting limits",
-         Inches(0.4), Inches(y + 0.05), Inches(7.0), Inches(0.4),
-         size=13, bold=True, color=NAVY)
-bullets(s, [
-    "Scored on our-data CV only; OOD checked for Prior FT alone",
-    "Point predictions — no uncertainty for picking experiments",
-    "Y>15% ceiling is DATA-bound, not model-bound",
-], Inches(0.45), Inches(y + 0.5), Inches(7.0), Inches(0.4), size=10, spacing=0.34, color=DGRAY)
-
-# Right: priority-ordered next steps
-add_rect(s, Inches(7.7), Inches(1.2), Inches(5.3), Inches(0.42), fill=GREEN)
-add_text(s, "What's next (priority-ordered)",
-         Inches(7.85), Inches(1.23), Inches(5.0), Inches(0.36),
+         Inches(7.85), Inches(1.38), Inches(5.0), Inches(0.36),
          size=13, bold=True, color=WHITE)
-next_steps = [
-    ("1.", "Add GHSV, CH₄:O₂, pressure — fixes the ceiling and likely the label shift", True),
-    ("2.", "Bag the Stage-1 expert to cut its variance", False),
-    ("3.", "Add uncertainty (quantile / conformal) for experiment selection", False),
-    ("4.", "Stack DRST + KMM into the Prior FT pipeline", False),
-    ("5.", "Neural domain adaptation (DANN / CORAL) once features are richer", False),
-    ("6.", "Close the active-learning loop: propose → measure → retrain", False),
-]
-y = 1.85
-for num, txt, top in next_steps:
-    h = 0.72 if len(txt) > 42 else 0.55
-    bg = RGBColor(0xE8, 0xF5, 0xE9) if top else WHITE
-    add_rect(s, Inches(7.7), Inches(y), Inches(5.3), Inches(h), fill=bg, line=LGRAY)
-    add_text(s, num, Inches(7.8), Inches(y + 0.05), Inches(0.4), Inches(0.4),
-             size=12, bold=True, color=GDARK if top else ACCENT)
-    add_text(s, txt, Inches(8.25), Inches(y + 0.05), Inches(4.6), Inches(h - 0.05),
-             size=11, bold=top, color=GDARK if top else BLACK)
-    if top:
-        badge(s, "Highest impact", Inches(8.25), Inches(y + h - 0.28),
-              Inches(1.7), Inches(0.24), GREEN, size=8)
-    y += h + 0.08
+bullets(s, [
+    "All methods evaluated on our-data CV only; OOD tested for Prior FT alone",
+    "Point predictions — no uncertainty estimates to guide experiment selection",
+    "Y>15% ceiling is DATA-bound (missing GHSV, CH₄:O₂, pressure), not model-bound",
+], Inches(7.75), Inches(1.88), Inches(5.2), Inches(0.4), size=10, spacing=0.42, color=BLACK)
+
+callout(s,
+        "Key insight: the ceiling effect and much of the label shift share the same root cause — "
+        "missing operating-condition features. Fix the data; the models follow.",
+        Inches(7.7), Inches(3.35), Inches(5.3), Inches(0.95),
+        fill=RGBColor(0xE8, 0xF5, 0xFF), border=ACCENT,
+        text_color=DGRAY, size=10, italic=False)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 12 — Summary
+# SLIDE 12 — Chapter 9b: What's Next
+# ════════════════════════════════════════════════════════════════════════════
+s = prs.slides.add_slide(BLANK)
+add_rect(s, 0, 0, W, H, fill=WHITE)
+slide_title_bar(s, "What's Next — Priority-Ordered", chapter="Chapter 9")
+nav_bar(s, 12, TOTAL)
+
+next_steps = [
+    ("1", "Add GHSV, CH₄:O₂, pressure to the feature set",
+     "Fixes the Y>15% ceiling and likely resolves much of the label shift too.", True),
+    ("2", "Bag the Stage-1 expert",
+     "Ensemble of XGBoost models reduces high variance from only 782 training samples.", False),
+    ("3", "Add uncertainty quantification",
+     "Conformal prediction or quantile regression — flag low-confidence picks for the experiment loop.", False),
+    ("4", "Stack DRST + KMM inside Prior FT",
+     "Run them as one integrated pipeline rather than three separate methods.", False),
+    ("5", "Neural domain adaptation (DANN, CORAL)",
+     "More powerful once the feature set is richer — currently under-powered.", False),
+    ("6", "Close the active-learning loop",
+     "Model proposes → lab measures → model retrains. Reduces label shift over time.", False),
+]
+
+col1 = next_steps[:3]
+col2 = next_steps[3:]
+
+for col_idx, col_items in enumerate([col1, col2]):
+    x_left = Inches(0.4) if col_idx == 0 else Inches(6.85)
+    col_w = Inches(6.2)
+    y = 1.45
+    for num, head, body, top in col_items:
+        bg = RGBColor(0xE8, 0xF5, 0xE9) if top else LIGHT
+        border_c = GREEN if top else LGRAY
+        add_rect(s, x_left, Inches(y), col_w, Inches(1.55), fill=bg, line=border_c)
+        badge(s, num, x_left + Inches(0.1), Inches(y + 0.1),
+              Inches(0.36), Inches(0.36),
+              fill=GREEN if top else ACCENT, size=14)
+        add_text(s, head, x_left + Inches(0.55), Inches(y + 0.1),
+                 col_w - Inches(0.65), Inches(0.42),
+                 size=12, bold=True, color=GDARK if top else NAVY)
+        add_text(s, body, x_left + Inches(0.55), Inches(y + 0.55),
+                 col_w - Inches(0.65), Inches(0.85),
+                 size=10, color=DGRAY)
+        if top:
+            badge(s, "Highest impact", x_left + col_w - Inches(1.85), Inches(y + 0.1),
+                  Inches(1.7), Inches(0.3), GREEN, size=9)
+        y += 1.65
+
+# ════════════════════════════════════════════════════════════════════════════
+# SLIDE 13 — Summary
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
 slide_title_bar(s, "Summary")
-nav_bar(s, 12, TOTAL)
+nav_bar(s, 13, TOTAL)
 
 # Big summary box
 add_rect(s, Inches(1.0), Inches(1.4), Inches(11.3), Inches(4.6),
