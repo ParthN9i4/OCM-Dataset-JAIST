@@ -1,19 +1,22 @@
 """
-Build ocm_presentation.pptx — 12-slide PowerPoint deck.
+Build ocm_presentation.pptx — 15-slide PowerPoint deck.
 
-Mirrors the 8-chapter walkthrough notebook narrative:
+Mirrors the 9-chapter walkthrough notebook narrative:
   1  Title
-  2  The Problem — two datasets, three systematic differences
-  3  Visual evidence — KDE + PCA + element usage
-  4  How We Measure Success — asymmetric 5-fold CV
-  5  Baseline + Why Naive Merging Fails
-  6  DRST — filtering by chemical similarity
-  7  KMM — soft weights, same conclusion
-  8  Prior Feature Transfer pipeline
-  9  Results — all 5 methods bar chart
- 10  SHAP — did it learn real chemistry
- 11  Limitations & Next Steps
- 12  Summary
+  2  The Problem — Chapter 1
+  3  Setup — Label Shift & PCA — Chapter 2
+  4  Setup — Element Usage — Chapter 2
+  5  How We Measure Success — Chapter 3
+  6  Baseline + Why Naive Merging Fails — Chapter 4
+  7  DRST — Filtering by Chemical Similarity — Chapter 5
+  8  KMM — Soft Weights Instead of a Hard Filter — Chapter 6
+  9  Prior Feature Transfer Pipeline — Chapter 7
+ 10  Results — All Five Methods — Chapter 8
+ 11  SHAP — Feature Importance Beeswarm — Chapter 8
+ 12  SHAP — Ceiling Effect & Model Limits — Chapter 8
+ 13  Critical Analysis — Per-Method Review — Chapter 9
+ 14  What's Next — Priority-Ordered — Chapter 9
+ 15  Summary
 
 Run: python build_pptx.py
 Produces: ocm_presentation.pptx  (and ocm_presentation.pdf via LibreOffice)
@@ -121,7 +124,7 @@ def callout(slide, text, x, y, w, h, fill=LIGHT, border=ACCENT,
              w - Inches(0.24), h - Inches(0.16),
              size=size, color=text_color, italic=italic)
 
-TOTAL = 13
+TOTAL = 15
 
 # ════════════════════════════════════════════════════════════════════════════
 # SLIDE 1 — Title
@@ -219,50 +222,74 @@ callout(s,
         fill=LIGHT, border=NAVY, text_color=DGRAY, size=10, italic=False)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 3 — Visual evidence
+# SLIDE 3 — Setup: Label Shift & PCA (Chapter 2a)
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "Setup — Visualising the Two Shifts", chapter="Chapter 2")
+slide_title_bar(s, "Setup — Label Shift & Covariate Shift", chapter="Chapter 2")
 nav_bar(s, 3, TOTAL)
 
-# Top figure
-add_img(s, "fig_walkthrough_label_pca.png", Inches(0.3), Inches(1.1), Inches(8.3))
-# Bottom figure
-add_img(s, "fig_element_usage.png", Inches(0.3), Inches(4.45), Inches(8.3))
+add_img(s, "fig_walkthrough_label_pca.png", Inches(0.3), Inches(1.1), Inches(9.0))
 
 # Right commentary
-add_rect(s, Inches(8.9), Inches(1.1), Inches(4.1), Inches(0.4), fill=NAVY)
-add_text(s, "Top: label & covariate shift", Inches(9.05), Inches(1.13),
-         Inches(3.9), Inches(0.34), size=12, bold=True, color=WHITE)
+add_rect(s, Inches(9.6), Inches(1.1), Inches(3.4), Inches(0.4), fill=NAVY)
+add_text(s, "Two panels, two shifts", Inches(9.75), Inches(1.13),
+         Inches(3.1), Inches(0.34), size=12, bold=True, color=WHITE)
 bullets(s, [
-    "Red band = 3.42 pp mean gap",
-    "Orange tail = publication-bias skew",
-    "PCA: orange spreads outside blue cluster",
-], Inches(8.95), Inches(1.6), Inches(4.05), Inches(0.4), size=11, spacing=0.42, color=BLACK)
-
-add_rect(s, Inches(8.9), Inches(4.45), Inches(4.1), Inches(0.4), fill=ACCENT)
-add_text(s, "Bottom: which elements differ?", Inches(9.05), Inches(4.48),
-         Inches(3.9), Inches(0.34), size=12, bold=True, color=WHITE)
-bullets(s, [
-    "Different active phases / promoters",
-    "Concrete chemistry, not abstract",
-    "Justifies selective filtering",
-], Inches(8.95), Inches(4.95), Inches(4.05), Inches(0.4), size=11, spacing=0.42, color=BLACK)
+    "Left: yield KDE — blue peaks 3–4%",
+    "Orange peaks 8–9% (3.42 pp gap)",
+    "Red band = systematic gap (t = −32.2)",
+    "Orange right tail = publication-bias skew",
+    "Right: PCA of 67 features → 2D",
+    "Orange outside blue = 78.5% OOD",
+], Inches(9.6), Inches(1.62), Inches(3.4), Inches(0.4), size=11, spacing=0.40, color=BLACK)
 
 callout(s,
-        "These three figures jointly forecast that naive concatenation will harm the model — confirmed on slide 5.",
-        Inches(8.9), Inches(6.3), Inches(4.1), Inches(0.7),
+        "Both signals — yield level AND chemistry composition — warn against naive concatenation (confirmed slide 6).",
+        Inches(9.6), Inches(4.15), Inches(3.4), Inches(0.9),
         fill=RGBColor(0xFF, 0xF0, 0xD8), border=AMBER,
-        text_color=RGBColor(0x6B, 0x3A, 0x00), size=10)
+        text_color=RGBColor(0x6B, 0x3A, 0x00), size=10, italic=False)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 4 — How We Measure Success
+# SLIDE 4 — Setup: Element Usage (Chapter 2b)
+# ════════════════════════════════════════════════════════════════════════════
+s = prs.slides.add_slide(BLANK)
+add_rect(s, 0, 0, W, H, fill=WHITE)
+slide_title_bar(s, "Setup — Which Elements Differ?", chapter="Chapter 2")
+nav_bar(s, 4, TOTAL)
+
+add_img(s, "fig_element_usage.png", Inches(0.3), Inches(1.1), Inches(9.0))
+
+# Right commentary
+add_rect(s, Inches(9.6), Inches(1.1), Inches(3.4), Inches(0.4), fill=ACCENT)
+add_text(s, "Reading the chart", Inches(9.75), Inches(1.13),
+         Inches(3.1), Inches(0.34), size=12, bold=True, color=WHITE)
+bullets(s, [
+    "Top 15 elements by usage frequency",
+    "Different dominant elements each side",
+    "Different active phases & promoters",
+    "Our lab: focused 2025 programme",
+    "Literature: 40 yrs, many groups",
+], Inches(9.6), Inches(1.62), Inches(3.4), Inches(0.4), size=11, spacing=0.40, color=BLACK)
+
+callout(s,
+        "This is what '78.5% out-of-distribution' looks like in plain terms — literally different elements and preparation methods.",
+        Inches(9.6), Inches(3.85), Inches(3.4), Inches(0.9),
+        fill=RGBColor(0xE8, 0xF5, 0xFF), border=ACCENT,
+        text_color=DGRAY, size=10, italic=False)
+
+add_text(s,
+         "Selective filtering methods keep only literature whose element profile resembles our experimental programme.",
+         Inches(9.6), Inches(4.9), Inches(3.4), Inches(0.65),
+         size=10, color=DGRAY, italic=True)
+
+# ════════════════════════════════════════════════════════════════════════════
+# SLIDE 5 — How We Measure Success (Chapter 3)
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
 slide_title_bar(s, "How We Measure Success — Asymmetric 5-Fold CV", chapter="Chapter 3")
-nav_bar(s, 4, TOTAL)
+nav_bar(s, 5, TOTAL)
 
 # Left: rule + reasoning
 add_rect(s, Inches(0.4), Inches(1.2), Inches(7.0), Inches(0.42), fill=NAVY)
@@ -318,12 +345,12 @@ callout(s,
         fill=LIGHT, border=NAVY, text_color=DGRAY, size=11, italic=True)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 5 — Baseline + Naive Merge
+# SLIDE 6 — Baseline + Naive Merge (Chapter 4)
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
 slide_title_bar(s, "Baseline + Why Naive Merging Fails", chapter="Chapter 4")
-nav_bar(s, 5, TOTAL)
+nav_bar(s, 6, TOTAL)
 
 # Left: Step 1 + Step 2 tables
 add_text(s, "Step 1 — establish baseline",
@@ -398,36 +425,36 @@ callout(s,
         text_color=RGBColor(0x6B, 0x3A, 0x00), size=11, italic=False)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 6 — DRST
+# SLIDE 7 — DRST (Chapter 5)
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
 slide_title_bar(s, "DRST — Filtering by Chemical Similarity", chapter="Chapter 5")
-nav_bar(s, 6, TOTAL)
+nav_bar(s, 7, TOTAL)
 
-add_img(s, "fig_drst_scores.png", Inches(0.3), Inches(1.25), Inches(7.2))
+add_img(s, "fig_drst_scores.png", Inches(0.3), Inches(1.25), Inches(8.0))
 add_text(s, "Histogram of P(ours | x) for every literature sample.  Dashed lines = candidate thresholds.",
-         Inches(0.3), Inches(4.5), Inches(7.2), Inches(0.4),
+         Inches(0.3), Inches(4.8), Inches(8.0), Inches(0.4),
          size=10, italic=True, color=DGRAY, align=PP_ALIGN.CENTER)
 
 # Right: how it works + sweep table
-add_rect(s, Inches(7.8), Inches(1.25), Inches(5.2), Inches(0.42), fill=NAVY)
-add_text(s, "How it works", Inches(7.95), Inches(1.28),
-         Inches(4.9), Inches(0.36), size=13, bold=True, color=WHITE)
+add_rect(s, Inches(8.5), Inches(1.25), Inches(4.5), Inches(0.42), fill=NAVY)
+add_text(s, "How it works", Inches(8.65), Inches(1.28),
+         Inches(4.2), Inches(0.36), size=13, bold=True, color=WHITE)
 bullets(s, [
-    "Train logistic classifier (finds element-space boundary):  ours=1, lit=0",
-    "Score each lit sample:  P(ours | x)",
+    "Train logistic classifier: ours=1, lit=0",
+    "Score each lit sample: P(ours | x)",
     "Keep samples scoring ≥ τ",
-], Inches(7.85), Inches(1.75), Inches(5.1), Inches(0.4), size=11, spacing=0.4)
+], Inches(8.55), Inches(1.75), Inches(4.3), Inches(0.4), size=11, spacing=0.4)
 callout(s,
-        "The classifier's confidence P(ours | x) is a similarity score: high = looks like our chemistry, "
+        "P(ours | x) is a similarity score: high = looks like our chemistry, "
         "low = foreign. We keep only literature scoring above τ.",
-        Inches(7.8), Inches(3.0), Inches(5.2), Inches(0.65),
+        Inches(8.5), Inches(3.05), Inches(4.5), Inches(0.65),
         fill=RGBColor(0xE8, 0xF5, 0xFF), border=ACCENT, text_color=DGRAY, size=9, italic=False)
 
-# Sweep table (shifted down to make room for callout above)
+# Sweep table
 add_text(s, "Threshold sweep",
-         Inches(7.8), Inches(3.75), Inches(5.2), Inches(0.4),
+         Inches(8.5), Inches(3.8), Inches(4.5), Inches(0.4),
          size=13, bold=True, color=NAVY)
 sweep_rows = [
     ("τ = 0.10", "1168 kept", "2.068", False),
@@ -435,58 +462,58 @@ sweep_rows = [
     ("τ = 0.30", "782 kept",  "2.019", True),
     ("τ = 0.40", "543 kept",  "2.045", False),
 ]
-add_rect(s, Inches(7.8), Inches(4.2), Inches(5.2), Inches(0.4), fill=NAVY)
+add_rect(s, Inches(8.5), Inches(4.25), Inches(4.5), Inches(0.4), fill=NAVY)
 for j, (h, x, w) in enumerate(zip(["τ", "kept", "RMSE"],
-                                    [Inches(7.95), Inches(9.3), Inches(11.4)],
-                                    [Inches(1.3), Inches(2.0), Inches(1.5)])):
-    add_text(s, h, x, Inches(4.23), w, Inches(0.34),
+                                    [Inches(8.65), Inches(9.95), Inches(11.6)],
+                                    [Inches(1.25), Inches(1.6), Inches(0.9)])):
+    add_text(s, h, x, Inches(4.28), w, Inches(0.34),
              size=11, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
 for i, (tau, kept, rmse, best) in enumerate(sweep_rows):
-    y0 = Inches(4.6) + Inches(i * 0.4)
+    y0 = Inches(4.65) + Inches(i * 0.4)
     bg = RGBColor(0xE8, 0xF5, 0xE9) if best else LIGHT
-    add_rect(s, Inches(7.8), y0, Inches(5.2), Inches(0.4), fill=bg, line=LGRAY)
-    add_text(s, tau, Inches(7.95), y0 + Inches(0.04), Inches(1.3), Inches(0.34),
+    add_rect(s, Inches(8.5), y0, Inches(4.5), Inches(0.4), fill=bg, line=LGRAY)
+    add_text(s, tau, Inches(8.65), y0 + Inches(0.04), Inches(1.25), Inches(0.34),
              size=11, bold=best, color=GDARK if best else BLACK, align=PP_ALIGN.CENTER)
-    add_text(s, kept, Inches(9.3), y0 + Inches(0.04), Inches(2.0), Inches(0.34),
+    add_text(s, kept, Inches(9.95), y0 + Inches(0.04), Inches(1.6), Inches(0.34),
              size=11, bold=best, color=GDARK if best else BLACK, align=PP_ALIGN.CENTER)
-    add_text(s, rmse, Inches(11.4), y0 + Inches(0.04), Inches(1.5), Inches(0.34),
+    add_text(s, rmse, Inches(11.6), y0 + Inches(0.04), Inches(0.9), Inches(0.34),
              size=11, bold=best, color=GDARK if best else BLACK, align=PP_ALIGN.CENTER)
 
 callout(s,
         "Unsolved: hard cutoff is arbitrary — a sample at 0.29 is fully discarded; 0.31 gets full weight.",
-        Inches(7.8), Inches(6.25), Inches(5.2), Inches(0.75),
+        Inches(8.5), Inches(6.35), Inches(4.5), Inches(0.72),
         fill=RGBColor(0xFF, 0xF0, 0xD8), border=AMBER,
         text_color=RGBColor(0x6B, 0x3A, 0x00), size=10)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 7 — KMM
+# SLIDE 8 — KMM (Chapter 6)
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
 slide_title_bar(s, "KMM — Soft Weights Instead of a Hard Filter", chapter="Chapter 6")
-nav_bar(s, 7, TOTAL)
+nav_bar(s, 8, TOTAL)
 
-add_img(s, "fig_kmm_weights.png", Inches(0.3), Inches(1.25), Inches(7.6))
+add_img(s, "fig_kmm_weights.png", Inches(0.3), Inches(1.25), Inches(8.65))
 
 # Right
-add_rect(s, Inches(8.2), Inches(1.25), Inches(4.8), Inches(0.42), fill=NAVY)
-add_text(s, "How it works", Inches(8.35), Inches(1.28),
-         Inches(4.5), Inches(0.36), size=13, bold=True, color=WHITE)
+add_rect(s, Inches(9.2), Inches(1.25), Inches(3.8), Inches(0.42), fill=NAVY)
+add_text(s, "How it works", Inches(9.35), Inches(1.28),
+         Inches(3.5), Inches(0.36), size=13, bold=True, color=WHITE)
 bullets(s, [
     "Each lit sample gets weight wᵢ ∈ [0, 10]",
-    "RBF kernel similarity: K(x,x′) = exp(−‖x−x′‖²/2σ²)",
+    "RBF kernel: K(x,x′) = exp(−‖x−x′‖²/2σ²)",
     "Solve QP:  ½ wᵀK_ss w − κᵀw",
     "σ via median heuristic (parameter-free)",
-], Inches(8.25), Inches(1.75), Inches(4.7), Inches(0.4), size=11, spacing=0.38)
+], Inches(9.25), Inches(1.75), Inches(3.7), Inches(0.4), size=11, spacing=0.38)
 callout(s,
         "KMM picks weights so the weighted literature cloud matches our data cloud. "
         "Samples inside our chemistry earn weight; those outside fade to zero.",
-        Inches(8.2), Inches(3.35), Inches(4.8), Inches(0.62),
+        Inches(9.2), Inches(3.35), Inches(3.8), Inches(0.62),
         fill=RGBColor(0xE8, 0xF5, 0xFF), border=ACCENT, text_color=DGRAY, size=9, italic=False)
 
-# Result table (shifted down to make room for callout above)
+# Result table
 add_text(s, "Result",
-         Inches(8.2), Inches(4.08), Inches(4.8), Inches(0.4),
+         Inches(9.2), Inches(4.08), Inches(3.8), Inches(0.4),
          size=13, bold=True, color=NAVY)
 results_rows = [
     ("KMM CV RMSE",        "2.035"),
@@ -497,25 +524,25 @@ results_rows = [
 for i, (k, v) in enumerate(results_rows):
     y0 = Inches(4.5) + Inches(i * 0.4)
     bg = LIGHT if i % 2 == 0 else WHITE
-    add_rect(s, Inches(8.2), y0, Inches(4.8), Inches(0.4), fill=bg, line=LGRAY)
-    add_text(s, k, Inches(8.35), y0 + Inches(0.05), Inches(3.0), Inches(0.34),
+    add_rect(s, Inches(9.2), y0, Inches(3.8), Inches(0.4), fill=bg, line=LGRAY)
+    add_text(s, k, Inches(9.35), y0 + Inches(0.05), Inches(2.4), Inches(0.34),
              size=11, color=DGRAY)
-    add_text(s, v, Inches(11.4), y0 + Inches(0.05), Inches(1.5), Inches(0.34),
+    add_text(s, v, Inches(11.65), y0 + Inches(0.05), Inches(1.3), Inches(0.34),
              size=11, bold=True, color=BLACK, align=PP_ALIGN.CENTER)
 
 callout(s,
         "Reassuring: two unrelated methods flag the same 78.5% of samples ⇒ real signal, not artifact.\n"
         "Still unsolved: literature labels remain in training, so the 3.42 pp offset still bleeds in.",
-        Inches(8.2), Inches(6.2), Inches(4.8), Inches(0.85),
+        Inches(9.2), Inches(6.2), Inches(3.8), Inches(0.85),
         fill=LIGHT, border=ACCENT, text_color=DGRAY, size=10)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 8 — Prior Feature Transfer Pipeline
+# SLIDE 9 — Prior Feature Transfer Pipeline (Chapter 7)
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
 slide_title_bar(s, "Prior Feature Transfer — The Winning Pipeline", chapter="Chapter 7")
-nav_bar(s, 8, TOTAL)
+nav_bar(s, 9, TOTAL)
 
 # Stage labels
 add_text(s, "STAGE 1 — Pre-train on Literature Chemistry",
@@ -594,18 +621,18 @@ add_text(s,
          size=10, color=DGRAY)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 9 — Results
+# SLIDE 10 — Results (Chapter 8)
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
 slide_title_bar(s, "Results — All Five Methods at a Glance", chapter="Chapter 8")
-nav_bar(s, 9, TOTAL)
+nav_bar(s, 10, TOTAL)
 
-add_img(s, "fig_walkthrough_results.png", Inches(0.3), Inches(1.25), Inches(7.6))
+add_img(s, "fig_walkthrough_results.png", Inches(0.3), Inches(1.25), Inches(8.3))
 
 # Right: CV table + OOD table
 add_text(s, "Cross-validation (our data)",
-         Inches(8.1), Inches(1.3), Inches(5.0), Inches(0.4),
+         Inches(8.8), Inches(1.3), Inches(4.2), Inches(0.4),
          size=14, bold=True, color=NAVY)
 cv_rows = [
     ("Naive merge",        "2.248", "+5.4%",  False, True),
@@ -614,81 +641,102 @@ cv_rows = [
     ("DRST (τ=0.30)",      "2.019", "−5.3%",  False, False),
     ("Prior FT  ★",        "1.907", "−10.6%", True,  False),
 ]
-add_rect(s, Inches(8.1), Inches(1.75), Inches(5.0), Inches(0.4), fill=NAVY)
+add_rect(s, Inches(8.8), Inches(1.75), Inches(4.2), Inches(0.4), fill=NAVY)
 for j, (h, x, w) in enumerate(zip(["Method", "RMSE", "Δ"],
-                                    [Inches(8.2), Inches(10.3), Inches(11.4)],
-                                    [Inches(2.0), Inches(1.1), Inches(1.6)])):
+                                    [Inches(8.9), Inches(10.8), Inches(11.9)],
+                                    [Inches(1.85), Inches(1.0), Inches(1.1)])):
     add_text(s, h, x, Inches(1.78), w, Inches(0.34),
              size=11, bold=True, color=WHITE)
 for i, (m, r, d, best, worst) in enumerate(cv_rows):
     y0 = Inches(2.15) + Inches(i * 0.4)
     bg = RGBColor(0xE8, 0xF5, 0xE9) if best else \
          RGBColor(0xFF, 0xEB, 0xEB) if worst else (LIGHT if i % 2 == 0 else WHITE)
-    add_rect(s, Inches(8.1), y0, Inches(5.0), Inches(0.4), fill=bg, line=LGRAY)
+    add_rect(s, Inches(8.8), y0, Inches(4.2), Inches(0.4), fill=bg, line=LGRAY)
     fc = GDARK if best else (RDARK if worst else BLACK)
-    add_text(s, m, Inches(8.2), y0 + Inches(0.04), Inches(2.0), Inches(0.34),
+    add_text(s, m, Inches(8.9), y0 + Inches(0.04), Inches(1.85), Inches(0.34),
              size=11, bold=best, color=fc)
-    add_text(s, r, Inches(10.3), y0 + Inches(0.04), Inches(1.1), Inches(0.34),
+    add_text(s, r, Inches(10.8), y0 + Inches(0.04), Inches(1.0), Inches(0.34),
              size=11, bold=best, color=fc, align=PP_ALIGN.CENTER)
-    add_text(s, d, Inches(11.4), y0 + Inches(0.04), Inches(1.6), Inches(0.34),
+    add_text(s, d, Inches(11.9), y0 + Inches(0.04), Inches(1.1), Inches(0.34),
              size=11, bold=best, color=fc, align=PP_ALIGN.CENTER)
 
 # OOD
 add_text(s, "OOD robustness (unseen lit)",
-         Inches(8.1), Inches(4.5), Inches(5.0), Inches(0.4),
+         Inches(8.8), Inches(4.5), Inches(4.2), Inches(0.4),
          size=14, bold=True, color=NAVY)
-add_rect(s, Inches(8.1), Inches(4.95), Inches(5.0), Inches(0.4), fill=NAVY)
-add_text(s, "Method", Inches(8.2), Inches(4.98), Inches(3.0), Inches(0.34),
+add_rect(s, Inches(8.8), Inches(4.95), Inches(4.2), Inches(0.4), fill=NAVY)
+add_text(s, "Method", Inches(8.9), Inches(4.98), Inches(2.4), Inches(0.34),
          size=11, bold=True, color=WHITE)
-add_text(s, "OOD RMSE", Inches(11.2), Inches(4.98), Inches(1.8), Inches(0.34),
+add_text(s, "OOD RMSE", Inches(11.3), Inches(4.98), Inches(1.65), Inches(0.34),
          size=11, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
-add_rect(s, Inches(8.1), Inches(5.35), Inches(5.0), Inches(0.42),
+add_rect(s, Inches(8.8), Inches(5.35), Inches(4.2), Inches(0.42),
          fill=LIGHT, line=LGRAY)
-add_text(s, "Baseline", Inches(8.2), Inches(5.4), Inches(3.0), Inches(0.34),
+add_text(s, "Baseline", Inches(8.9), Inches(5.4), Inches(2.4), Inches(0.34),
          size=11, color=BLACK)
-add_text(s, "6.53", Inches(11.2), Inches(5.4), Inches(1.8), Inches(0.34),
+add_text(s, "6.53", Inches(11.3), Inches(5.4), Inches(1.65), Inches(0.34),
          size=11, color=BLACK, align=PP_ALIGN.CENTER)
-add_rect(s, Inches(8.1), Inches(5.77), Inches(5.0), Inches(0.42),
+add_rect(s, Inches(8.8), Inches(5.77), Inches(4.2), Inches(0.42),
          fill=RGBColor(0xE8, 0xF5, 0xE9), line=GREEN)
-add_text(s, "Prior FT  ★", Inches(8.2), Inches(5.82), Inches(3.0), Inches(0.34),
+add_text(s, "Prior FT  ★", Inches(8.9), Inches(5.82), Inches(2.4), Inches(0.34),
          size=11, bold=True, color=GDARK)
-add_text(s, "3.60  (−45%)", Inches(11.2), Inches(5.82), Inches(1.8), Inches(0.34),
+add_text(s, "3.60  (−45%)", Inches(11.3), Inches(5.82), Inches(1.65), Inches(0.34),
          size=11, bold=True, color=GDARK, align=PP_ALIGN.CENTER)
 
 add_text(s, "OOD: 2,139 non-Impregnation lit samples, unseen.",
-         Inches(8.1), Inches(6.3), Inches(5.0), Inches(0.4),
+         Inches(8.8), Inches(6.3), Inches(4.2), Inches(0.4),
          size=10, italic=True, color=DGRAY)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 10 — SHAP
+# SLIDE 11 — SHAP Beeswarm standalone (Chapter 8)
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "SHAP — Did the Model Learn Real Chemistry?", chapter="Chapter 8")
-nav_bar(s, 10, TOTAL)
+slide_title_bar(s, "SHAP — Feature Importance Beeswarm", chapter="Chapter 8")
+nav_bar(s, 11, TOTAL)
 
-add_img(s, "fig_shap_beeswarm.png", Inches(0.3), Inches(1.25), Inches(6.8))
+add_img(s, "fig_shap_beeswarm.png", Inches(0.3), Inches(1.2), Inches(9.5))
+add_text(s,
+         "TreeExplainer on 3,000-sample subsample.  Each row = feature ranked by mean |SHAP|.  "
+         "Colour = feature value (red=high);  x-position = prediction impact.",
+         Inches(0.3), Inches(5.5), Inches(9.5), Inches(0.5),
+         size=9, italic=True, color=DGRAY, align=PP_ALIGN.CENTER)
 
-# Right: findings + residuals
-add_rect(s, Inches(7.3), Inches(1.25), Inches(5.7), Inches(0.42), fill=NAVY)
-add_text(s, "Top findings (3,000 sample subsample)",
-         Inches(7.45), Inches(1.28), Inches(5.4), Inches(0.36),
-         size=12, bold=True, color=WHITE)
+# Right: top findings
+add_rect(s, Inches(10.1), Inches(1.2), Inches(2.9), Inches(0.42), fill=NAVY)
+add_text(s, "Key signals", Inches(10.25), Inches(1.23),
+         Inches(2.65), Inches(0.36), size=12, bold=True, color=WHITE)
 bullets(s, [
-    "#1: lit_prior_prediction — transfer is genuinely used",
-    "Temperature — strong positive, T↑ → C₂↑",
-    "Ba, Mn, La, Ce — known OCM active phases / promoters",
-    "Li, K — mixed / suppressive effect",
-], Inches(7.35), Inches(1.78), Inches(5.6), Inches(0.4), size=11, spacing=0.42)
+    "#1: lit_prior — transfer used",
+    "Temp ↑ → yield ↑ (correct OCM)",
+    "Ba, Mn, La, Ce: net positive",
+    "Li, K: mixed / suppressive",
+], Inches(10.1), Inches(1.74), Inches(2.85), Inches(0.4), size=11, spacing=0.44, color=BLACK)
 
-# Residual table
-add_text(s, "Residual pattern (ceiling effect)",
-         Inches(7.3), Inches(4.0), Inches(5.7), Inches(0.4),
-         size=13, bold=True, color=NAVY)
-add_rect(s, Inches(7.3), Inches(4.45), Inches(5.7), Inches(0.42), fill=NAVY)
-add_text(s, "Y(C₂) range", Inches(7.45), Inches(4.48), Inches(3.0), Inches(0.34),
+callout(s,
+        "The model uses real OCM chemistry — transfer learning is not dead weight.",
+        Inches(10.1), Inches(3.6), Inches(2.9), Inches(0.75),
+        fill=RGBColor(0xE8, 0xF5, 0xFF), border=ACCENT, text_color=DGRAY, size=10)
+
+add_text(s, "See next slide for residual breakdown →",
+         Inches(10.1), Inches(4.6), Inches(2.9), Inches(0.5),
+         size=10, italic=True, color=DGRAY)
+
+# ════════════════════════════════════════════════════════════════════════════
+# SLIDE 12 — SHAP Ceiling Effect & Findings (Chapter 8)
+# ════════════════════════════════════════════════════════════════════════════
+s = prs.slides.add_slide(BLANK)
+add_rect(s, 0, 0, W, H, fill=WHITE)
+slide_title_bar(s, "SHAP — Ceiling Effect & Model Limits", chapter="Chapter 8")
+nav_bar(s, 12, TOTAL)
+
+# Left: residual table
+add_text(s, "Residual breakdown by yield range",
+         Inches(0.4), Inches(1.3), Inches(5.8), Inches(0.4),
+         size=14, bold=True, color=NAVY)
+add_rect(s, Inches(0.4), Inches(1.75), Inches(5.8), Inches(0.42), fill=NAVY)
+add_text(s, "Y(C₂) range", Inches(0.55), Inches(1.78), Inches(3.1), Inches(0.34),
          size=11, bold=True, color=WHITE)
-add_text(s, "RMSE", Inches(10.7), Inches(4.48), Inches(2.0), Inches(0.34),
+add_text(s, "RMSE", Inches(3.8), Inches(1.78), Inches(2.2), Inches(0.34),
          size=11, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
 res_rows = [
     ("0 – 6%",   "1.43 – 1.48", False),
@@ -697,28 +745,54 @@ res_rows = [
     ("> 15%",    "4.70  (−4.2 pp bias)", True),
 ]
 for i, (rng, rmse, bad) in enumerate(res_rows):
-    y0 = Inches(4.87) + Inches(i * 0.4)
+    y0 = Inches(2.17) + Inches(i * 0.52)
     bg = RGBColor(0xFF, 0xEB, 0xEB) if bad else (LIGHT if i % 2 == 0 else WHITE)
-    add_rect(s, Inches(7.3), y0, Inches(5.7), Inches(0.4), fill=bg, line=LGRAY)
+    add_rect(s, Inches(0.4), y0, Inches(5.8), Inches(0.52), fill=bg, line=LGRAY)
     fc = RDARK if bad else BLACK
-    add_text(s, rng, Inches(7.45), y0 + Inches(0.04), Inches(3.0), Inches(0.34),
-             size=11, bold=bad, color=fc)
-    add_text(s, rmse, Inches(10.7), y0 + Inches(0.04), Inches(2.0), Inches(0.34),
-             size=11, bold=bad, color=fc, align=PP_ALIGN.CENTER)
+    add_text(s, rng, Inches(0.55), y0 + Inches(0.08), Inches(3.1), Inches(0.38),
+             size=12, bold=bad, color=fc)
+    add_text(s, rmse, Inches(3.8), y0 + Inches(0.08), Inches(2.2), Inches(0.38),
+             size=12, bold=bad, color=fc, align=PP_ALIGN.CENTER)
+
+callout(s,
+        "Root cause: GHSV, CH₄/O₂ ratio, pressure absent from the feature set — "
+        "a data limit, not a model failure.",
+        Inches(0.4), Inches(4.4), Inches(5.8), Inches(0.85),
+        fill=RGBColor(0xFF, 0xF0, 0xD8), border=AMBER,
+        text_color=RGBColor(0x6B, 0x3A, 0x00), size=10, italic=False)
+
+# Right: top features + ceiling insight
+add_rect(s, Inches(6.7), Inches(1.3), Inches(6.3), Inches(0.42), fill=ACCENT)
+add_text(s, "What SHAP confirmed",
+         Inches(6.85), Inches(1.33), Inches(6.0), Inches(0.36),
+         size=13, bold=True, color=WHITE)
+bullets(s, [
+    "#1: lit_prior_prediction — transfer learning actively used",
+    "Temperature: high T → yield up (correct OCM physics)",
+    "Ba, Mn, La, Ce — known active phases and promoters",
+    "Li, K — mixed / suppressive (can over-reduce surface)",
+], Inches(6.75), Inches(1.85), Inches(6.2), Inches(0.4), size=11, spacing=0.44, color=BLACK)
+
+callout(s,
+        "The ceiling is NOT a modelling failure — it is a DATA failure.\n"
+        "Missing columns (GHSV, CH₄:O₂, pressure) explain why Y>15% catalysts exist.\n"
+        "No algorithm can compensate for absent input features.",
+        Inches(6.7), Inches(4.0), Inches(6.3), Inches(1.1),
+        fill=RGBColor(0xE8, 0xF5, 0xFF), border=ACCENT,
+        text_color=DGRAY, size=11, italic=False)
 
 add_text(s,
-         "Root cause: GHSV, CH₄/O₂ ratio, pressure absent from dataset — "
-         "a data limit, not a model failure.",
-         Inches(7.3), Inches(6.45), Inches(5.7), Inches(0.55),
-         size=9, italic=True, color=DGRAY)
+         "Fix the data → the model automatically improves.  That is the single highest-impact next step.",
+         Inches(6.7), Inches(5.25), Inches(6.3), Inches(0.55),
+         size=12, bold=True, color=NAVY)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 11 — Chapter 9a: Critical Analysis (per-method)
+# SLIDE 13 — Critical Analysis — Per-Method Review (Chapter 9a)
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
 slide_title_bar(s, "Critical Analysis — Per-Method Review", chapter="Chapter 9")
-nav_bar(s, 11, TOTAL)
+nav_bar(s, 13, TOTAL)
 
 # Left: per-method critique table
 add_text(s, "Honest critique of each method",
@@ -765,12 +839,12 @@ callout(s,
         text_color=DGRAY, size=10, italic=False)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 12 — Chapter 9b: What's Next
+# SLIDE 14 — What's Next — Priority-Ordered (Chapter 9b)
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
 slide_title_bar(s, "What's Next — Priority-Ordered", chapter="Chapter 9")
-nav_bar(s, 12, TOTAL)
+nav_bar(s, 14, TOTAL)
 
 next_steps = [
     ("1", "Add GHSV, CH₄:O₂, pressure to the feature set",
@@ -813,12 +887,12 @@ for col_idx, col_items in enumerate([col1, col2]):
         y += 1.65
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 13 — Summary
+# SLIDE 15 — Summary
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
 slide_title_bar(s, "Summary")
-nav_bar(s, 13, TOTAL)
+nav_bar(s, 15, TOTAL)
 
 # Big summary box
 add_rect(s, Inches(1.0), Inches(1.4), Inches(11.3), Inches(4.6),

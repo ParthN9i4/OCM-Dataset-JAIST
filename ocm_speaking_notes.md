@@ -4,7 +4,7 @@ Personal reference only. Not included in `ocm_walkthrough.ipynb`.
 
 ---
 
-# Part 1 — PPT Speaking Notes (13 slides)
+# Part 1 — PPT Speaking Notes (15 slides)
 
 One block per slide. Verbatim first-person speech — not a script, more like thinking out
 loud while pointing at the screen. Read alongside the corresponding slide.
@@ -50,32 +50,56 @@ guides which experiments to actually run in the lab."
 
 ---
 
-## Slide 3 — Setup — Visualising the Two Shifts (Chapter 2)
+## Slide 3 — Setup — Label Shift & PCA (Chapter 2)
 
-"Before any modelling, let me show you what these shifts actually look like in data. Two
-figures here — top shows the label and covariate shift, bottom shows which specific
-elements differ.
+"This slide shows the label shift and covariate shift in data form. The figure has two
+panels side by side.
 
-Top figure, left panel: the yield distributions. Blue is our data, peaking around 3 to 4
-percent. Orange is literature, peaking around 8 to 9 percent. The red shaded band between
-the two dashed lines is that 3.42 pp gap drawn as a physical distance. And notice the
-orange isn't just shifted — it has a heavier right tail. That asymmetric skew is
-publication bias: you only publish when the experiment worked well.
+Left panel — yield distributions. Blue is our 89,074 experiments, peaking around 3 to 4
+percent. Orange is the 3,852 published literature experiments, peaking around 8 to 9
+percent. The smooth curves are kernel density estimates. The red shaded band between the
+two vertical dashed lines is the 3.42 percentage-point mean gap drawn as a physical
+distance on the plot. That gap is not noise — the t-statistic is −32.2 and the p-value is
+below 10 to the power of negative 200. And notice the orange distribution isn't just
+shifted — it has a heavier right tail. That asymmetric skew is publication bias: labs
+don't publish experiments that failed, so the literature over-represents high-yield
+outcomes.
 
-Top figure, right panel: PCA — principal component analysis takes our 67 features and
-compresses them to 2 dimensions. Each dot is a catalyst. Blue dots are ours, orange are
-literature. The orange cloud extends well beyond the boundary of the blue cluster on the
-right side — those are the 78.5% of literature samples describing chemistry our lab has
-never explored. If we added those to training, we'd teach the model to predict
-compositions it will never see in our experiments.
+Right panel — PCA of the chemistry. Principal component analysis takes the 67 element and
+condition features and compresses them to 2 dimensions. Each dot is a catalyst. Blue dots
+are ours, orange are literature. The blue cloud is relatively compact. The orange cloud
+extends well beyond the right boundary of the blue cluster — those are the 78.5% of
+literature samples describing chemistry our lab has never synthesised. If we added those
+to training, we'd teach the model to predict compositions it will never be asked about.
 
-Bottom figure: the top 15 elements by frequency in each dataset. The palettes are clearly
-different — different active phases, different promoters. The two datasets don't just have
-different yield levels, they represent different experimental traditions."
+Both the yield gap and the chemistry gap warn against naive concatenation. We confirm that
+warning on slide 6."
 
 ---
 
-## Slide 4 — How We Measure Success (Chapter 3)
+## Slide 4 — Setup — Element Usage (Chapter 2)
+
+"The previous slide's PCA showed that chemistry differs in an abstract two-dimensional
+projection. This figure makes it concrete. Each panel is a horizontal bar chart of the top
+15 elements by usage frequency — meaning what fraction of experiments in that dataset
+include a non-zero loading of that element.
+
+Our lab data is on the left, literature is on the right. The palettes are clearly
+different. Our data in 2025 focused on a specific set of active phases and promoters.
+Literature, compiled over 40 years from dozens of independent research groups around the
+world, spreads across a broader and different mix — different rare-earth promoters,
+different support materials, different alkali metal choices.
+
+This is what '78.5% out-of-distribution' looks like in plain terms. It is not abstract
+statistics — it is literally different elements and preparation methods. A model trained on
+a mixture of both would have to simultaneously predict yield for our chemistry and for
+chemistries we will never synthesise. The selective filtering methods that follow use
+exactly this observation: keep only the literature that, at the element level, resembles
+our experimental programme."
+
+---
+
+## Slide 5 — How We Measure Success (Chapter 3)
 
 "Before results, I want to explain how we measure success, because the design choice here
 determines whether the numbers are meaningful.
@@ -99,7 +123,7 @@ data only — is 2.133. That is the target every subsequent method must beat."
 
 ---
 
-## Slide 5 — Baseline + Why Naive Merging Fails (Chapter 4)
+## Slide 6 — Baseline + Why Naive Merging Fails (Chapter 4)
 
 "Step one: establish the baseline. Train on our data alone — no literature — and get RMSE
 2.133. That's the number to beat. If a method returns anything higher, it has actively
@@ -122,7 +146,7 @@ selective about *which* samples we add and *how* we represent their information.
 
 ---
 
-## Slide 6 — DRST — Filtering by Chemical Similarity (Chapter 5)
+## Slide 7 — DRST — Filtering by Chemical Similarity (Chapter 5)
 
 "The first serious attempt: instead of adding all literature, only add the part that
 chemically resembles our data. DRST — Density-Ratio Selective Transfer — scores each
@@ -148,7 +172,7 @@ binary decision throws away gradual similarity information."
 
 ---
 
-## Slide 7 — KMM — Soft Weights Instead of a Hard Filter (Chapter 6)
+## Slide 8 — KMM — Soft Weights Instead of a Hard Filter (Chapter 6)
 
 "KMM — Kernel Mean Matching — is the natural continuation of DRST's idea but made
 continuous. Instead of keep-or-discard, every literature sample gets a weight between 0
@@ -175,7 +199,7 @@ ceiling the next method breaks."
 
 ---
 
-## Slide 8 — Prior Feature Transfer — The Winning Pipeline (Chapter 7)
+## Slide 9 — Prior Feature Transfer — The Winning Pipeline (Chapter 7)
 
 "This is the method that worked well, and its logic is a fundamental reframing of the
 problem.
@@ -205,7 +229,7 @@ our 89,000 samples, using histogram-based tree building."
 
 ---
 
-## Slide 9 — Results — All Five Methods at a Glance (Chapter 8)
+## Slide 10 — Results — All Five Methods at a Glance (Chapter 8)
 
 "Here's the full picture. The bar chart shows all five methods with the baseline as a
 dashed reference line. Naive merge is the one bar to the right of that line — worse.
@@ -230,31 +254,64 @@ than just limiting exposure to it."
 
 ---
 
-## Slide 10 — SHAP — Did the Model Learn Real Chemistry? (Chapter 8)
+## Slide 11 — SHAP — Feature Importance Beeswarm (Chapter 8)
 
-"RMSE tells us how accurate the model is. SHAP tells us *why* it makes each prediction.
-For every sample, SHAP asks: how much did each feature push this particular prediction up
-or down from the average? The beeswarm plot shows all 3,000 subsample points at once.
-Each row is a feature ranked by total importance, top to bottom. Each dot is one catalyst
-sample. Horizontal position is the SHAP value — how much that feature shifted the
-prediction. Colour is the feature value — red is high, blue is low.
+"RMSE tells us how accurate the model is — SHAP tells us *why* it makes each prediction.
+For each of the 3,000 sample points, SHAP decomposes the prediction into individual
+feature contributions: how much did each of the 68 features push that particular
+prediction above or below the mean?
 
-Three things to look for. First: `lit_prior_prediction` is at the very top. The transfer
-learning is not dead weight — it's the single most influential feature across 3,000
-samples. That validates the whole Prior FT approach. Second: temperature comes second,
-with red dots (high temperature) on the right — pushing predictions up. That's correct
-OCM physics; higher temperature promotes C₂ selectivity. Third: Ba, Mn, La, Ce are all
-net-positive — known OCM active phases and promoters, physically sensible.
+The beeswarm visualises all 3,000 samples at once. Each row is one feature, ranked
+top-to-bottom by its mean absolute SHAP value — the most influential feature is at the
+top. Each dot is one catalyst sample. Horizontal position is the SHAP value: dots to the
+right pushed the prediction up; dots to the left pushed it down. Dot colour is the feature
+value — red is high, blue is low. So a red dot far to the right means 'high value of this
+feature strongly increases the predicted yield.'
 
-The table shows the residual pattern. Below 10% yield, RMSE is reasonable. Above 15%,
-RMSE shoots to 4.70 with a bias of −4.2 pp — the model systematically under-predicts.
-This is not a modelling failure; it's a data failure. The conditions that explain why a
-catalyst achieves 20% yield — gas flow rate, methane-to-oxygen ratio — are absent from
-our feature set. No algorithm can compensate for a missing column."
+Three things stand out immediately. First: the very top row is `lit_prior_prediction`.
+The literature prior is the single most influential feature across all 3,000 samples. The
+transfer learning is not dead weight — it is actively driving every prediction. That
+validates the entire Prior Feature Transfer approach.
+
+Second: temperature is ranked second. Red dots — high temperature — cluster on the right
+side, meaning high temperature systematically pushes yield predictions up. That is correct
+OCM physics: higher temperatures promote the gas-phase radical chain reaction that
+produces ethylene.
+
+Third: Ba, Mn, La, and Ce all show net-positive SHAP values — they are well-known OCM
+active phases and promoters, consistent with decades of experimental literature. Li and K
+show mixed or slightly negative contributions — both can over-reduce the catalyst surface,
+which suppresses C₂ selectivity. The model has learned real chemistry from the data it
+has access to."
 
 ---
 
-## Slide 11 — Critical Analysis — Per-Method Review (Chapter 9)
+## Slide 12 — SHAP — Ceiling Effect & Model Limits (Chapter 8)
+
+"This slide shows the one important limitation the residual analysis reveals: a ceiling
+effect at high yields.
+
+The table breaks down prediction error by yield range. Below 6% yield — where the vast
+majority of our data lives — RMSE is 1.43 to 1.48, quite good. Between 6 and 10%, it
+rises to 1.95. Between 10 and 15%, 2.58 — still manageable. But above 15%, RMSE jumps to
+4.70, and there is a systematic bias of −4.2 percentage points. The model is not just
+imprecise at high yields — it is consistently and substantially under-predicting.
+
+This is the ceiling effect. It looks like a modelling failure but it is a data failure.
+The conditions that explain why a specific catalyst achieves 20% yield — gas hourly space
+velocity, the methane-to-oxygen ratio, reactor pressure — are absent from our feature set.
+They were never recorded in either our experiments or the literature database. No machine
+learning algorithm can predict a phenomenon driven by features that don't exist in the
+dataset.
+
+The right column summarises what SHAP confirmed works correctly: the literature prior,
+temperature, and the known promoter elements are the primary drivers of what the model
+predicts accurately. The ceiling is bounded — data below 15% yield is predicted well. Fix
+the data by adding the missing operating conditions; the ceiling lifts automatically."
+
+---
+
+## Slide 13 — Critical Analysis — Per-Method Review (Chapter 9)
 
 "Let me be honest about what each method can and cannot do.
 
@@ -280,7 +337,7 @@ follow."
 
 ---
 
-## Slide 12 — What's Next — Priority-Ordered (Chapter 9)
+## Slide 14 — What's Next — Priority-Ordered (Chapter 9)
 
 "Six next steps in priority order.
 
@@ -308,7 +365,7 @@ chemistry we previously hadn't explored."
 
 ---
 
-## Slide 13 — Summary
+## Slide 15 — Summary
 
 "Let me bring this together in four points.
 
