@@ -192,10 +192,10 @@ add_text(s,
 # Three differences
 diffs = [
     ("1. Label shift",
-     "Literature mean is 3.42 pp higher (t = −32.2, p < 10⁻²⁰⁰) — systematic offset from publication bias and optimised conditions (Fanelli, 2012).",
+     "Literature mean is 3.42 pp higher (t = −32.2, p < 10⁻²⁰⁰) — a systematic offset from publication bias and optimised conditions.",
      RED),
     ("2. Covariate shift",
-     "78.5% of literature samples describe chemistry our lab has never tested (Pan & Yang, 2010, IEEE TKDE).",
+     "78.5% of literature samples describe chemistry our lab has never tested.",
      AMBER),
     ("3. Publication bias",
      "Literature is skewed, not just shifted — failed experiments are rarely reported, over-weighting high yields.",
@@ -210,7 +210,7 @@ for i, (head, body, color) in enumerate(diffs):
 # Why ML? callout
 callout(s,
         "Why ML? The catalyst search space (65 elements × varying loadings × temperature) is too large to screen physically. "
-        "A surrogate model guides experiments toward high-yield compositions (Lookman et al., 2019, npj Comput. Mater.).",
+        "A surrogate model guides experiments toward high-yield compositions.",
         Inches(0.4), Inches(6.42), Inches(12.5), Inches(0.68),
         fill=LIGHT, border=NAVY, text_color=DGRAY, size=10, italic=False)
 
@@ -386,8 +386,8 @@ add_text(s,
          size=12, color=DGRAY)
 
 callout(s,
-        "The 3.42 pp offset is a SYSTEMATIC signal the model cannot account for — and incorrectly tries to fit.\n"
-        "Ben-David et al. (2010, Mach. Learn.): when source and target distributions differ significantly, naive combination can perform WORSE than target-only training.\n\n"
+        "The 3.42 pp offset is a SYSTEMATIC signal the model cannot account for — and incorrectly tries to fit. "
+        "Mixing the two datasets can perform WORSE than using ours alone.\n\n"
         "⇒ We need to be much more selective.",
         Inches(7.0), Inches(4.35), Inches(6.0), Inches(1.9),
         fill=RGBColor(0xFF, 0xF0, 0xD8), border=AMBER,
@@ -416,8 +416,8 @@ bullets(s, [
     "Keep samples scoring ≥ τ",
 ], Inches(7.85), Inches(1.75), Inches(5.1), Inches(0.4), size=11, spacing=0.4)
 callout(s,
-        "Logistic regression = finds a hyperplane in 67-dimensional feature space that best separates our samples from literature. "
-        "Ref: Huang et al. (2006, NeurIPS); Sugiyama et al. (2007, JMLR).",
+        "The classifier's confidence P(ours | x) is a similarity score: high = looks like our chemistry, "
+        "low = foreign. We keep only literature scoring above τ.",
         Inches(7.8), Inches(3.0), Inches(5.2), Inches(0.65),
         fill=RGBColor(0xE8, 0xF5, 0xFF), border=ACCENT, text_color=DGRAY, size=9, italic=False)
 
@@ -475,8 +475,8 @@ bullets(s, [
     "σ via median heuristic (parameter-free)",
 ], Inches(8.25), Inches(1.75), Inches(4.7), Inches(0.4), size=11, spacing=0.38)
 callout(s,
-        "RBF kernel = chemical similarity based on distance in element-composition space. "
-        "Ref: Huang et al. (2006, NeurIPS); Gretton et al. (2009, Dataset Shift in ML).",
+        "KMM picks weights so the weighted literature cloud matches our data cloud. "
+        "Samples inside our chemistry earn weight; those outside fade to zero.",
         Inches(8.2), Inches(3.35), Inches(4.8), Inches(0.62),
         fill=RGBColor(0xE8, 0xF5, 0xFF), border=ACCENT, text_color=DGRAY, size=9, italic=False)
 
@@ -578,14 +578,14 @@ line.line.color.rgb = AMBER; line.line.width = Pt(2.5)
 # Key property callout
 add_rect(s, Inches(0.4), Inches(5.65), Inches(12.5), Inches(1.45),
          fill=LIGHT, line=NAVY)
-add_text(s, "Key property — feature-based transfer learning  (Pan & Yang, 2010, IEEE TKDE)",
+add_text(s, "Key property — literature enters as a feature, not a label",
          Inches(0.55), Inches(5.72), Inches(12.2), Inches(0.4),
          size=13, bold=True, color=NAVY)
 add_text(s,
          "Stage 2 NEVER sees literature labels. The 3.42 pp offset affects the VALUE of the 68th feature — which Stage 2 can calibrate: "
-         "\"when expert says X, my lab gets ~X − 3.4\". It does NOT corrupt the training loss (which it could not fix). "
-         "Stage 1 uses XGBoost (Chen & Guestrin, 2016) for conservative behaviour on 782 samples; "
-         "Stage 2 uses LightGBM (Ke et al., 2017) for efficiency on 89,074 rows.",
+         "\"when the expert says 8, my lab gets ~4.5\". It does NOT corrupt the training loss, which it could not fix. "
+         "A corrupted label can't be un-corrupted; a feature value is just another thing to learn around. "
+         "Stage 1 uses XGBoost (conservative on 782 rows); Stage 2 uses LightGBM (fast on 89,074 rows).",
          Inches(0.55), Inches(6.12), Inches(12.2), Inches(0.9),
          size=10, color=DGRAY)
 
@@ -703,75 +703,81 @@ for i, (rng, rmse, bad) in enumerate(res_rows):
              size=11, bold=bad, color=fc, align=PP_ALIGN.CENTER)
 
 add_text(s,
-         "Root cause: GHSV, CH₄/O₂ ratio, pressure absent from dataset. "
-         "SHAP reference: Lundberg & Lee (2017, NeurIPS); Shapley (1953).",
+         "Root cause: GHSV, CH₄/O₂ ratio, pressure absent from dataset — "
+         "a data limit, not a model failure.",
          Inches(7.3), Inches(6.45), Inches(5.7), Inches(0.55),
          size=9, italic=True, color=DGRAY)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 11 — Limitations & Next Steps
+# SLIDE 11 — Critical Analysis & Next Steps
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "Limitations & Next Steps")
+slide_title_bar(s, "Critical Analysis & Next Steps")
 nav_bar(s, 11, TOTAL)
 
-options = [
-    ("Option A", "Easy", GREEN, "Add reaction conditions",
-     "Include GHSV, CH₄/O₂, and pressure as features.",
-     "Expected to fix the >15% ceiling effect and reduce high-yield RMSE from 4.70 to ~2.5."),
-    ("Option B", "Medium", AMBER, "Tune transfer threshold",
-     "Sweep DRST τ and Stage 1 sample size jointly.",
-     "Current best: τ = 0.30 (782 samples). Grid search may recover 0.3–0.5% additional RMSE."),
-    ("Option C", "Hard", RED, "Neural domain adaptation",
-     "Replace LightGBM with DANN or CORAL.",
-     "High complexity — only justified after reaction conditions are added."),
+# Left: per-method critique table
+add_text(s, "Honest critique of each method",
+         Inches(0.4), Inches(1.2), Inches(7.0), Inches(0.4),
+         size=14, bold=True, color=NAVY)
+add_rect(s, Inches(0.4), Inches(1.65), Inches(7.0), Inches(0.4), fill=NAVY)
+add_text(s, "Method", Inches(0.5), Inches(1.68), Inches(1.8), Inches(0.34),
+         size=11, bold=True, color=WHITE)
+add_text(s, "Main limitation", Inches(2.3), Inches(1.68), Inches(5.0), Inches(0.34),
+         size=11, bold=True, color=WHITE)
+crit_rows = [
+    ("Naive merge", "Negative control only — harms the model", False),
+    ("DRST", "Hard cliff; discards ~80% of lit; τ tuned on the reported CV", False),
+    ("KMM", "Slow n×n kernel; σ-sensitive; still uses labels; ties DRST", False),
+    ("Prior FT", "Best — but Stage-1 on 782 rows → high variance; two models", True),
 ]
-col_w = Inches(4.1); col_gap = Inches(0.25)
-for i, (lab, diff, color, head, sub, body) in enumerate(options):
-    x0 = Inches(0.4) + i * (col_w + col_gap)
-    add_rect(s, x0, Inches(1.25), col_w, Inches(3.4), fill=LIGHT, line=color)
-    add_rect(s, x0, Inches(1.25), col_w, Inches(0.45), fill=color)
-    add_text(s, f"{lab} — {diff}",
-             x0 + Inches(0.15), Inches(1.28),
-             col_w - Inches(0.3), Inches(0.4),
-             size=13, bold=True, color=WHITE)
-    add_text(s, head,
-             x0 + Inches(0.15), Inches(1.8),
-             col_w - Inches(0.3), Inches(0.4),
-             size=13, bold=True, color=NAVY)
-    add_text(s, sub,
-             x0 + Inches(0.15), Inches(2.25),
-             col_w - Inches(0.3), Inches(0.8),
-             size=11, color=DGRAY)
-    add_text(s, body,
-             x0 + Inches(0.15), Inches(3.1),
-             col_w - Inches(0.3), Inches(1.4),
-             size=11, color=DGRAY, italic=True)
+y = 2.05
+for meth, lim, best in crit_rows:
+    h = 0.62 if len(lim) > 45 else 0.5
+    bg = RGBColor(0xE8, 0xF5, 0xE9) if best else (LIGHT)
+    add_rect(s, Inches(0.4), Inches(y), Inches(7.0), Inches(h), fill=bg, line=LGRAY)
+    add_text(s, meth, Inches(0.5), Inches(y + 0.04), Inches(1.8), Inches(0.5),
+             size=10, bold=True, color=GDARK if best else BLACK)
+    add_text(s, lim, Inches(2.3), Inches(y + 0.04), Inches(5.0), Inches(h - 0.05),
+             size=10, color=GDARK if best else DGRAY)
+    y += h + 0.05
 
-# Bottom two boxes
-add_rect(s, Inches(0.4), Inches(4.9), Inches(6.2), Inches(2.0),
-         fill=RGBColor(0xF5, 0xF5, 0xFF), line=ACCENT)
-add_text(s, "Key Limitations",
-         Inches(0.55), Inches(4.97), Inches(5.9), Inches(0.4),
+# Cross-cutting limits
+add_text(s, "Cross-cutting limits",
+         Inches(0.4), Inches(y + 0.05), Inches(7.0), Inches(0.4),
          size=13, bold=True, color=NAVY)
 bullets(s, [
-    "Missing GHSV / CH₄:O₂ / pressure features",
-    "Literature has 15+ prep methods — coverage uneven",
-    "Publication bias: only successful experiments published",
-    "OOD improvement may not generalise to new catalyst families",
-], Inches(0.5), Inches(5.4), Inches(6.1), Inches(0.4), size=11, spacing=0.36, color=DGRAY)
+    "Scored on our-data CV only; OOD checked for Prior FT alone",
+    "Point predictions — no uncertainty for picking experiments",
+    "Y>15% ceiling is DATA-bound, not model-bound",
+], Inches(0.45), Inches(y + 0.5), Inches(7.0), Inches(0.4), size=10, spacing=0.34, color=DGRAY)
 
-add_rect(s, Inches(6.8), Inches(4.9), Inches(6.2), Inches(2.0),
-         fill=RGBColor(0xE8, 0xF5, 0xE9), line=GREEN)
-add_text(s, "Recommended Priority",
-         Inches(6.95), Inches(4.97), Inches(5.9), Inches(0.4),
-         size=13, bold=True, color=GDARK)
-bullets(s, [
-    "1. Collect GHSV + CH₄/O₂  (highest impact)",
-    "2. Re-run Prior FT with expanded features",
-    "3. Revisit τ tuning with updated data",
-], Inches(6.9), Inches(5.4), Inches(6.1), Inches(0.4), size=11, spacing=0.42, color=GDARK)
+# Right: priority-ordered next steps
+add_rect(s, Inches(7.7), Inches(1.2), Inches(5.3), Inches(0.42), fill=GREEN)
+add_text(s, "What's next (priority-ordered)",
+         Inches(7.85), Inches(1.23), Inches(5.0), Inches(0.36),
+         size=13, bold=True, color=WHITE)
+next_steps = [
+    ("1.", "Add GHSV, CH₄:O₂, pressure — fixes the ceiling and likely the label shift", True),
+    ("2.", "Bag the Stage-1 expert to cut its variance", False),
+    ("3.", "Add uncertainty (quantile / conformal) for experiment selection", False),
+    ("4.", "Stack DRST + KMM into the Prior FT pipeline", False),
+    ("5.", "Neural domain adaptation (DANN / CORAL) once features are richer", False),
+    ("6.", "Close the active-learning loop: propose → measure → retrain", False),
+]
+y = 1.85
+for num, txt, top in next_steps:
+    h = 0.72 if len(txt) > 42 else 0.55
+    bg = RGBColor(0xE8, 0xF5, 0xE9) if top else WHITE
+    add_rect(s, Inches(7.7), Inches(y), Inches(5.3), Inches(h), fill=bg, line=LGRAY)
+    add_text(s, num, Inches(7.8), Inches(y + 0.05), Inches(0.4), Inches(0.4),
+             size=12, bold=True, color=GDARK if top else ACCENT)
+    add_text(s, txt, Inches(8.25), Inches(y + 0.05), Inches(4.6), Inches(h - 0.05),
+             size=11, bold=top, color=GDARK if top else BLACK)
+    if top:
+        badge(s, "Highest impact", Inches(8.25), Inches(y + h - 0.28),
+              Inches(1.7), Inches(0.24), GREEN, size=8)
+    y += h + 0.08
 
 # ════════════════════════════════════════════════════════════════════════════
 # SLIDE 12 — Summary
