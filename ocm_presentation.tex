@@ -30,6 +30,8 @@
 \setbeamercolor{block body}{bg=lightgray}
 \setbeamercolor{alerted text}{fg=accent}
 \setbeamercolor{background canvas}{bg=white}
+\setbeamercolor{framesubtitle}{bg=navyblue, fg=white!65}
+\setbeamerfont{framesubtitle}{size=\footnotesize, shape=\itshape}
 
 \setbeamerfont{frametitle}{size=\large, series=\bfseries}
 \setbeamerfont{title}{size=\LARGE, series=\bfseries}
@@ -100,6 +102,7 @@
 
 % ── Slide 2 — Chapter 1: The Problem ──────────────────────────────────────────
 \begin{frame}{The Problem — Two Datasets, Three Systematic Differences}
+  \framesubtitle{Chapter 1}
 
   \begin{columns}[T]
 
@@ -159,8 +162,9 @@
 
 \end{frame}
 
-% ── Slide 3 — Chapter 2: Visual evidence ──────────────────────────────────────
-\begin{frame}{Visualising the Gap — Label Shift, Covariate Shift, Chemistry}
+% ── Slide 3 — Chapter 2: Setup / Visual evidence ──────────────────────────────
+\begin{frame}{Setup — Visualising the Two Shifts}
+  \framesubtitle{Chapter 2}
 
   \begin{columns}[T]
 
@@ -201,6 +205,7 @@
 
 % ── Slide 4 — Chapter 3: How We Measure Success ───────────────────────────────
 \begin{frame}{How We Measure Success — Asymmetric 5-Fold CV}
+  \framesubtitle{Chapter 3}
 
   \begin{columns}[T]
 
@@ -247,6 +252,7 @@
 
 % ── Slide 5 — Chapter 4: Baseline + Naive Merge ───────────────────────────────
 \begin{frame}{Baseline + Why Naive Merging Fails}
+  \framesubtitle{Chapter 4}
 
   \begin{columns}[T]
 
@@ -304,6 +310,7 @@
 
 % ── Slide 6 — Chapter 5: DRST ─────────────────────────────────────────────────
 \begin{frame}{DRST — Filtering by Chemical Similarity}
+  \framesubtitle{Chapter 5}
 
   \begin{columns}[T]
 
@@ -318,16 +325,16 @@
 
     \begin{column}{0.44\textwidth}
       \textbf{How it works}
-      \begin{enumerate}\small
+      \begin{enumerate}\footnotesize
         \item Train \textit{logistic classifier}
-          (finds a boundary in element-space):\\
-          our $=1$, literature $=0$
+          (element-space boundary): our $=1$, lit $=0$
         \item Score each lit sample: $P(\text{ours} \mid x)$
         \item Keep only samples scoring $\geq \tau$
       \end{enumerate}
 
       \vspace{4pt}
-      \textbf{Threshold sweep} (Stone 1974 CV selection)
+      \textbf{Threshold sweep}
+      \footnotesize
       \begin{tabular}{lcr}
         \toprule
         $\tau$ & kept & CV RMSE \\
@@ -353,6 +360,7 @@
 
 % ── Slide 7 — Chapter 6: KMM ──────────────────────────────────────────────────
 \begin{frame}{KMM — Soft Weights Instead of a Hard Filter}
+  \framesubtitle{Chapter 6}
 
   \begin{columns}[T]
 
@@ -362,16 +370,17 @@
 
     \begin{column}{0.42\textwidth}
       \textbf{How it works}
-      \begin{itemize}\small
+      \begin{itemize}\footnotesize
         \item Each lit sample gets a weight $w_i \in [0, 10]$
-        \item \textit{RBF kernel} measures chemical similarity:
+        \item RBF kernel similarity:
           $K(x,x')=\exp\!\bigl(-\|x-x'\|^2/2\sigma^2\bigr)$
-        \item Solve QP: $\min \frac{1}{2} w^\top K_{ss} w - \kappa^\top w$
-        \item $\sigma$ via median heuristic (data-driven, no tuning)
+        \item Solve QP: $\min \tfrac{1}{2} w^\top K_{ss} w - \kappa^\top w$
+        \item $\sigma$ via median heuristic — no manual tuning
       \end{itemize}
 
       \vspace{4pt}
       \textbf{Result}
+      \footnotesize
       \begin{tabular}{lr}
         \toprule
         Metric & Value \\
@@ -398,6 +407,7 @@
 
 % ── Slide 8 — Chapter 7: Prior Feature Transfer Pipeline ──────────────────────
 \begin{frame}{Prior Feature Transfer — The Winning Pipeline}
+  \framesubtitle{Chapter 7}
 
   \begin{tikzpicture}[
       box/.style={rectangle, rounded corners=4pt, draw=navyblue, fill=lightgray,
@@ -444,6 +454,7 @@
 
 % ── Slide 9 — Chapter 8a: Results ─────────────────────────────────────────────
 \begin{frame}{Results — All Five Methods at a Glance}
+  \framesubtitle{Chapter 8}
 
   \begin{columns}[T]
 
@@ -489,6 +500,7 @@
 
 % ── Slide 10 — Chapter 8b: SHAP ───────────────────────────────────────────────
 \begin{frame}{SHAP — Did the Model Learn Real Chemistry?}
+  \framesubtitle{Chapter 8}
 
   \begin{columns}[T]
 
@@ -529,47 +541,83 @@
 
 \end{frame}
 
-% ── Slide 11 — Critical Analysis & Next Steps ─────────────────────────────────
-\begin{frame}{Critical Analysis \& Next Steps}
+% ── Slide 11 — Chapter 9a: Critical Analysis ──────────────────────────────────
+\begin{frame}{Critical Analysis — Per-Method Review}
+  \framesubtitle{Chapter 9}
 
   \begin{columns}[T]
 
-    \begin{column}{0.55\textwidth}
+    \begin{column}{0.52\textwidth}
       \textbf{Honest critique of each method}
-      \vspace{2pt}
-      \footnotesize
-      \begin{tabular}{@{}p{2.0cm}p{4.3cm}@{}}
+      \vspace{4pt}
+      \scriptsize
+      \begin{tabular}{@{}p{1.6cm}p{5.0cm}@{}}
         \toprule
         \textbf{Method} & \textbf{Main limitation} \\
         \midrule
-        Naive merge & Negative control only — harms the model \\
-        DRST & Hard cliff; discards $\sim$80\% of lit; $\tau$ tuned on the reported CV \\
-        KMM & Slow $n{\times}n$ kernel; $\sigma$-sensitive; still uses labels; ties DRST \\
+        Naive merge & Negative control — makes the model worse \\[2pt]
+        DRST & Hard cliff; discards $\sim$80\%; $\tau$ tuned on the reported CV \\[2pt]
+        KMM & $O(n^2)$ kernel; $\sigma$-sensitive; labels still in loss; ties DRST \\[2pt]
         \rowcolor{green!12}
-        Prior FT & Best, but Stage-1 on only 782 rows $\rightarrow$ high variance; 2 models \\
+        Prior FT & Best — but Stage-1 on 782 rows $\to$ high variance; two models \\
         \bottomrule
       \end{tabular}
-
-      \vspace{6pt}
-      \textbf{Cross-cutting limits}
-      \begin{itemize}\footnotesize
-        \item Scored on our-data CV only; OOD checked for Prior FT alone
-        \item Point predictions — no uncertainty for picking experiments
-        \item Y$>$15\% ceiling is \emph{data}-bound, not model-bound
-      \end{itemize}
     \end{column}
 
-    \begin{column}{0.42\textwidth}
-      \textbf{What's next (priority-ordered)}
-      \vspace{2pt}
-      \begin{enumerate}\small
-        \item \badge{green}{Highest} Add GHSV, CH$_4$:O$_2$, pressure —
-          fixes the ceiling and likely the label shift
-        \item Bag the Stage-1 expert to cut its variance
-        \item Add uncertainty (quantile / conformal) for experiment selection
-        \item Stack DRST + KMM into the Prior FT pipeline
-        \item Neural domain adaptation (DANN / CORAL) once features are richer
-        \item Close the active-learning loop: propose $\to$ measure $\to$ retrain
+    \begin{column}{0.44\textwidth}
+      \textbf{Cross-cutting limits}
+      \vspace{4pt}
+      \begin{itemize}\footnotesize
+        \item All methods evaluated on our-data CV only; OOD tested for Prior FT alone
+        \item Point predictions — no uncertainty estimates to guide experiment selection
+        \item Y$>$15\% ceiling is \emph{data}-bound (missing GHSV, CH$_4$:O$_2$,
+          pressure), not model-bound — no algorithm can fix a missing column
+      \end{itemize}
+
+      \vspace{8pt}
+      \colorbox{lightgray}{\parbox{\linewidth}{\scriptsize
+        \textbf{Key insight:} the ceiling effect and much of the label shift share
+        the same root cause — missing operating-condition features.
+        Fix the data; the models follow.
+      }}
+    \end{column}
+
+  \end{columns}
+
+\end{frame}
+
+% ── Slide 12 — Chapter 9b: What's Next ───────────────────────────────────────
+\begin{frame}{What's Next — Priority-Ordered}
+  \framesubtitle{Chapter 9}
+
+  \begin{columns}[T]
+
+    \begin{column}{0.48\textwidth}
+      \begin{enumerate}\footnotesize
+        \item \badge{green}{Highest impact} \textbf{Add GHSV, CH$_4$:O$_2$,
+          pressure} — fixes the Y$>$15\% ceiling and likely resolves much of
+          the label shift too.
+        \vspace{3pt}
+        \item \textbf{Bag the Stage-1 expert} — ensemble of XGBoost models
+          reduces high variance from only 782 training samples.
+        \vspace{3pt}
+        \item \textbf{Add uncertainty} (conformal prediction or quantile
+          regression) — flag low-confidence picks for the experiment loop.
+      \end{enumerate}
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \begin{enumerate}\footnotesize
+        \setcounter{enumi}{3}
+        \item \textbf{Stack DRST + KMM} inside the Prior FT pipeline rather
+          than running them as three separate methods.
+        \vspace{3pt}
+        \item \textbf{Neural domain adaptation} (DANN, CORAL) once the feature
+          set is richer — currently under-powered for deep methods.
+        \vspace{3pt}
+        \item \textbf{Close the active-learning loop} — model proposes
+          candidates, lab measures them, model retrains, reducing label shift
+          over time.
       \end{enumerate}
     \end{column}
 
@@ -577,7 +625,7 @@
 
 \end{frame}
 
-% ── Slide 12 — Closing ────────────────────────────────────────────────────────
+% ── Slide 13 — Closing ────────────────────────────────────────────────────────
 \begin{frame}{Summary}
 
   \centering

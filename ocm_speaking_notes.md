@@ -2,8 +2,341 @@
 
 Personal reference only. Not included in `ocm_walkthrough.ipynb`.
 
-This transcript follows the notebook **cell by cell, in order**. For every code cell it
-walks through the code **line by line**, so you can read this alongside the notebook and
+---
+
+# Part 1 — PPT Speaking Notes (13 slides)
+
+One block per slide. Verbatim first-person speech — not a script, more like thinking out
+loud while pointing at the screen. Read alongside the corresponding slide.
+
+---
+
+## Slide 1 — Title
+
+"Good afternoon, everyone. Today I'm going to walk you through some work we've been doing
+on using published OCM literature to improve our catalyst screening model. The central
+question is simple: we have 89,000 of our own experiments, and there are 3,852 published
+experiments from 40 years of OCM research around the world — can that published data make
+our model more accurate? The short answer is yes, but it turns out to require some care
+about *how* you use it. I'll show you five approaches we tried, what each one taught us,
+and what we'd focus on next. I'll also end with an honest critical look at what these
+methods still can't do."
+
+---
+
+## Slide 2 — The Problem (Chapter 1)
+
+"This slide sets up why this isn't just 'download some data and append it'. The two cards
+show our lab data and the published literature side by side.
+
+Our data: 89,074 experiments, all done with the impregnation preparation method, all in
+2025, with a mean yield of 5.25%. The literature: 3,852 papers from 1982 to 2019, using
+15 different preparation methods, with a mean yield of 8.67%. That 3.42 percentage-point
+gap is not noise — the t-statistic is −32.2 with a p-value below 10 to the power of
+negative 200. It's as systematic as it gets.
+
+Three sources of that gap. First, **label shift**: publications report their best results,
+not their average ones — that's publication bias. And published labs often optimise their
+gas flow rates and methane-to-oxygen ratios to get the best yield, while we run fixed
+conditions. Second, **covariate shift**: 78.5% of the literature describes catalysts we've
+never tested — completely different elements, different preparation methods. Third,
+**publication bias as distributional skew**: the literature distribution isn't just shifted
+upward, it has a heavier right tail, because failed experiments don't get published. A
+shape mismatch can't be fixed by subtracting a constant.
+
+The bottom callout explains why we use ML at all: the search space — 65 elements, varying
+loadings, temperature, preparation — is too large to screen physically. A surrogate model
+guides which experiments to actually run in the lab."
+
+---
+
+## Slide 3 — Setup — Visualising the Two Shifts (Chapter 2)
+
+"Before any modelling, let me show you what these shifts actually look like in data. Two
+figures here — top shows the label and covariate shift, bottom shows which specific
+elements differ.
+
+Top figure, left panel: the yield distributions. Blue is our data, peaking around 3 to 4
+percent. Orange is literature, peaking around 8 to 9 percent. The red shaded band between
+the two dashed lines is that 3.42 pp gap drawn as a physical distance. And notice the
+orange isn't just shifted — it has a heavier right tail. That asymmetric skew is
+publication bias: you only publish when the experiment worked well.
+
+Top figure, right panel: PCA — principal component analysis takes our 67 features and
+compresses them to 2 dimensions. Each dot is a catalyst. Blue dots are ours, orange are
+literature. The orange cloud extends well beyond the boundary of the blue cluster on the
+right side — those are the 78.5% of literature samples describing chemistry our lab has
+never explored. If we added those to training, we'd teach the model to predict
+compositions it will never see in our experiments.
+
+Bottom figure: the top 15 elements by frequency in each dataset. The palettes are clearly
+different — different active phases, different promoters. The two datasets don't just have
+different yield levels, they represent different experimental traditions."
+
+---
+
+## Slide 4 — How We Measure Success (Chapter 3)
+
+"Before results, I want to explain how we measure success, because the design choice here
+determines whether the numbers are meaningful.
+
+We use 5-fold cross-validation, but in an asymmetric way. Split our 89,074 samples into 5
+groups. In each round, 4 groups train the model and 1 group tests it. We rotate which
+group is the test 5 times and average the RMSE.
+
+The asymmetry: literature, when we use it, only ever goes into the *training* side — never
+the test fold. The diagram shows fold 3 in red as the held-out test, folds 1, 2, 4, 5 in
+blue as training, and the literature always in the training row below.
+
+Why this design? The question is 'how well does the model predict *our* experiments?' If
+literature appeared in the test fold we'd be measuring a diluted answer to a different
+question — and we'd be unable to compare the 5 methods fairly. Every method goes through
+exactly the same CV function, so the comparison is apples-to-apples.
+
+RMSE is in units of percentage points of yield. An RMSE of 2.1 means we're typically off
+by about 2 percentage points. Smaller is better. The baseline number — training on our
+data only — is 2.133. That is the target every subsequent method must beat."
+
+---
+
+## Slide 5 — Baseline + Why Naive Merging Fails (Chapter 4)
+
+"Step one: establish the baseline. Train on our data alone — no literature — and get RMSE
+2.133. That's the number to beat. If a method returns anything higher, it has actively
+harmed the model.
+
+Step two: try the obvious thing. Append all 3,852 literature rows and retrain. 'More data
+is always better' is the intuition. RMSE goes to 2.248 — 5.4% worse. It harmed the model.
+
+The explanation box on the right shows why. The model now sees two catalyst compositions
+that are nearly identical in element space. One is labelled 5.2% yield — from our lab. The
+other is labelled 8.7% — from literature. There is no feature in our dataset that explains
+the difference: gas flow rate, methane-to-oxygen ratio, pressure are missing columns. The
+model does the only rational thing it can: it hedges and predicts something in between,
+which makes it wrong for both.
+
+The 3.42 pp offset is a systematic signal the model is trying to fit, but cannot fit
+correctly because the explanatory features aren't there. So it corrupts everything around
+it. Conclusion: we cannot just add literature labels directly. We need to be much more
+selective about *which* samples we add and *how* we represent their information."
+
+---
+
+## Slide 6 — DRST — Filtering by Chemical Similarity (Chapter 5)
+
+"The first serious attempt: instead of adding all literature, only add the part that
+chemically resembles our data. DRST — Density-Ratio Selective Transfer — scores each
+literature sample on how much it looks like our chemistry.
+
+The scoring method: train a logistic classifier to separate our samples from literature,
+then read off the classifier's probability that a literature sample belongs to our class.
+High probability means 'this looks like our chemistry.' Low probability means 'chemically
+foreign.'
+
+The histogram on the left shows the score distribution for all 3,852 literature samples.
+There's a big spike near zero — most of literature is confidently foreign. A thin tail
+stretches toward 1 — those are the samples that resemble our lab's work. The dashed lines
+mark the candidate thresholds.
+
+The table on the right shows the threshold sweep. At τ=0.30, 782 samples survive and CV
+RMSE drops to 2.019 — 5.3% better than baseline. Both higher and lower thresholds perform
+worse: lower keeps too many foreign samples, higher discards too many useful ones.
+
+The weakness I'll come back to in the critical analysis: the cutoff is a hard cliff. A
+sample scoring 0.289 is completely discarded; one scoring 0.31 gets full weight. That
+binary decision throws away gradual similarity information."
+
+---
+
+## Slide 7 — KMM — Soft Weights Instead of a Hard Filter (Chapter 6)
+
+"KMM — Kernel Mean Matching — is the natural continuation of DRST's idea but made
+continuous. Instead of keep-or-discard, every literature sample gets a weight between 0
+and 10. We find the entire weight vector at once by solving an optimisation problem: choose
+weights so the weighted average of literature samples, in a kernel similarity space,
+matches the average of our data as closely as possible.
+
+The RBF kernel measures similarity by distance in the 67-feature space. Catalysts with
+similar element profiles score high; chemically distant ones score near zero. The bandwidth
+parameter σ is set by the median heuristic — the median pairwise distance in a subsample
+— so there's no manual tuning.
+
+The weight histogram on the left: a huge spike at zero. The same ~78.5% of literature that
+DRST threw away gets weight near zero here. The scatter plot shows the reassuring result:
+KMM weights and DRST scores correlate at r=0.79. Two completely different mathematical
+approaches — one a logistic classifier, one a quadratic optimisation — independently
+concluded the same 78.5% of literature is chemically irrelevant. That agreement is
+reassuring evidence that the signal is real and not an artifact.
+
+CV RMSE is 2.035 — 4.6% better than baseline, essentially tied with DRST. Why do they
+tie? Because both still feed literature labels directly into training. The 3.42 pp offset
+is still bleeding into the model, just from a smaller number of samples. That is the shared
+ceiling the next method breaks."
+
+---
+
+## Slide 8 — Prior Feature Transfer — The Winning Pipeline (Chapter 7)
+
+"This is the method that worked well, and its logic is a fundamental reframing of the
+problem.
+
+DRST and KMM both had literature labels in the training loss. The offset corrupts that
+loss no matter how carefully you filter. The reframe: what if literature never enters as a
+*label* at all — only as a *feature*?
+
+Stage 1, top row: the 782 DRST-filtered literature samples train an XGBoost model — the
+'literature expert'. Before training, we quantile-normalise the labels onto our yield
+scale: the top-10% literature catalyst maps to our top-10% value, and so on. This strips
+the absolute offset while preserving the ranking of which chemistry is good versus bad.
+
+Stage 2, bottom row: for each of our 89,074 catalysts, we ask the expert 'what would you
+predict for this composition?' and add that as a 68th feature. We then train LightGBM on
+those 68 features with our own labels — never literature labels.
+
+The key property highlighted at the bottom: Stage 2 never sees a literature label. The
+3.42 pp offset lives in the *value* of the 68th feature. Stage 2 can learn 'when the
+expert says 8, my lab gets about 4.5' — a calibration it discovers automatically from our
+own data. A corrupted label cannot be un-corrupted; a feature value is just another number
+to learn around.
+
+Why XGBoost for Stage 1? It's more conservative on small data — 782 samples — and less
+prone to overfitting. Why LightGBM for Stage 2? It's much faster on large datasets like
+our 89,000 samples, using histogram-based tree building."
+
+---
+
+## Slide 9 — Results — All Five Methods at a Glance (Chapter 8)
+
+"Here's the full picture. The bar chart shows all five methods with the baseline as a
+dashed reference line. Naive merge is the one bar to the right of that line — worse.
+DRST and KMM dip modestly below — about 5% improvement each. Prior Feature Transfer makes
+a distinctly larger step: 1.907, a 10.6% improvement.
+
+The OOD table on the right measures something different and arguably more important: how
+well do we generalise to chemistry we've never trained on? We tested on 2,139
+non-Impregnation literature samples the model had never seen in any form. Baseline RMSE
+was 6.53. Prior Feature Transfer drops that to 3.60 — a 45% reduction.
+
+Why such a large OOD jump? Stage 1 was trained on literature which covers diverse
+preparation methods and chemistries. When the final model encounters a catalyst from a
+sol-gel or coprecipitation process, the prior feature provides a sensible starting
+estimate from the literature domain. Without the prior, the Stage-2 model has never seen
+anything like that composition and is essentially extrapolating blind.
+
+The message: filtering methods recover a modest 5% by reducing label contamination.
+Feature transfer doubles the improvement and dramatically improves out-of-distribution
+accuracy because it eliminates the root cause — the offset in the training loss — rather
+than just limiting exposure to it."
+
+---
+
+## Slide 10 — SHAP — Did the Model Learn Real Chemistry? (Chapter 8)
+
+"RMSE tells us how accurate the model is. SHAP tells us *why* it makes each prediction.
+For every sample, SHAP asks: how much did each feature push this particular prediction up
+or down from the average? The beeswarm plot shows all 3,000 subsample points at once.
+Each row is a feature ranked by total importance, top to bottom. Each dot is one catalyst
+sample. Horizontal position is the SHAP value — how much that feature shifted the
+prediction. Colour is the feature value — red is high, blue is low.
+
+Three things to look for. First: `lit_prior_prediction` is at the very top. The transfer
+learning is not dead weight — it's the single most influential feature across 3,000
+samples. That validates the whole Prior FT approach. Second: temperature comes second,
+with red dots (high temperature) on the right — pushing predictions up. That's correct
+OCM physics; higher temperature promotes C₂ selectivity. Third: Ba, Mn, La, Ce are all
+net-positive — known OCM active phases and promoters, physically sensible.
+
+The table shows the residual pattern. Below 10% yield, RMSE is reasonable. Above 15%,
+RMSE shoots to 4.70 with a bias of −4.2 pp — the model systematically under-predicts.
+This is not a modelling failure; it's a data failure. The conditions that explain why a
+catalyst achieves 20% yield — gas flow rate, methane-to-oxygen ratio — are absent from
+our feature set. No algorithm can compensate for a missing column."
+
+---
+
+## Slide 11 — Critical Analysis — Per-Method Review (Chapter 9)
+
+"Let me be honest about what each method can and cannot do.
+
+The table: naive merge is a negative control. It proves the shift is real and harmful, but
+it provides no solution. DRST is simple, fast, and interpretable, but it uses a hard
+cliff, discards about 80% of the literature, and the threshold was tuned on the same
+cross-validation we then reported — so that 5.3% improvement is slightly optimistic. KMM
+is more principled — no cliff, continuous weights — but the n-by-n kernel matrix is slow
+to compute, it's sensitive to the bandwidth choice, it still feeds literature labels into
+the loss, and the fact that it just *ties* DRST tells us filtering has hit an inherent
+ceiling. Prior Feature Transfer is the winner, but it requires two models to maintain, and
+Stage 1 trained on only 782 samples has relatively high variance.
+
+On the right: three limits that cut across all methods. First, all methods were scored on
+our own data cross-validation. Out-of-distribution performance was only checked for Prior
+FT — we don't know how the filtering methods generalise. Second, point predictions only —
+no uncertainty estimates — which limits our ability to identify the most informative
+experiments to run next. Third, and most critically: the Y>15% ceiling is a data limit,
+not a model limit. The missing condition features — GHSV, methane-to-oxygen ratio,
+pressure — explain the ceiling. The key insight at the bottom sums it up: the ceiling
+effect and much of the label shift share the same root cause. Fix the data; the models
+follow."
+
+---
+
+## Slide 12 — What's Next — Priority-Ordered (Chapter 9)
+
+"Six next steps in priority order.
+
+Item 1 — the highest impact by far: add GHSV, methane-to-oxygen ratio, and pressure to
+the feature set. These are the operating conditions that explain the bulk of the label
+shift and all of the ceiling effect. This is a data collection problem, not a modelling
+problem, and data improvements always dominate. If those features existed, a much simpler
+model would likely already beat what we've built.
+
+Item 2: bag the Stage-1 expert. Right now we train one XGBoost on 782 samples.
+Bootstrapping several instances and averaging their predictions reduces the variance of the
+prior feature. Low cost, likely meaningful gain.
+
+Item 3: add uncertainty. Conformal prediction or quantile regression would let us produce
+prediction intervals. In an active-learning setting, we want to prefer candidates that are
+both likely to be high-yield *and* uncertain — those are the most informative experiments.
+
+Item 4: stack DRST and KMM inside the Prior FT pipeline. Instead of three separate
+methods, integrate filtering and weighting into a single pipeline. Item 5: neural domain
+adaptation — DANN or CORAL — once the feature set is richer. With 67 features and limited
+diversity, these deep methods don't have enough signal to outperform gradient boosting.
+Item 6: close the active-learning loop. Model proposes candidates, lab measures them,
+model retrains. Over time the label shift itself shrinks as we accumulate data from
+chemistry we previously hadn't explored."
+
+---
+
+## Slide 13 — Summary
+
+"Let me bring this together in four points.
+
+We asked: can published OCM literature improve a lab-data model without harming it? The
+answer is yes, but the right method matters a lot.
+
+Naive merging *harms* accuracy — a 5.4% RMSE penalty — because the systematic offset
+corrupts training when there are no features to explain it. Selective filtering with DRST
+and KMM recovers about 5% improvement, and two independent methods agreeing at r=0.79
+confirms the signal is real, not an artifact. Using literature as a *prior feature* — never
+as a label — gives the biggest gain: 10.6% better CV accuracy and 45% better
+out-of-distribution accuracy, because it removes the offset from the training loss
+entirely. SHAP confirms the model uses real OCM chemistry — temperature, barium,
+manganese, lanthanum, cerium, and the literature prior are the primary drivers.
+
+The next step that matters most is a data step: add GHSV and the methane-to-oxygen ratio
+to the feature set. The modelling work here is solid. The bottleneck is now the data.
+
+Thank you — happy to take questions."
+
+---
+
+---
+
+# Part 2 — Notebook Walkthrough Speaking Notes
+
+This section follows the notebook **cell by cell, in order**. For every code cell it walks
+through the code **line by line** and explains what each line does and *why*, so you can
 narrate each line as it appears on screen.
 
 ---
@@ -192,11 +525,21 @@ function, so the comparison is always apples-to-apples."
 "This function is the engine — every method's score comes out of here. Line by line:
 
 - `lgb_params()` just returns the LightGBM settings as a dict, so every model uses
-  identical hyperparameters — only the *data* changes between methods.
+  identical hyperparameters — only the *data* changes between methods. This is important
+  for a fair comparison: if each method had its own hyperparameters we'd be comparing
+  (method + tuning luck), not just method.
 - `evaluate_cv_ours` takes optional extra training data: `X_train_extra`, `y_train_extra`,
   and optional `sample_weight_extra`. For the baseline we pass nothing.
-- `KFold(n_splits=5, shuffle=True, random_state=42)` — the fixed-seed 5-fold split, the
-  same folds for every method.
+- `KFold(n_splits=5, shuffle=True, random_state=42)` — three design decisions here.
+  Why 5 folds? More folds (e.g. 10) give a lower-variance estimate but take twice as long
+  and are rarely necessary when n=89,074. Fewer folds (e.g. 3) increase variance and leave
+  less data for training. 5 is the standard trade-off. Why `shuffle=True`? Our 89,074
+  samples were collected in a specific order (a designed experimental sequence), not
+  randomly. Without shuffling, each fold would contain a contiguous block of experiments
+  that might share systematic structure (similar catalyst families explored together). With
+  shuffling, each fold is a random 20% of all samples, so folds are interchangeable.
+  Why `random_state=42`? Reproducibility — we want the exact same folds every run so the
+  comparison between methods is deterministic.
 - Inside the loop, the first two lines pull out the validation fold: `X_ours_sc[val_idx]`
   and `y_ours[val_idx]`. This is *always our data* — that line never changes. That's the
   asymmetry, right there.
@@ -263,15 +606,27 @@ full weight, even though they're almost identical. That's what KMM fixes."
 ## Code cell — DRST classifier (`156b2acf`)
 
 "Line by line:
-- `sub_idx = rng.choice(..., size=10_000)` subsamples our data to 10,000 — enough to
-  characterise our distribution without making the classifier slow.
-- `X_dom = np.vstack([X_ours_sc[sub_idx], X_lit_sc])` stacks our subsample and all
-  literature; `y_dom` labels them — ones for ours, zeros for literature.
-- `LogisticRegression(C=0.5).fit(X_dom, y_dom)` trains the classifier. `C=0.5` keeps the
-  boundary general rather than memorising individual points.
-- `clf_dom.predict_proba(X_lit_sc)[:, 1]` — this is the key line. For every literature
-  sample it returns the probability of class 1, 'ours'. Column index 1 is the 'ours' class.
-  That vector, `p_ours_lit`, is the similarity score.
+- `sub_idx = rng.choice(..., size=10_000)` subsamples our data to 10,000. Why subsample?
+  Our 89,074 samples are already heavily dominant — using all of them would make the
+  classifier's decision boundary overly biased toward the majority class and slow to train.
+  10,000 is enough to characterise our distribution's shape without dominating.
+- `X_dom = np.vstack([X_ours_sc[sub_idx], X_lit_sc])` stacks our subsample on top of all
+  literature into one matrix; `y_dom` labels ours as 1 and literature as 0.
+- `LogisticRegression(C=0.5).fit(X_dom, y_dom)` trains the classifier. Why logistic
+  regression and not something like XGBoost or SVM? Because logistic regression estimates
+  a *linear* decision boundary in the 67-dimensional feature space, which is exactly what
+  we need for density ratio estimation — we want a smooth, general sense of which region
+  of feature space is 'ours', not a highly nonlinear boundary that memorises the training
+  set. A complex boundary would over-certify some literature samples as 'ours' and
+  incorrectly exclude others. Why C=0.5 specifically? C is the regularisation parameter —
+  smaller C means stronger regularisation, a smoother, more generalised boundary. C=0.5
+  was swept alongside the threshold τ; it gives the best overall CV RMSE. If C were too
+  large, the boundary would fit noise in the subsample; too small and the boundary becomes
+  too crude to distinguish anything useful.
+- `clf_dom.predict_proba(X_lit_sc)[:, 1]` — this is the key line. `predict_proba` returns
+  a two-column matrix: column 0 is P(literature|x), column 1 is P(ours|x). We want column
+  1 — the probability that this sample belongs to our class. That vector `p_ours_lit` is
+  the continuous similarity score for every literature sample.
 - The histogram block plots those scores with dashed lines at the candidate thresholds.
 - The final loop prints, for each τ, how many samples survive the cutoff.
 
@@ -285,11 +640,17 @@ The τ=0.30 line sits in that tail."
 - We loop over five τ values. For each, `mask = p_ours_lit >= tau` selects the surviving
   literature, and we feed `X_lit_sc[mask]` into `evaluate_cv_ours` as the extra training
   data.
-- We track the lowest RMSE in `best_drst` and store the winning τ.
+- We track the lowest RMSE in `best_drst` and store the winning τ and its mask.
 
-**[Point at the output.]** τ=0.30 gives the lowest RMSE, 2.019 — a 5.3% improvement. One
-honest caveat I'll mention in Chapter 9: we picked τ on the same CV we're reporting, so
-that number is a touch optimistic."
+**[Point at the output.]** τ=0.30 gives the lowest RMSE, 2.019 — a 5.3% improvement.
+
+Decision-making note: why five candidate values and not a finer grid? With 5-fold CV, each
+evaluation takes several seconds. Sweeping 5 values is quick enough to do every run. A
+finer grid (say 10 values) risks overfitting to the CV folds — we'd be optimising τ on the
+very folds we report. That's already a mild concern here: the τ was tuned on the same 5
+folds that produce the 2.019 number. A held-out validation set would remove this bias but
+requires even more data. The 2.019 is therefore a slight overestimate — a fully honest
+number would come from a separate test split not used in τ selection."
 
 ---
 
@@ -314,15 +675,30 @@ next method breaks."
 "There's infrastructure here, but the heart is a few lines:
 - `rbf_kernel(X, Y, sigma)` uses `cdist` to get squared distances between all pairs, then
   `np.exp(-dist / 2σ²)` turns distance into similarity — identical samples give 1, far ones
-  give near 0.
+  give near 0. Why RBF? It's the standard choice for density matching because it gives
+  smooth, bounded similarity values in any feature space. No assumption about the shape of
+  the distribution.
 - Inside `kmm_weights`, `sigma` is set by the **median heuristic**: take the median of all
-  pairwise distances in a subsample. No tuning — it adapts to the data's natural scale.
-- `K_ss` is literature-to-literature similarity; `K_st` is literature-to-ours.
-- `kappa = (n_s / n_t) * K_st.sum(axis=1)` — for each literature sample, how much it
-  overlaps our data overall. High kappa → it should get weight.
-- The `obj` and `grad` functions define the optimisation — minimise ½ wᵀK_ss·w − κ·w — and
-  `minimize(..., method='L-BFGS-B', bounds=[(0, B)]...)` solves it with weights bounded
-  between 0 and B. The bounds are what keep weights non-negative and capped.
+  pairwise distances in a subsample. Why median? The median distance is a natural 'typical
+  separation' scale for the data — it's large enough to avoid treating every pair as
+  identical (which σ too small would do) and small enough to avoid treating all pairs as
+  equally distant (σ too large). The key advantage: no manual tuning, σ adapts to the
+  actual spread of the feature space.
+- `K_ss` is literature-to-literature similarity — how similar each pair of literature
+  samples is to each other. `K_st` is literature-to-ours — how similar each literature
+  sample is to our data as a whole.
+- `kappa = (n_s / n_t) * K_st.sum(axis=1)` — for each literature sample, this aggregates
+  its total similarity to all our data points, scaled by the size ratio. High kappa means
+  this literature sample is broadly similar to many of ours → it should get weight.
+- The `obj` and `grad` functions define the optimisation — minimise ½ wᵀK_ss·w − κ·w.
+  Intuitively: minimising wᵀK_ss·w penalises assigning high weight to samples that are
+  far from each other (it's a smoothness term), while maximising κ·w rewards putting weight
+  on samples that overlap with our distribution.
+- `minimize(..., method='L-BFGS-B', bounds=[(0, B)]...)` solves it with weights bounded
+  between 0 and B=10. Why cap at 10? Without a cap, outlier literature samples that happen
+  to be very close to one of our points could get extremely large weights, dominating the
+  training set. B=10 is a common default that prevents extreme upweighting while still
+  allowing meaningful differentiation.
 - Back outside, we compute the correlation with the DRST scores and print how many weights
   are near zero.
 - The two-panel figure: left is the weight histogram, right is the scatter of DRST score
@@ -330,7 +706,9 @@ next method breaks."
 
 **[Point at the left panel.]** Huge spike at zero — 78.5% of literature effectively
 ignored. **[Point at the right panel.]** The diagonal trend is the r=0.79 agreement: two
-different methods, same conclusion."
+different methods, same conclusion. This is the key sanity check: if the two methods
+disagreed strongly, at least one of them would be wrong. Their agreement means the signal
+is structural, not an artifact of method choice."
 
 ## Code cell — KMM evaluate (`da4a3980`)
 
@@ -367,16 +745,34 @@ where our model would otherwise be guessing blind."
 ## Code cell — Prior Feature Transfer (`560d7b02`)
 
 "Walk through it carefully — the order inside the fold matters:
-- `quantile_normalize_y` ranks the source labels and maps each rank to the matching
-  quantile of the target — that's the rank-matching that aligns scale while keeping order.
-- `xgb_params()` returns the XGBoost settings for the small Stage-1 model.
-- `mask = p_ours_lit >= best_drst[3]` reuses DRST's filter — Stage 1 trains only on the 782
-  relevant samples.
+
+- `quantile_normalize_y` ranks the source labels (literature's yields) and maps each rank
+  to the matching quantile of the target (our training fold's yields). Why quantile
+  normalisation and not a simpler mean-shift — just subtracting the 3.42 pp gap? Two
+  reasons. First, the gap is not constant across the yield range — literature's
+  distribution has a heavier right tail, so the shift is larger at high yields than low.
+  Subtracting a constant would under-correct at high yields and over-correct at low yields.
+  Quantile normalisation fixes the *shape* mismatch, not just the mean. Second, quantile
+  normalisation preserves *rank ordering* — if catalyst A gives higher yield than catalyst
+  B in literature, it still gives higher yield after normalisation. That's the signal we
+  want Stage 1 to learn.
+- `xgb_params()` returns the XGBoost settings for the small Stage-1 model. Why XGBoost
+  for Stage 1 and not LightGBM? XGBoost is more conservative by default — it uses exact
+  greedy tree building with stronger regularisation, which is preferable on small datasets
+  (782 samples). LightGBM's histogram-based approach trades some accuracy for speed, and
+  speed isn't the bottleneck on 782 samples. On our 89,074 samples in Stage 2, the
+  speed advantage of LightGBM matters.
+- `mask = p_ours_lit >= best_drst[3]` reuses DRST's filter — Stage 1 trains only on the
+  782 chemically relevant samples, not the full 3,852.
 - Now the CV loop. For each fold:
-  - `y_lit_qn = quantile_normalize_y(y_lit[mask], y_ours[train_idx])` — normalise literature
-    labels onto *this fold's* yield distribution.
+  - `y_lit_qn = quantile_normalize_y(y_lit[mask], y_ours[train_idx])` — critical: we
+    normalise *inside the fold*, using only the *training fold's* yields as the target
+    distribution. If we normalised once outside the loop using all our data, the
+    normalisation would 'see' the validation fold's yields — that's data leakage. Doing it
+    inside the loop ensures the validation fold's yield distribution never influenced the
+    normalisation.
   - `pre = xgb.XGBRegressor(...)` then `pre.fit(X_lit_sc[mask], y_lit_qn)` — train the
-    expert on literature only.
+    literature expert on the 782 filtered, quantile-normalised literature samples only.
   - `prior_tr = pre.predict(X_ours_sc[train_idx])` and `prior_val = pre.predict(...val_idx)`
     — the expert's opinion on each of our training and validation catalysts. `.reshape(-1,1)`
     makes it a column we can append.
@@ -428,23 +824,39 @@ Chapter 9."
 ## Code cell — SHAP (`76bea5fc`)
 
 "Line by line:
-- We retrain the whole pipeline once on *all* our data, outside the CV loop, so we have a
-  single model to explain: quantile-normalise, train the Stage-1 `pre_shap` expert, generate
-  `prior_all` for every one of our samples, and `np.hstack` it on to make the 68-feature
-  matrix `X_aug`. `aug_feat_names` adds the name `lit_prior_prediction` for that 68th column.
+- We retrain the whole pipeline once on *all* our data, outside the CV loop. Why retrain?
+  In cross-validation, each fold produces a different model — there's no single model to
+  explain. Here we want one stable model to interrogate. Quantile-normalise the full
+  literature, train Stage-1 `pre_shap` on all filtered literature, generate `prior_all`
+  for all 89,074 of our samples, and `np.hstack` it on to make the 68-feature matrix
+  `X_aug`. `aug_feat_names` adds the name `lit_prior_prediction` for that 68th column.
 - `final_shap = lgb.LGBMRegressor(...).fit(X_aug, y_ours)` is the model we'll interrogate.
-- `idx_sh = rng_sh.choice(..., size=3000)` subsamples 3,000 points — SHAP is expensive, and
-  3,000 is plenty to see the pattern.
+- `idx_sh = rng_sh.choice(..., size=3000)` subsamples 3,000 points. Why 3,000 and not all
+  89,074? SHAP for tree models is O(n × depth × leaves) per sample — it's fast per sample
+  but 89,074 samples would take minutes. 3,000 captures the full population structure;
+  beyond ~1,000 the beeswarm pattern stabilises.
 - `explainer = shap.TreeExplainer(final_shap)` — for tree models this computes *exact* SHAP
-  values, not an approximation.
-- `shap_values = explainer.shap_values(X_sh)` produces one SHAP value per sample per feature.
-- `shap.summary_plot(...)` draws the beeswarm.
+  values, not an approximation. TreeExplainer exploits the tree structure to compute the
+  conditional expectations analytically, rather than the KernelExplainer approach which
+  would sample random subsets. The result is exact Shapley values, guaranteed to satisfy
+  efficiency, symmetry, and dummy properties.
+- `shap_values = explainer.shap_values(X_sh)` produces one SHAP value per sample per
+  feature. A positive SHAP value for a feature means 'this feature pushed this prediction
+  above the average prediction.' A negative value means it pushed it below.
+- `shap.summary_plot(...)` draws the beeswarm. In the beeswarm: each row is a feature
+  sorted by mean |SHAP value|. Each dot is one sample. Horizontal position is the SHAP
+  value. Color is the *feature value* — red means high, blue means low. So a red dot far
+  right for temperature means 'high temperature → big positive contribution to yield' —
+  which is physically correct. A blue dot far left means 'low feature value → depresses
+  yield.' The width of the dot cloud shows variability in how much that feature matters
+  across different catalysts.
 
 **[Point at the beeswarm.]** Top row is `lit_prior_prediction` — the prior is the single
 most influential feature, so the transfer learning is genuinely doing work. Temperature is
 next, with high values (red) pushing yield up — correct OCM physics. Then Ba, Mn, La, Ce —
-the known active phases and promoters — all positive. That's the model using real
-chemistry, which is exactly what we wanted to confirm."
+the known active phases and promoters — all positive. Li and K are mixed or net-negative,
+also physically reasonable as these can over-reduce the catalyst surface. That's the model
+using real chemistry, which is exactly what we wanted to confirm."
 
 ---
 
