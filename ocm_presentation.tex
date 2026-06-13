@@ -142,10 +142,9 @@
   \begin{itemize}
     \item \badge{red}{1.\ Label shift} \ Literature mean is 3.42 pp higher
       ($t = -32.2$, $p < 10^{-200}$) — a systematic offset from publication
-      bias and optimised operating conditions (Fanelli, 2012, \textit{PLOS ONE}).
+      bias and optimised operating conditions.
     \item \badge{red}{2.\ Covariate shift} \ 78.5\% of literature samples
-      describe chemistry our lab has never tested
-      (Pan \& Yang, 2010, \textit{IEEE TKDE}).
+      describe chemistry our lab has never tested.
     \item \badge{red}{3.\ Publication bias} \ Literature is \emph{skewed}, not
       just shifted — failed experiments are rarely reported, over-weighting
       high yields and distorting the distribution shape.
@@ -155,8 +154,7 @@
   \colorbox{lightgray}{\parbox{0.93\linewidth}{\scriptsize
     \textbf{Why ML?} The catalyst search space (65 elements $\times$ varying
     loadings $\times$ temperature) is too large to screen physically.
-    A surrogate model guides experiments toward high-yield compositions
-    (Lookman et al., 2019, \textit{npj Comput.\ Mater.}).
+    A surrogate model guides experiments toward high-yield compositions.
   }}
 
 \end{frame}
@@ -294,10 +292,8 @@
       \vspace{6pt}
       \colorbox{lightgray}{\parbox{\linewidth}{\small
         The 3.42 pp offset is a \emph{systematic signal} the model
-        cannot account for and incorrectly tries to fit.\\[2pt]
-        Ben-David et al.\ (2010, \textit{Mach.\ Learn.}): when source
-        and target distributions differ significantly, naive combination
-        can perform \emph{worse} than target-only training.\\[4pt]
+        cannot account for and incorrectly tries to fit. Mixing the
+        two datasets can perform \emph{worse} than using ours alone.\\[4pt]
         $\Rightarrow$ \textbf{We need to be much more selective.}
       }}
     \end{column}
@@ -346,11 +342,8 @@
 
       \vspace{4pt}
       \colorbox{lightgray}{\parbox{\linewidth}{\scriptsize
-        \textbf{Literature:} Density-ratio selective transfer —
-        Huang et al.\ (2006, \textit{NeurIPS}); Sugiyama et al.\
-        (2007, \textit{JMLR}).\\[2pt]
-        \textbf{Unsolved:} hard cutoff is arbitrary — 0.29 is
-        fully discarded; 0.31 gets full weight.
+        \textbf{Unsolved:} the hard cutoff is arbitrary — a sample at
+        0.29 is fully discarded; 0.31 gets full weight.
       }}
     \end{column}
 
@@ -392,8 +385,6 @@
 
       \vspace{4pt}
       \colorbox{lightgray}{\parbox{\linewidth}{\scriptsize
-        \textbf{Literature:} Huang et al.\ (2006, \textit{NeurIPS});
-        Gretton et al.\ (2009, \textit{Dataset Shift in ML}).\\[2pt]
         \textbf{Reassuring:} two unrelated methods flag the same 78.5\%
         of samples $\Rightarrow$ real signal, not artifact.\\[2pt]
         \textbf{Still unsolved:} literature labels remain in training,
@@ -443,12 +434,11 @@
   \small
   \textbf{Key property:} Stage 2 \emph{never sees literature labels}.
   The 3.42 pp offset affects the \emph{value} of the 68th feature —
-  which Stage 2 can calibrate — not the training loss (which it cannot fix).
-  This is \emph{feature-based transfer learning}
-  (Pan \& Yang, 2010, \textit{IEEE TKDE}): source knowledge enters as a
-  feature rather than as additional training labels.
-  Stage 1 uses XGBoost (Chen \& Guestrin, 2016) for conservative behaviour
-  on 782 samples; Stage 2 uses LightGBM (Ke et al., 2017) for speed on 89k rows.
+  which Stage 2 can calibrate (``when the expert says 8, my lab gets $\sim$4.5'') —
+  not the training loss, which it could not fix. A corrupted label can't be
+  un-corrupted; a feature value is just another thing to learn around.
+  Stage 1 uses XGBoost (conservative on 782 samples); Stage 2 uses LightGBM
+  (fast on 89k rows).
 
 \end{frame}
 
@@ -532,71 +522,57 @@
 
       \vspace{4pt}
       \scriptsize Root cause: GHSV, CH$_4$/O$_2$ ratio, and pressure
-      are absent from the dataset.\\[3pt]
-      \textbf{SHAP reference:} Lundberg \& Lee (2017, \textit{NeurIPS});
-      Shapley values from cooperative game theory (Shapley, 1953).
+      are absent from the dataset — a data limit, not a model failure.
     \end{column}
 
   \end{columns}
 
 \end{frame}
 
-% ── Slide 11 — Limitations & Next Steps ───────────────────────────────────────
-\begin{frame}{Limitations \& Next Steps}
+% ── Slide 11 — Critical Analysis & Next Steps ─────────────────────────────────
+\begin{frame}{Critical Analysis \& Next Steps}
 
   \begin{columns}[T]
 
-    \begin{column}{0.32\textwidth}
-      \begin{block}{Option A — \badge{green}{Easy}}
-        \textbf{Add reaction conditions}\\[4pt]
-        \small
-        Include GHSV, CH$_4$/O$_2$, pressure as features.\\[4pt]
-        Expected to fix the $>$15\% ceiling effect and reduce
-        high-yield RMSE from 4.70 to $\sim$2.5.
-      \end{block}
-    \end{column}
+    \begin{column}{0.55\textwidth}
+      \textbf{Honest critique of each method}
+      \vspace{2pt}
+      \footnotesize
+      \begin{tabular}{@{}p{2.0cm}p{4.3cm}@{}}
+        \toprule
+        \textbf{Method} & \textbf{Main limitation} \\
+        \midrule
+        Naive merge & Negative control only — harms the model \\
+        DRST & Hard cliff; discards $\sim$80\% of lit; $\tau$ tuned on the reported CV \\
+        KMM & Slow $n{\times}n$ kernel; $\sigma$-sensitive; still uses labels; ties DRST \\
+        \rowcolor{green!12}
+        Prior FT & Best, but Stage-1 on only 782 rows $\rightarrow$ high variance; 2 models \\
+        \bottomrule
+      \end{tabular}
 
-    \begin{column}{0.32\textwidth}
-      \begin{block}{Option B — \badge{amber}{Medium}}
-        \textbf{Tune transfer threshold}\\[4pt]
-        \small
-        Sweep DRST $\tau$ and Stage 1 sample size jointly.\\[4pt]
-        Current best: $\tau = 0.30$ (782 samples).\ Grid
-        search may recover 0.3–0.5\% additional RMSE.
-      \end{block}
-    \end{column}
-
-    \begin{column}{0.32\textwidth}
-      \begin{block}{Option C — \badge{red}{Hard}}
-        \textbf{Neural domain adaptation}\\[4pt]
-        \small
-        Replace LightGBM with DANN or CORAL.\\[4pt]
-        High complexity; only justified after reaction
-        conditions are added.
-      \end{block}
-    \end{column}
-
-  \end{columns}
-
-  \vspace{10pt}
-  \begin{columns}[T]
-    \begin{column}{0.48\textwidth}
-      \textbf{Key Limitations}
-      \begin{itemize}\small
-        \item Missing GHSV / CH$_4$:O$_2$ / pressure features
-        \item Literature has 15+ prep methods — coverage uneven
-        \item Publication bias: only successful experiments published
-        \item OOD improvement may not generalise to new catalyst families
+      \vspace{6pt}
+      \textbf{Cross-cutting limits}
+      \begin{itemize}\footnotesize
+        \item Scored on our-data CV only; OOD checked for Prior FT alone
+        \item Point predictions — no uncertainty for picking experiments
+        \item Y$>$15\% ceiling is \emph{data}-bound, not model-bound
       \end{itemize}
     \end{column}
-    \begin{column}{0.48\textwidth}
-      \textbf{Recommended Priority}
+
+    \begin{column}{0.42\textwidth}
+      \textbf{What's next (priority-ordered)}
+      \vspace{2pt}
       \begin{enumerate}\small
-        \item Collect GHSV + CH$_4$/O$_2$ \badge{green}{highest impact}
-        \item Re-run Prior FT with expanded features
-        \item Revisit $\tau$ tuning with updated data
+        \item \badge{green}{Highest} Add GHSV, CH$_4$:O$_2$, pressure —
+          fixes the ceiling and likely the label shift
+        \item Bag the Stage-1 expert to cut its variance
+        \item Add uncertainty (quantile / conformal) for experiment selection
+        \item Stack DRST + KMM into the Prior FT pipeline
+        \item Neural domain adaptation (DANN / CORAL) once features are richer
+        \item Close the active-learning loop: propose $\to$ measure $\to$ retrain
       \end{enumerate}
     \end{column}
+
   \end{columns}
 
 \end{frame}
