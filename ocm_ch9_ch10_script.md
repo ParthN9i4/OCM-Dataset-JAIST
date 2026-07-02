@@ -125,113 +125,241 @@ model propose the next experiments, run them, and retrain."
 
 ---
 
-## CHAPTER 10 — Reviewer Q&A: Answering the Committee, Logically
+## CHAPTER 10 — Reviewer Q&A: A Full Answer to Every Question
 
 ### 10.0 — Framing
 
-"The committee raised seventeen questions. Rather than answer them as seventeen disconnected points,
-I've grouped them into six themes, because each theme is really one concern in disguise. If I satisfy
-the theme, I've satisfied the cluster. I'll take them in order, and every answer is backed by either
-a figure or a number, both of which are reproducible in the notebook."
+"The committee raised seventeen questions. I'll answer every one of them directly and in full, and
+I've grouped them into six themes so the logic flows. Every answer is backed by a specific number or
+a figure that is reproducible in the notebook."
 
-### 10.1 — Theme 1: "Did you prepare the data correctly?" (Q1–Q4)
+---
 
-"First, scaling. I used StandardScaler, not MinMax, and no, standardisation does not destroy
-linearity — both are straight-line, affine maps; z-scoring can't bend a relationship, it only
-recentres and rescales. The only nonlinear rescaling in the whole pipeline is the quantile map on
-the *labels*, which is probably what the question was picturing. I chose StandardScaler because it
-only matters for the distance-based steps — PCA, the DRST classifier, the KMM kernel — and it's
-irrelevant to the tree models that actually predict yield; and because it's robust to the extreme
-literature compositions, whereas MinMax would let one outlier crush everything else into a sliver."
+### Theme 1 — "Did you prepare the data correctly?"
 
-"Second, PCA. The PCA values are just each sample's coordinates on the first two principal
-components — the two directions of maximum variance — plus the percentage of variance each explains.
-I use only two because this is a *picture*, a diagnostic to show the domain gap, not a modelling
-step. Two components under-state the gap, if anything, because they can't capture all 67 dimensions;
-the rigorous gap measure is the DRST classifier, which says 78.5% of the literature is
-out-of-distribution. And to be precise about a common misunderstanding: I fit the PCA on the
-*combined* set, because you can only judge whether two clouds overlap if they're drawn on the same
-axes. Finally, the '3,000' in that plot is a subsample of *our 89,000 lab points*, taken purely so
-the scatter is legible — all 3,852 literature rows are used; nothing is thrown away."
+**Q1 — Why StandardScaler and not MinMaxScaler? Is linearity lost?**
 
-### 10.2 — Theme 2: "Did you pick methods and thresholds honestly?" (Q5, Q6, Q8)
+"StandardScaler subtracts the mean and divides by the standard deviation — z equals x minus mu over
+sigma. MinMax maps to the zero-to-one range — x minus the minimum over the range. Both are *affine*,
+straight-line transforms, so neither destroys linearity: correlations, linear-model fits, and linear
+separability are all preserved exactly. The idea that standardisation loses linearity is a
+misconception — the only genuinely nonlinear rescaling anywhere in this project is the quantile map
+on the *labels*, which is probably what the question had in mind. I chose StandardScaler for two
+concrete reasons. First, scaling only affects the distance-based steps — the PCA plot, the DRST
+logistic classifier, and the KMM kernel — and it is completely irrelevant to the gradient-boosted
+trees that actually predict yield, because trees split on thresholds and are invariant to scale.
+Second, StandardScaler is robust to the extreme catalyst compositions in the literature, whereas
+MinMax lets a single outlier define the range and crushes all the informative variation into a
+sliver."
 
-"On the threshold: I didn't pick 0.30 by eye, I swept every value from 0 to 1. Two findings. Single-
-stage filtering barely helps at any threshold — the best point is only a hair below baseline, and at
-0.30 it's actually slightly worse. But the two-stage PFT is *flat* across the threshold — every
-value from 0.05 to 0.8 lands within a hundredth of an RMSE point of the best, all about 10% below
-baseline. That's the important part: 0.30 is a safe, near-optimal choice, and the win comes from the
-*architecture*, not from tuning a knob. If I'd cherry-picked the threshold, the curve would be
-sharp; it's flat, which means I didn't."
+**Q2 — What are the PCA values, how do you find them, and why only the first two?**
 
-"On KMM versus DRST: they're not the same 782 samples by construction — one hard-cuts, one soft-
-weights all 3,852 — but they read the same signal. Their correlation is 0.79, and DRST's kept set
-overlaps KMM's top-782 by 81%. They corroborate each other, which is exactly what you want: it means
-the covariate-shift signal is real and not an artefact of one method."
+"PCA finds the orthogonal directions of maximum variance in the 67-dimensional feature space, by
+eigen-decomposing the covariance matrix — equivalently, the singular-value decomposition of the
+mean-centred data. The 'values' are two things: each sample's *scores*, meaning its coordinates on
+the first two components, which are the x and y of each dot in the scatter; and the
+*explained-variance ratio*, the fraction of total spread each component captures, which I print on
+the axis labels. I keep only two components because this is a *diagnostic picture* of the domain
+gap, not a modelling step — two components give a plottable plane. And I'm explicit that two
+components *under-state* the gap, because they cannot capture all 67 dimensions, so the visual
+separation is a lower bound; the rigorous measure of the gap is the DRST classifier, which says
+78.5% of the literature is out-of-distribution."
 
-### 10.3 — Theme 3: "Is the result real, or luck?" (Q7, Q11, Q14–Q16)
+**Q3 — Did you run PCA on the literature only or the whole set? What is the ideal way to think about it?**
 
-"Did I use all the data — yes: all 89,000 lab rows, through asymmetric five-fold cross-validation.
-Every lab row trains in four folds and is scored once, and the validation fold is *always* lab-only;
-the literature only ever enters the training side. So the number measures accuracy on *our*
-experiments, not a blurred average."
+"I fit the PCA on the *combined* set — our lab points plus all the literature — because you can only
+judge whether two clouds overlap if they are drawn on the *same* axes. If I fit it on the literature
+alone, I would see the literature's internal structure but have no common frame to compare our data
+against. The general principle is: when your goal is *comparison*, define the projection on a shared
+basis — either fit on the union, or fit on one domain and project the other onto it. The trap to
+avoid is fitting on one domain and then reading the other domain's spread as if it were meaningful
+internal variance. And for a genuinely rigorous shift measurement you shouldn't rely on a
+two-component picture at all — you use a domain classifier, which is exactly what DRST does on all 67
+features."
 
-"How many times did I run it — originally once, which was a fair criticism, so I now run it ten
-times with ten different random splits. Baseline is 2.121 plus or minus 0.006; PFT is 1.909 plus or
-minus 0.002. PFT wins all ten out of ten — the curves never cross, the worst PFT run still beats the
-best baseline run. A paired t-test gives p equal to 3.9 times ten-to-the-minus-fifteen, and the
-Wilcoxon test agrees. Nothing is tuned per seed, so this isn't force-fitting; it's a genuine,
-repeatable effect. And it's not only better, it's *tighter* — a third of the baseline's variance."
+**Q4 — For the PCA plot you used 3,000 — why not all 3,852?**
 
-"Did I validate on untouched data — yes, I added a true hold-out: a random 20% of the lab, set aside
-and never used in any stage of any method. Baseline 2.097, PFT 1.892 — the same 10% gain on data the
-model has genuinely never seen. That, not the OOD number, is the honest generalisation evidence, for
-exactly the leakage reason I explained in Chapter 9."
+"That's a misreading of which number was thinned. All 3,852 literature rows are used — nothing is
+dropped from the literature. The 3,000 is a subsample of our *89,000 lab* points, taken purely so the
+scatter is legible: 89,000 blue dots would form an opaque blob that completely hides the 3,852 orange
+literature points. Thinning the lab cloud for a plot does not change the PCA in expectation, and it
+has no effect on any model — the models use every single row."
 
-### 10.4 — Theme 4: "Did it learn real chemistry?" (Q12, Q13)
+---
 
-"The SHAP analysis is computed on our lab data, which is correct: the model predicts *lab* yields and
-operates on lab chemistry, so we explain it in its operating regime. Reading the beeswarm: each dot
-is one catalyst; its horizontal position is that feature's push on the prediction, in yield-percent
-units; and the colour is the feature's value — red high, blue low. So a blue dot near the centre is
-a low or absent feature value with little effect; a red tail to the right means a high value raises
-yield — which is exactly what temperature does, correct physics. The literature prior ranks number
-one, temperature two, and known OCM promoters — barium, manganese, lanthanum, cerium — follow, so
-the model learned chemistry, not a shortcut. And I checked stability: across ten independent
-subsamples, the literature prior is number one in all ten, and nine features are top-ten every time.
-I didn't use LIME, deliberately — for a tree model, TreeSHAP is *exact*, so a LIME approximation
-would be strictly noisier and add nothing."
+### Theme 2 — "Did you pick your methods and thresholds honestly?"
 
-### 10.5 — Theme 5: "Where does this sit in the literature?" (Q9, Q10)
+**Q5 — Why the threshold tau equals 0.30 for DRST? Did you evaluate other values? Show the full analysis.**
 
-"On novelty: the ingredients exist — stacked generalisation, delta and multi-fidelity learning where
-a cheap model's prediction feeds a better one, and importance weighting for domain shift. But those
-methods *trust* the source label; we deliberately don't — we pass the prior only as a feature, so
-the bias is calibrated away rather than inherited. What's new is the specific combination — filter,
-then quantile-normalise the prior, then use it as a feature — applied to OCM literature-to-lab
-transfer under *both* covariate and label shift at once. On model drift: we don't have temporal
-drift, but we have a static two-domain shift, which is the same mathematics — our 3.4-point label
-gap is label shift, our 78.5% OOD is covariate shift — and the standard corrections for it,
-importance weighting, instance selection, label rescaling, and recalibration, are exactly the four
-tools this pipeline uses."
+"I didn't pick 0.30 by eye — I swept the threshold from 0 to 1, and two findings came out, the second
+being the important one. First: *single-stage* DRST, where I simply add the kept literature to
+training, barely helps at any threshold — the best point is only a hair below baseline, and at 0.30
+it is actually slightly *worse* than baseline, because even lab-like literature still carries the
+3.4-point label shift that poisons the loss. Second: the *two-stage* method, where the filtered
+literature only trains the Stage-1 prior, is essentially *flat* across the threshold — every value
+from 0.05 to 0.8 lands within one hundredth of an RMSE point of the best, all about 10% below
+baseline. So 0.30 is a safe, near-optimal, non-cherry-picked choice, and the crucial point is that
+the improvement comes from the *architecture*, not from tuning that knob. If I had cherry-picked the
+threshold, the curve would be sharp; it is flat, which proves I didn't."
 
-### 10.6 — Theme 6: "Data honesty and next steps" (Q17)
+**Q6 — Plot RMSE against the threshold, right across 0 to 1.**
 
-"On synthetic data: we don't generate any today — the one resampling ablation we tried was pure
-duplication, and it didn't help, which is itself informative. If we did, the honest options are
-SMOGN or SMOTER for regression, jittering real compositions, or tabular generative models like CTGAN
-— and to hit a target proportion p you draw p-over-one-minus-p times the real count. But two rules
-are non-negotiable: keep every synthetic row out of validation and test, so we validate only on real
-held-out lab data; and enforce chemical validity, because a naive generator will happily invent
-impossible catalysts. And the meta-point for the committee: the strongest evidence in this whole
-project is the ten-seed plot, and the most important thing I did this round was to *find and correct*
-an over-optimistic OOD number rather than defend it. Reporting the pipeline honestly is the result."
+"That plot exists — it is `fig_drst_threshold_sweep.png` for the single-stage sweep and
+`fig_pft_tau1_sweep.png` for the two-stage. The single-stage curve hugs the baseline line at every
+threshold; the two-stage curve sits about 10% below baseline and is almost perfectly flat. Both carry
+the baseline reference line, the 0.30 marker, the empirical optimum circled, and, on a second axis,
+the number of literature samples surviving each threshold — so you can see the accuracy and the
+data-retention trade-off together. I show both curves so the choice is fully transparent."
+
+**Q8 — Does KMM select the same 782 samples as DRST? How compatible are the two methods?**
+
+"They are not identical by construction — DRST makes a hard cut and keeps 782 rows, while KMM assigns
+a *continuous* weight between 0 and 5 to all 3,852 samples and never hard-selects. But they read the
+same underlying signal. Their correlation is 0.79, and when I take DRST's 782 kept rows and KMM's
+top-782 by weight, they overlap by 634 rows — that's 81% — with a Jaccard index of 0.68. So they
+corroborate each other rather than compete, and that agreement is itself evidence: when two
+mathematically different methods flag the same samples, the covariate-shift signal is real, not an
+artefact of one method's particular assumptions."
+
+---
+
+### Theme 3 — "Is the result real, or luck?"
+
+**Q7 — Did you use the entire dataset for training? How is it implemented?**
+
+"Yes — all 89,074 lab rows are used, through asymmetric five-fold cross-validation. Every lab row is
+in the training set for four of the five folds and is scored exactly once, in the fold where it is
+held out. The word 'asymmetric' is the key detail: the *validation* fold is always lab-only —
+literature never appears in validation, only ever on the training side. That is a deliberate choice,
+so the reported RMSE measures accuracy on *our* experiments, which is what we care about, rather than
+a blurred lab-plus-literature average. For the final deployed model I train on all lab rows plus the
+filtered literature prior."
+
+**Q11 — How many times did you actually run the transfer method to cross-check the result?**
+
+"Originally just once, at a single random seed — and that was a fair criticism, so I re-ran it
+properly. I now run the whole pipeline with ten different random seeds, each producing a fresh
+five-fold split and fresh model randomness, for both the baseline and the transfer method. The full
+numbers are in the next two answers, but the headline is that it wins every single time."
+
+**Q14 — Give the mean and standard deviation of RMSE, plot all ten runs, show it is below baseline every time, and confirm nothing is force-fit.**
+
+"Across the ten seeds, the baseline averages 2.121 with a standard deviation of 0.006, and the
+transfer method averages 1.909 with a standard deviation of 0.002. The transfer method beats the
+baseline in all ten out of ten runs — in `fig_repeated_runs.png` the two curves never cross, and the
+*worst* transfer run still beats the *best* baseline run. Nothing is force-fit: the
+hyper-parameters are identical across every seed, there is no per-seed tuning, and no early stopping
+on the validation fold. And notice it is not only better on average, it is three times *tighter* — a
+standard deviation of 0.002 against the baseline's 0.006 — so the transfer method is both more
+accurate and more stable."
+
+**Q15 — Demonstrate that the result is not accidental.**
+
+"I test it statistically on the paired ten-seed results. A paired t-test gives a p-value of 3.9 times
+ten-to-the-minus-fifteen, and the non-parametric Wilcoxon signed-rank test agrees at p equals two
+times ten-to-the-minus-three. The average improvement, 0.21 RMSE, is more than thirty times the
+seed-to-seed standard deviation. A ten-out-of-ten win with p-values that small is, by definition, not
+a lucky split — it is a genuine, repeatable effect."
+
+**Q16 — Did you validate the model on completely untested data?**
+
+"Yes. Beyond cross-validation I added a true hold-out: a random 20% of the lab — about 17,800 rows —
+set aside at the very start and never used in *any* stage of *any* method: not in the DRST
+classifier, not in Stage 1, not in Stage 2. On that untouched set the baseline scores 2.097 and the
+transfer method scores 1.892, with an R-squared of 0.76 — the same 10% gain, on data the model has
+genuinely never seen. That, and not the out-of-distribution number, is the honest generalisation
+evidence — for the leakage reason I explained in Chapter 9."
+
+---
+
+### Theme 4 — "Did it learn real chemistry?"
+
+**Q12 — Is the SHAP beeswarm on lab data or the whole dataset? How should it be done, and what did you do?**
+
+"I computed SHAP on a 3,000-sample subsample of the *lab* data, with the prior feature included,
+explaining the final Stage-2 LightGBM model using the exact TreeExplainer. That is the correct scope,
+and the reasoning is this: SHAP explains a *specific model on a specific dataset*, and our model
+predicts *lab* yields and is meant to run on lab-like chemistry — so explaining it on lab data
+answers the right question, namely 'what drives predictions in our operating regime.' Explaining it
+on literature would answer a different, also legitimate, question: how the model extrapolates
+out-of-distribution. The 3,000-sample subsample is purely for speed; the mean-absolute-SHAP rankings
+converge quickly, and I verify exactly that in the next answer."
+
+**Q13 — Explain how to read the beeswarm — the blue and red, the spread, the lab points near zero, the literature — and did you run it at least ten times?**
+
+"Reading the beeswarm: each dot is one lab catalyst; its horizontal position is that feature's signed
+push on that specific prediction, measured in yield-percent units, so a dot on the right means the
+feature pushed the predicted yield up; and the colour is the feature's *value* — red for high, blue
+for low. So a cluster of blue dots sitting near the zero line means a low or absent feature value with
+little effect — for an element column, that reads as 'this element is absent, so it does not move the
+prediction.' A red tail stretching to one side shows what a *high* value does: temperature's red dots
+sit on the right, meaning hotter pushes yield up, which is correct OCM physics; lithium and potassium
+show red dots on the left, meaning high loadings suppress yield. Every dot is a lab sample, so there
+are no literature points on this plot at all — the literature's influence enters through the single
+feature called `lit_prior_prediction`, and that feature ranks number one. And yes, I checked
+stability: I recomputed SHAP on ten independent subsamples, and `lit_prior_prediction` is the
+number-one feature in all ten of them, with nine features appearing in the top ten in every single
+run — so the ranking is not an artefact of one random draw. I deliberately did not use LIME, because
+for a tree model TreeSHAP is *exact* and consistent, so a local linear LIME surrogate would be
+strictly noisier and would add nothing here."
+
+---
+
+### Theme 5 — "Where does this sit in the literature?"
+
+**Q9 — Has this transfer-learning approach been done before?**
+
+"The ingredients exist, but the combination is new. Using a source model's prediction as a feature is
+known — it appears in stacked generalisation, and in delta-learning and multi-fidelity learning in
+materials and quantum chemistry, where a cheap model's output feeds a more accurate one. Filtering by
+domain similarity and importance weighting are also standard covariate-shift tools. But there is a
+genuine distinction: those multi-fidelity methods *trust* the source label — they literally add the
+source prediction as a correction term — whereas we deliberately pass the prior only as a *feature*,
+so the label bias is calibrated away by Stage 2 rather than inherited. What is novel is the specific
+combination — filter with DRST, quantile-normalise the prior, then use its prediction as a feature —
+applied to OCM literature-to-lab transfer under covariate *and* label shift simultaneously. I
+searched the transfer-learning, domain-adaptation, multi-fidelity, and catalysis-ML literature and
+found no prior OCM work doing literature-to-lab transfer this way."
+
+**Q10 — What is model drift, is it relevant here, and how would you correct it?**
+
+"Model or concept drift is when the statistics a model relies on change, degrading it. There are three
+kinds: covariate shift, where the input distribution P-of-x moves; label or prior shift, where the
+target distribution P-of-y moves; and concept drift, where the actual input-to-output rule,
+P-of-y-given-x, changes. We do not have *temporal* deployment drift, but we do have a *static
+two-domain shift* between the literature and our lab — and that is the same mathematics: our
+3.4-point label gap is a label-shift instance, and our 78.5%-out-of-distribution is a covariate-shift
+instance. So drift concepts underpin the whole project. The standard corrections map directly onto
+what we already do: importance weighting is KMM, instance selection is DRST, label-shift correction
+is our quantile normalisation, and recalibration around the offset is exactly what Stage 2 does. For
+an eventual deployment you would add monitoring — a Kolmogorov-Smirnov test or a population-stability
+index — and periodic retraining."
+
+---
+
+### Theme 6 — "Data honesty and next steps"
+
+**Q17 — How could you generate synthetic data with a controlled proportion?**
+
+"Right now we generate none — the one resampling ablation we tried was pure duplication with
+replacement, and it did not help, which is itself informative. If we wanted real synthetic data, the
+honest options are: SMOGN or SMOTER, the regression variants of SMOTE, which interpolate between
+near-neighbours and add noise in sparse target regions; simple jittering, adding small Gaussian
+perturbations to real compositions; tabular generative models such as CTGAN or a TVAE trained on the
+real data; or conditional generation, where you condition on target-yield bins to directly rebalance
+the skewed label distribution. To hit a target synthetic fraction p, you draw p-over-one-minus-p
+times the real count. But two rules are non-negotiable in catalysis: first, keep every synthetic row
+out of validation and test, so you only ever validate on *real* held-out lab data — otherwise the
+metrics are meaningless; and second, enforce chemical validity, because a naive generator will
+happily invent impossible catalysts, so you constrain element sets and loading sums, or better, use
+physics-based generation."
 
 ---
 
 ### One-line close
 
 "To summarise the two chapters: on our own chemistry the method delivers a real, repeatable,
-statistically significant 10% gain, validated on genuinely held-out data; the earlier out-of-
-distribution claim was inflated by leakage and I've corrected it; and quantile normalisation is best
-understood as a deliberate dial that trades extrapolation for the local accuracy we actually need."
+statistically significant 10% gain, validated on genuinely held-out data; the earlier
+out-of-distribution claim was inflated by leakage and I have corrected it openly; and quantile
+normalisation is best understood as a deliberate dial that trades extrapolation for the local
+accuracy we actually need."
