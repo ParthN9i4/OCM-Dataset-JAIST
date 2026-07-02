@@ -1,0 +1,37 @@
+{
+  "baseline": {
+    "cv_rmse": 2.1330557865317252,
+    "ood_rmse": 6.530989908247004
+  },
+  "configs": [
+    {
+      "config": "DRST-filtered + raw labels",
+      "n_prior": 628,
+      "cv_rmse": 1.9149558726638318,
+      "ood_rmse": 6.109306859517832
+    },
+    {
+      "config": "DRST-filtered + QN (=PFT)",
+      "n_prior": 628,
+      "cv_rmse": 1.909769794781905,
+      "ood_rmse": 6.771849835784447
+    },
+    {
+      "config": "Full impreg-lit + raw labels",
+      "n_prior": 1713,
+      "cv_rmse": 1.9235540381747758,
+      "ood_rmse": 6.046677022776187
+    },
+    {
+      "config": "Full impreg-lit + QN",
+      "n_prior": 1713,
+      "cv_rmse": 1.9130732912431696,
+      "ood_rmse": 6.315165591126656
+    }
+  ],
+  "leaky_repro": {
+    "cv_rmse": 1.931737956724786,
+    "ood_rmse": 3.6153141960990953,
+    "note": "prior trained on OOD rows -> optimistic"
+  }
+}
