@@ -14,9 +14,10 @@ Mirrors the 9-chapter walkthrough notebook narrative:
  10  Results — All Five Methods — Chapter 8
  11  SHAP — Feature Importance Beeswarm — Chapter 8
  12  SHAP — Ceiling Effect & Model Limits — Chapter 8
- 13  Critical Analysis — Per-Method Review — Chapter 9
- 14  What's Next — Priority-Ordered — Chapter 9
- 15  Summary
+ 13  Statistical Rigour & Honesty (10-seed, QN trade-off) — Chapter 8
+ 14  Critical Analysis — Per-Method Review — Chapter 9
+ 15  What's Next — Priority-Ordered — Chapter 9
+ 16  Summary
 
 Run: python build_pptx.py
 Produces: ocm_presentation.pptx  (and ocm_presentation.pdf via LibreOffice)
@@ -124,7 +125,7 @@ def callout(slide, text, x, y, w, h, fill=LIGHT, border=ACCENT,
              w - Inches(0.24), h - Inches(0.16),
              size=size, color=text_color, italic=italic)
 
-TOTAL = 15
+TOTAL = 16
 
 # ════════════════════════════════════════════════════════════════════════════
 # SLIDE 1 — Title
@@ -660,8 +661,8 @@ for i, (m, r, d, best, worst) in enumerate(cv_rows):
     add_text(s, d, Inches(11.9), y0 + Inches(0.04), Inches(1.1), Inches(0.34),
              size=11, bold=best, color=fc, align=PP_ALIGN.CENTER)
 
-# OOD
-add_text(s, "OOD robustness (unseen lit)",
+# OOD (leak-free, corrected)
+add_text(s, "OOD — leak-free (unseen lit)",
          Inches(8.8), Inches(4.5), Inches(4.2), Inches(0.4),
          size=14, bold=True, color=NAVY)
 add_rect(s, Inches(8.8), Inches(4.95), Inches(4.2), Inches(0.4), fill=NAVY)
@@ -676,15 +677,16 @@ add_text(s, "Baseline", Inches(8.9), Inches(5.4), Inches(2.4), Inches(0.34),
 add_text(s, "6.53", Inches(11.3), Inches(5.4), Inches(1.65), Inches(0.34),
          size=11, color=BLACK, align=PP_ALIGN.CENTER)
 add_rect(s, Inches(8.8), Inches(5.77), Inches(4.2), Inches(0.42),
-         fill=RGBColor(0xE8, 0xF5, 0xE9), line=GREEN)
-add_text(s, "Prior FT  ★", Inches(8.9), Inches(5.82), Inches(2.4), Inches(0.34),
-         size=11, bold=True, color=GDARK)
-add_text(s, "3.60  (−45%)", Inches(11.3), Inches(5.82), Inches(1.65), Inches(0.34),
-         size=11, bold=True, color=GDARK, align=PP_ALIGN.CENTER)
+         fill=LIGHT, line=LGRAY)
+add_text(s, "Prior FT", Inches(8.9), Inches(5.82), Inches(2.4), Inches(0.34),
+         size=11, color=BLACK)
+add_text(s, "6.77", Inches(11.3), Inches(5.82), Inches(1.65), Inches(0.34),
+         size=11, color=BLACK, align=PP_ALIGN.CENTER)
 
-add_text(s, "OOD: 2,139 non-Impregnation lit samples, unseen.",
-         Inches(8.8), Inches(6.3), Inches(4.2), Inches(0.4),
-         size=10, italic=True, color=DGRAY)
+add_text(s, "OOD gain is modest & honest.  Earlier “3.60 (−45%)” was leakage "
+            "(prior saw test rows).  QN trades OOD for in-dist accuracy — see Rigour slide.",
+         Inches(8.8), Inches(6.25), Inches(4.2), Inches(0.75),
+         size=9, italic=True, color=DGRAY)
 
 # ════════════════════════════════════════════════════════════════════════════
 # SLIDE 11 — SHAP Beeswarm standalone (Chapter 8)
@@ -787,12 +789,44 @@ add_text(s,
          size=12, bold=True, color=NAVY)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 13 — Critical Analysis — Per-Method Review (Chapter 9a)
+# SLIDE 13 — Statistical Rigour & Honesty (Chapter 8/9)
+# ════════════════════════════════════════════════════════════════════════════
+s = prs.slides.add_slide(BLANK)
+add_rect(s, 0, 0, W, H, fill=WHITE)
+slide_title_bar(s, "Statistical Rigour & Honesty", chapter="Chapter 8")
+nav_bar(s, 13, TOTAL)
+
+# Left: 10-seed repeated runs
+add_text(s, "Repeatable across 10 random seeds",
+         Inches(0.3), Inches(1.2), Inches(6.4), Inches(0.4),
+         size=13, bold=True, color=NAVY)
+add_img(s, "fig_repeated_runs.png", Inches(0.3), Inches(1.65), Inches(6.4))
+bullets(s, [
+    "Baseline 2.121 ± 0.006  vs  PFT 1.909 ± 0.002",
+    "PFT wins 10 / 10 runs — curves never cross",
+    "Paired t  p = 3.9×10⁻¹⁵;  held-out 20%: 2.097 → 1.892",
+], Inches(0.3), Inches(4.55), Inches(6.4), Inches(0.4), size=11, spacing=0.42, color=BLACK)
+
+# Right: QN trade-off + honesty note
+add_text(s, "Quantile normalisation is a trade-off",
+         Inches(6.9), Inches(1.2), Inches(6.1), Inches(0.4),
+         size=13, bold=True, color=NAVY)
+add_img(s, "fig_qn_tradeoff.png", Inches(6.9), Inches(1.65), Inches(6.1))
+callout(s,
+        "Honest correction: the earlier “OOD 6.53→3.60 (−45%)” was data leakage — the prior was "
+        "trained on the OOD test rows. Leak-free OOD is ≈6.0–6.8 (near baseline). QN improves "
+        "in-distribution accuracy but slightly worsens OOD.",
+        Inches(6.9), Inches(4.35), Inches(6.1), Inches(1.4),
+        fill=RGBColor(0xFF, 0xF4, 0xE5), border=RGBColor(0xE6, 0x7E, 0x22),
+        text_color=DGRAY, size=10)
+
+# ════════════════════════════════════════════════════════════════════════════
+# SLIDE 14 — Critical Analysis — Per-Method Review (Chapter 9a)
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
 slide_title_bar(s, "Critical Analysis — Per-Method Review", chapter="Chapter 9")
-nav_bar(s, 13, TOTAL)
+nav_bar(s, 14, TOTAL)
 
 # Left: per-method critique table
 add_text(s, "Honest critique of each method",
@@ -839,12 +873,12 @@ callout(s,
         text_color=DGRAY, size=10, italic=False)
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 14 — What's Next — Priority-Ordered (Chapter 9b)
+# SLIDE 15 — What's Next — Priority-Ordered (Chapter 9b)
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
 slide_title_bar(s, "What's Next — Priority-Ordered", chapter="Chapter 9")
-nav_bar(s, 14, TOTAL)
+nav_bar(s, 15, TOTAL)
 
 next_steps = [
     ("1", "Add GHSV, CH₄:O₂, pressure to the feature set",
@@ -887,12 +921,12 @@ for col_idx, col_items in enumerate([col1, col2]):
         y += 1.65
 
 # ════════════════════════════════════════════════════════════════════════════
-# SLIDE 15 — Summary
+# SLIDE 16 — Summary
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
 slide_title_bar(s, "Summary")
-nav_bar(s, 15, TOTAL)
+nav_bar(s, 16, TOTAL)
 
 # Big summary box
 add_rect(s, Inches(1.0), Inches(1.4), Inches(11.3), Inches(4.6),
@@ -913,7 +947,7 @@ add_text(s,
 findings = [
     "Naive merging HARMS accuracy (+5.4% RMSE) — the systematic offset corrupts training.",
     "Selective filtering (DRST / KMM) recovers about 5% improvement — independent methods agree (r=0.79).",
-    "Using literature as a PRIOR FEATURE (not a label) gives the biggest gain: −10.6% CV, −45% OOD.",
+    "Using literature as a PRIOR FEATURE (not a label) gives the biggest gain: −10.6% CV, confirmed 10/10 seeds (p<10⁻¹⁴) and on a held-out test.",
     "SHAP confirms the model uses real OCM chemistry: temperature, Ba, Mn, La, Ce, and the literature prior drive predictions.",
 ]
 for i, txt in enumerate(findings):

@@ -357,19 +357,27 @@ Stage 2).
 This held-out result (independent of the CV folds) confirms the ~10 % gain is real on data the
 model has genuinely never touched.
 
-**An honest caveat on the OOD-literature stress test.** We also evaluated on the 2,139 literature
-rows made by *non-impregnation* methods (chemistry the lab never uses). Here the faithful
-reproduction gives **baseline RMSE 6.53 → PFT 7.60, i.e. PFT is ~16 % WORSE on this set** — it
-does **not** reproduce the "6.53 → 3.60" figure quoted in the current deck, and that deck number
-should be re-derived/corrected. The reason PFT loses here is by design: quantile-normalisation
-calibrates the prior (and hence the whole model) onto the **lab yield scale** (mean ≈ 5.25 %),
-whereas non-impregnation literature has systematically **higher** true yields (mean ≈ 8–9 %). A
-model deliberately tuned to predict lab-scale yields must under-predict those high
-literature-scale targets, inflating OOD RMSE. In other words, PFT optimises *our* operating
-regime — which is exactly the project's goal — and is **not** a general literature-extrapolation
-model. The defensible claim is the **held-out lab** result above (1.89 vs 2.10), not OOD
-literature superiority. If literature-scale extrapolation were a goal, one would skip the
-quantile-normalisation step (and accept the label shift) — a different objective.
+**An honest caveat on the OOD-literature stress test — with a leakage correction.** We also
+evaluated on the 2,139 literature rows made by *non-impregnation* methods (chemistry the lab never
+uses). The old deck's "6.53 → 3.60 (−45 %)" was **data leakage**: that prior had been trained on the
+OOD test rows and their labels, so it reproduces (3.62) *only* when the leak is present. A clean,
+**leak-free** ablation (`qn_tradeoff.py`, `fig_qn_tradeoff.png`) — prior never sees the OOD rows —
+gives the honest picture:
+
+| Config (leak-free) | In-dist CV RMSE | OOD RMSE |
+|---|---|---|
+| Baseline | 2.133 | 6.53 |
+| DRST-filtered + raw | 1.915 | 6.11 |
+| **DRST-filtered + QN (= PFT)** | **1.910** | 6.77 |
+| Full impreg-lit + raw | 1.924 | 6.05 |
+| Full impreg-lit + QN | 1.913 | 6.32 |
+
+So leak-free OOD is ~6.0–6.8 (**near baseline**, not −45 %). Quantile normalisation calibrates the
+prior onto the **lab yield scale** (mean ≈ 5.25 %) while non-impregnation literature has higher true
+yields (≈ 8–9 %); this is why **QN improves in-distribution CV and slightly worsens OOD** — a
+deliberate dial trading extrapolation for local accuracy. The defensible claim is the
+**in-distribution** result (−10.6 %, 10/10 seeds, p < 10⁻¹⁴, held-out 2.097 → 1.892), not OOD
+literature superiority.
 
 ---
 
