@@ -205,11 +205,28 @@ threshold, the curve would be sharp; it is flat, which proves I didn't."
 **Q6 — Plot RMSE against the threshold, right across 0 to 1.**
 
 "That plot exists — it is `fig_drst_threshold_sweep.png` for the single-stage sweep and
-`fig_pft_tau1_sweep.png` for the two-stage. The single-stage curve hugs the baseline line at every
-threshold; the two-stage curve sits about 10% below baseline and is almost perfectly flat. Both carry
-the baseline reference line, the 0.30 marker, the empirical optimum circled, and, on a second axis,
-the number of literature samples surviving each threshold — so you can see the accuracy and the
-data-retention trade-off together. I show both curves so the choice is fully transparent."
+`fig_pft_tau1_sweep.png` for the two-stage. I show both curves so the choice is fully transparent."
+
+**[On screen: `fig_drst_threshold_sweep.png`] — how to read it:**
+"The horizontal axis is the DRST keep-threshold τ, running from 0 on the left to nearly 1 on the
+right — as you move right we keep only the most lab-like literature. The left vertical axis is the
+5-fold cross-validation RMSE, and the blue dots-and-line are the single-stage result at each
+threshold. The grey dashed horizontal line is the baseline, 2.133 — no transfer at all. The orange
+dotted vertical line marks τ equals 0.30, the value the deck uses, and the crimson ring marks the
+empirical best point, τ equals 0.85 at RMSE 2.127. The green squares, read against the right-hand
+axis, are how many literature rows survive each threshold — they fall from over 1,300 down to under
+100 as τ rises. The one thing to take away: the blue curve *hugs* the grey baseline line the whole
+way across — the best it ever gets is 2.127 versus baseline 2.133 — so simply adding filtered
+literature to training barely helps at any threshold."
+
+**[On screen: `fig_pft_tau1_sweep.png`] — how to read it:**
+"Same idea, but now the filtered literature is used only to train the Stage-1 prior. The horizontal
+axis is the Stage-1 filter threshold τ₁; the vertical axis is again 5-fold CV RMSE. The grey dashed
+line is baseline 2.121, the orange dotted line is τ₁ equals 0.30, and the crimson ring is the best
+point, τ₁ equals 0.80 at 1.906. The story is in the shape: unlike the previous plot, this whole
+curve sits far *below* the baseline — about 10% lower — and it is almost perfectly flat, every point
+between 1.906 and 1.913. That flatness is the argument: the improvement doesn't depend on picking
+the threshold carefully, so 0.30 isn't cherry-picked — the win comes from the architecture."
 
 **Q8 — Does KMM select the same 782 samples as DRST? How compatible are the two methods?**
 
@@ -220,6 +237,17 @@ top-782 by weight, they overlap by 634 rows — that's 81% — with a Jaccard in
 corroborate each other rather than compete, and that agreement is itself evidence: when two
 mathematically different methods flag the same samples, the covariate-shift signal is real, not an
 artefact of one method's particular assumptions."
+
+**[On screen: `fig_kmm_drst_overlap.png`] — how to read it:**
+"There are two panels. The left panel is a scatter: every point is one of the 3,852 literature
+samples, with its DRST score — the classifier's probability that it looks like our lab, P of lab
+given x — on the horizontal axis, and its KMM weight on the vertical axis. The title shows the
+correlation, r equals 0.79, and the orange vertical line is the τ equals 0.30 cut. The key visual is
+that the cloud rises from bottom-left to top-right — samples DRST scores as lab-like are exactly the
+ones KMM up-weights. The right panel makes the overlap concrete: it's three bars — the samples both
+methods pick, 634 of them; the ones only DRST keeps, about 148; and the ones only KMM ranks in its
+top-782, again about 148 — for a Jaccard overlap of 0.68. Takeaway: a hard filter and a soft
+re-weighting, built on completely different mathematics, land on essentially the same samples."
 
 ---
 
@@ -253,6 +281,17 @@ on the validation fold. And notice it is not only better on average, it is three
 standard deviation of 0.002 against the baseline's 0.006 — so the transfer method is both more
 accurate and more stable."
 
+**[On screen: `fig_repeated_runs.png`] — how to read it:**
+"Two panels again. The left panel plots RMSE against the random seed — ten seeds along the bottom.
+The grey line with circles is the baseline, hovering around 2.12; the navy line with squares is the
+transfer method, sitting around 1.91; and the green shading between them is the gap. The single most
+important visual is that the two lines *never touch* — even the worst navy point is well below the
+best grey point. The right panel is the same data as a paired difference: one bar per seed showing
+baseline-minus-PFT, and every bar is green and positive, all clustered around 0.21 — the method
+improves things on every single seed, never once regresses. The p-values from the paired t-test and
+Wilcoxon test are printed in the title. Takeaway: this isn't one lucky split — it's a consistent,
+significant win repeated ten times."
+
 **Q15 — Demonstrate that the result is not accidental.**
 
 "I test it statistically on the paired ten-seed results. A paired t-test gives a p-value of 3.9 times
@@ -269,6 +308,21 @@ classifier, not in Stage 1, not in Stage 2. On that untouched set the baseline s
 transfer method scores 1.892, with an R-squared of 0.76 — the same 10% gain, on data the model has
 genuinely never seen. That, and not the out-of-distribution number, is the honest generalisation
 evidence — for the leakage reason I explained in Chapter 9."
+
+**[On screen: `fig_qn_tradeoff.png`] — how to read it:**
+"This is the figure behind the quantile-normalisation trade-off, and it has two panels sharing the
+same four bars — four configurations crossing the prior source, DRST-filtered versus full
+impregnation literature, with the labels either raw or quantile-normalised. The left panel is
+in-distribution 5-fold CV RMSE, and its grey dashed line is the baseline, 2.133; notice all four
+bars sit well below it around 1.91, and inside each pair the quantile-normalised bar is a touch
+*lower* — QN helps here. The right panel is the leak-free OOD RMSE, with its grey dashed baseline at
+6.53; here all four honest bars sit around 6.0 to 6.8, roughly level with baseline, and inside each
+pair the quantile-normalised bar is a touch *higher* — QN hurts here. The one extra line to point at
+is the red dotted line on the right panel, way down at 3.62 — that's the old, leaky number, and I
+draw it deliberately far below the honest bars to show how much leakage inflated it. Takeaway in one
+sentence: quantile normalisation is a dial — it buys in-distribution accuracy at a small
+out-of-distribution cost — and the dramatic 3.62 only exists when the prior is allowed to see the
+test rows."
 
 ---
 
@@ -302,6 +356,18 @@ number-one feature in all ten of them, with nine features appearing in the top t
 run — so the ranking is not an artefact of one random draw. I deliberately did not use LIME, because
 for a tree model TreeSHAP is *exact* and consistent, so a local linear LIME surrogate would be
 strictly noisier and would add nothing here."
+
+**[On screen: `fig_shap_stability.png`] — how to read it:**
+"This is the stability check, and it's a simple horizontal bar chart. Each bar is a feature; the
+length of the bar is its mean absolute SHAP value — its average importance — and the little black
+whisker on the end is the standard deviation of that importance across the ten independent
+subsampling runs. The features are sorted, so the most important sits at the top: `lit_prior_prediction`
+is far and away the longest bar, around 2.75, with a tiny whisker — followed a long way back by
+Temperature, then barium, zirconium, manganese, lanthanum, cerium, copper, aluminium. Two things to
+read off it: first, the literature prior dominates — its bar dwarfs everything else, which is the
+visual proof that the transfer signal is doing the work; and second, the whiskers are all short
+relative to the gaps between bars, which means the ranking barely moves from run to run. Takeaway:
+the importance story is stable, not an accident of one random sample."
 
 ---
 
