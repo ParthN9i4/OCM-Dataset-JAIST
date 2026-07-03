@@ -2,7 +2,7 @@
 % Compile with: pdflatex ocm_presentation.tex  (run twice for slide counters)
 % Requires: beamer, booktabs, graphicx, xcolor, tikz, helvet, fontenc, inputenc
 %
-% Structure: 15 slides mirroring the 9-chapter walkthrough notebook narrative.
+% Structure: 16 slides mirroring the 9-chapter walkthrough notebook narrative.
 
 \documentclass[aspectratio=169,12pt]{beamer}
 
@@ -490,19 +490,21 @@
       \end{tabular}
 
       \vspace{6pt}
-      \textbf{OOD robustness}
+      \textbf{OOD --- leak-free}
       \begin{tabular}{lc}
         \toprule
          & RMSE \\
         \midrule
         Baseline & 6.53 \\
-        \rowcolor{green!15}
-        \textbf{Prior FT} & \textbf{3.60} \badge{green}{$-45\%$} \\
+        Prior FT & 6.77 \\
         \bottomrule
       \end{tabular}
 
       \vspace{4pt}
-      \scriptsize OOD: 2{,}139 unseen non-Impregnation samples.
+      \scriptsize OOD: 2{,}139 unseen non-Impregnation samples. Earlier
+      ``3.60 ($-45\%$)'' was leakage (prior saw the test rows); leak-free OOD
+      is $\approx$baseline. QN trades OOD for in-distribution accuracy
+      (see Rigour slide).
     \end{column}
 
   \end{columns}
@@ -575,7 +577,28 @@
 
 \end{frame}
 
-% ── Slide 13 — Chapter 9a: Critical Analysis ──────────────────────────────────
+% ── Slide 13 — Statistical Rigour & Honesty ───────────────────────────────────
+\begin{frame}{Statistical Rigour \& Honesty}
+  \framesubtitle{The result is repeatable; the earlier OOD number was not}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{fig_repeated_runs.png}\\[2pt]
+      \scriptsize Baseline $2.121\pm0.006$ vs PFT $1.909\pm0.002$;
+      PFT wins 10/10 ($p=3.9\times10^{-15}$); held-out 20\%: $2.097\to1.892$.
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{fig_qn_tradeoff.png}\\[2pt]
+      \sidenote{\textbf{Honest correction:} the earlier ``OOD $6.53\to3.60$
+      ($-45\%$)'' was \emph{leakage} — the Stage-1 prior was trained on the OOD
+      test rows. Leak-free OOD is $\approx6.0$--$6.8$ (near baseline). Quantile
+      normalisation improves in-distribution accuracy but slightly worsens OOD.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ── Slide 14 — Chapter 9a: Critical Analysis ──────────────────────────────────
 \begin{frame}[allowframebreaks]{Critical Analysis — Per-Method Review}
   \framesubtitle{Chapter 9}
 
@@ -602,7 +625,8 @@
       \textbf{Cross-cutting limits}
       \vspace{4pt}
       \begin{itemize}\footnotesize
-        \item All methods evaluated on our-data CV only; OOD tested for Prior FT alone
+        \item OOD gain is modest \& honest ($\approx$baseline, leak-free); the
+          earlier $-45\%$ was leakage. QN trades OOD for in-distribution accuracy
         \item Point predictions — no uncertainty estimates to guide experiment selection
         \item Y$>$15\% ceiling is \emph{data}-bound (missing GHSV, CH$_4$:O$_2$,
           pressure), not model-bound
@@ -618,7 +642,7 @@
 
 \end{frame}
 
-% ── Slide 14 — Chapter 9b: What's Next ───────────────────────────────────────
+% ── Slide 15 — Chapter 9b: What's Next ───────────────────────────────────────
 \begin{frame}[allowframebreaks]{What's Next — Priority-Ordered}
   \framesubtitle{Chapter 9}
 
@@ -657,7 +681,7 @@
 
 \end{frame}
 
-% ── Slide 15 — Summary ────────────────────────────────────────────────────────
+% ── Slide 16 — Summary ────────────────────────────────────────────────────────
 \begin{frame}{Summary}
 
   \centering
@@ -674,7 +698,8 @@
         \item Naive merging \emph{harms} accuracy (\textcolor{red}{$+5.4\%$ RMSE}).
         \item Selective filtering (DRST / KMM) recovers $\sim$5\% improvement.
         \item Using literature as a \emph{prior feature} (not a label) gives
-          the biggest gain: \textcolor{green}{$-10.6\%$ CV RMSE, $-45\%$ OOD RMSE}.
+          the biggest gain: \textcolor{green}{$-10.6\%$ CV RMSE}, confirmed
+          10/10 seeds ($p<10^{-14}$) and on a held-out test.
         \item SHAP confirms the model uses real OCM chemistry: temperature,
           Ba, Mn, La, Ce — and the literature prior — drive predictions.
       \end{itemize}

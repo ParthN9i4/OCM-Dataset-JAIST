@@ -236,21 +236,27 @@ dashed reference line. Naive merge is the one bar to the right of that line — 
 DRST and KMM dip modestly below — about 5% improvement each. Prior Feature Transfer makes
 a distinctly larger step: 1.907, a 10.6% improvement.
 
-The OOD table on the right measures something different and arguably more important: how
-well do we generalise to chemistry we've never trained on? We tested on 2,139
-non-Impregnation literature samples the model had never seen in any form. Baseline RMSE
-was 6.53. Prior Feature Transfer drops that to 3.60 — a 45% reduction.
+The OOD table on the right measures generalisation to chemistry we've never trained on:
+2,139 non-Impregnation literature samples. Baseline RMSE is 6.53. I need to be honest and
+correct an earlier version of this slide here: it claimed Prior Feature Transfer dropped
+that to 3.60, a 45% reduction. That number was leakage. In the original experiment the
+Stage-1 prior was trained on *all* literature, which includes those very OOD test samples
+and their true yields — so the prior effectively handed the final model the answers. When
+I retrain the prior with the OOD rows removed — a genuinely blind test — the leak-free OOD
+RMSE is about 6.0 to 6.8 depending on configuration, i.e. roughly level with baseline, not
+a dramatic win.
 
-Why such a large OOD jump? Stage 1 was trained on literature which covers diverse
-preparation methods and chemistries. When the final model encounters a catalyst from a
-sol-gel or coprecipitation process, the prior feature provides a sensible starting
-estimate from the literature domain. Without the prior, the Stage-2 model has never seen
-anything like that composition and is essentially extrapolating blind.
+This doesn't touch the headline: on our own chemistry the 10.6% gain is real, repeatable
+across ten random seeds at p below ten-to-the-minus-fourteen, and confirmed on a held-out
+test set. What it changes is the extrapolation claim: this is a model that is very good in
+our operating regime, not one that dramatically re-derives the literature.
 
-The message: filtering methods recover a modest 5% by reducing label contamination.
-Feature transfer doubles the improvement and dramatically improves out-of-distribution
-accuracy because it eliminates the root cause — the offset in the training loss — rather
-than just limiting exposure to it."
+It also ties to quantile normalisation, which the committee asked about. QN rescales the
+literature labels onto our yield scale. Turning it on and off cleanly shows a consistent
+trade-off: with QN, in-distribution accuracy is better because the prior speaks in our
+units, but OOD is slightly worse because the prior can no longer reach the higher yields of
+unfamiliar literature. QN is a deliberate dial — we chose local accuracy because our goal
+is predicting our next experiment. I'll show this on the Rigour slide."
 
 ---
 
@@ -376,9 +382,11 @@ Naive merging *harms* accuracy — a 5.4% RMSE penalty — because the systemati
 corrupts training when there are no features to explain it. Selective filtering with DRST
 and KMM recovers about 5% improvement, and two independent methods agreeing at r=0.79
 confirms the signal is real, not an artifact. Using literature as a *prior feature* — never
-as a label — gives the biggest gain: 10.6% better CV accuracy and 45% better
-out-of-distribution accuracy, because it removes the offset from the training loss
-entirely. SHAP confirms the model uses real OCM chemistry — temperature, barium,
+as a label — gives the biggest gain: 10.6% better CV accuracy, and this is repeatable
+across ten random seeds at p below ten-to-the-minus-fourteen and holds on a held-out test
+set. On out-of-distribution literature the honest, leak-free gain is modest — roughly
+baseline — and I corrected an earlier slide that overstated it. SHAP confirms the model
+uses real OCM chemistry — temperature, barium,
 manganese, lanthanum, cerium, and the literature prior are the primary drivers.
 
 The next step that matters most is a data step: add GHSV and the methane-to-oxygen ratio
@@ -795,9 +803,10 @@ not in the labels. Stage 2 can learn 'when the expert says 8, my lab actually ge
 4.5' — a calibration it discovers from our own data. You can't un-corrupt a label, but you
 can learn around a feature.
 
-The result is 1.907 — a 10.6% improvement, double the filtering methods. And on
-out-of-distribution chemistry, error drops 45%, because the expert gives a sensible prior
-where our model would otherwise be guessing blind."
+The result is 1.907 — a 10.6% improvement, double the filtering methods, and repeatable
+across ten seeds and on a held-out test set. On out-of-distribution literature the honest
+leak-free gain is modest (near baseline); an earlier version of this slide overstated it
+due to leakage, which I've corrected."
 
 ## Code cell — Prior Feature Transfer (`560d7b02`)
 

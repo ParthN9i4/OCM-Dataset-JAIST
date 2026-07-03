@@ -147,7 +147,8 @@ rows = [
      "Stage 1: XGBoost pre-trained on DRST-filtered literature only → generates "
      "lit_prior_prediction as 68th feature. "
      "Stage 2: LightGBM trained on internal 89k with prior as additional input.",
-     "BEST RESULT: RMSE 1.907% (−10.6%). OOD test: 6.53→3.60 (−45%).",
+     "BEST RESULT: RMSE 1.907% (−10.6%), 10/10 seeds p<1e-14, held-out 2.097→1.892. "
+     "OOD (leak-free): 6.53→6.77 (≈baseline); old 6.53→3.60 was leakage.",
      "✅ Done — best method"),
     (10, "SHAP Analysis",
      "TreeExplainer on 3,000-sample subsample. Beeswarm, bar, dependence, "
@@ -324,14 +325,16 @@ apply_header_row(ws4, 3, 1,
     ACCENT)
 
 ood_rows = [
-    ("Baseline (no literature)", "6.53", "—",
-     "Model trained only on impregnation data fails badly on other prep methods"),
-    ("Naive concatenation",       "6.21", "−4.9%",
-     "Small gain but still poor — label shift confuses the model"),
-    ("DRST (τ=0.30)",             "4.95", "−24.2%",
-     "Better — filtered literature provides some generalization signal"),
-    ("Two-stage fine-tuning ★",   "3.60", "−45.0% ✅",
-     "BEST — Stage 1 literature prior gives model a chemistry map of unseen space"),
+    ("Baseline (no literature)",        "6.53", "—",
+     "Model trained only on impregnation data; reference point"),
+    ("DRST-filtered + raw labels",       "6.11", "−6.4%",
+     "Leak-free; small honest gain on unseen prep methods"),
+    ("Full impreg-lit + raw labels",     "6.05", "−7.4%",
+     "Leak-free; best honest OOD — literature-scale prior helps most"),
+    ("Two-stage PFT (DRST + QN)",        "6.77", "+3.7%",
+     "Leak-free; QN calibrates to lab scale → slightly worse OOD (the trade-off)"),
+    ("OLD 'two-stage' (3.60, leaky)",    "3.62", "−44.6% ✗",
+     "REPRODUCED ONLY WITH LEAKAGE — prior trained on the OOD test rows/labels"),
 ]
 
 for r_idx, row in enumerate(ood_rows, start=4):
@@ -342,10 +345,12 @@ for r_idx, row in enumerate(ood_rows, start=4):
         ws4.cell(r_idx, col).alignment = left()
     ws4.row_dimensions[r_idx].height = 30
 
-note(ws4, 8, 1,
-     "Key insight: OOD improvement (−45%) is larger than in-distribution improvement "
-     "(−10.6%). This confirms the two-stage method genuinely learns transferable "
-     "chemistry knowledge, not just in-distribution memorization.",
+note(ws4, 9, 1,
+     "Correction & key insight: the old −45% OOD (3.60) was DATA LEAKAGE — the Stage-1 "
+     "prior was trained on the OOD test rows and their labels (reproduced here as 3.62). "
+     "Leak-free, OOD gains are modest (~6.0–6.8). Quantile normalisation (QN) improves "
+     "in-distribution accuracy but slightly worsens OOD — a deliberate trade-off. The "
+     "strong, honest result is in-distribution: −10.6%, 10/10 seeds, p<1e-14, held-out.",
      5, YELLOW)
 ws4.row_dimensions[8].height = 38
 

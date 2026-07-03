@@ -186,15 +186,15 @@ S6 = f"""
             <div class="kpi-sub">RMSE 2.133 → 1.907</div>
           </div>
           <div class="kpi">
-            <div class="kpi-n green">−45 %</div>
-            <div class="kpi-label">OOD error reduction</div>
-            <div class="kpi-sub">6.53 → 3.60 on unseen catalyst types</div>
+            <div class="kpi-n green">10 / 10</div>
+            <div class="kpi-label">seeds PFT beats baseline</div>
+            <div class="kpi-sub">p &lt; 10⁻¹⁴; held-out 2.097 → 1.892</div>
           </div>
         </div>
         <div class="callout green mt-4">
-          Only the two-stage approach improves <b>both</b>
-          in-distribution accuracy and out-of-distribution
-          robustness simultaneously.
+          The two-stage approach gives the largest <b>in-distribution</b> gain,
+          confirmed across 10 seeds (p &lt; 10⁻¹⁴) and on a held-out test set.
+          (Leak-free OOD is modest — an earlier −45% claim was withdrawn as leakage.)
         </div>
       </div>
       <div class="fig-wrap">

@@ -426,9 +426,11 @@ HTML = f"""<!DOCTYPE html>
     </p>
     <p>
       <strong>What happened:</strong> RMSE of 1.907%, a <strong>10.6% improvement</strong>
-      over baseline &mdash; more than double the gain of any other method.
-      On a completely held-out set of 2,139 literature experiments the model had never
-      seen, performance improved by <strong>45%</strong> (RMSE 6.53 &rarr; 3.60).
+      over baseline &mdash; more than double the gain of any other method, and repeatable
+      across 10 seeds (p&lt;10<sup>&minus;14</sup>) and on a held-out test set.
+      <em>Correction:</em> an earlier version claimed a 45% out-of-distribution gain
+      (6.53&rarr;3.60); that was data leakage (the prior had been trained on the OOD test
+      rows). Leak-free OOD is &asymp;6.0&ndash;6.8, roughly level with baseline.
     </p>
     <p>
       <strong>Why it works best:</strong> Literature knowledge enters the final model
@@ -439,7 +441,7 @@ HTML = f"""<!DOCTYPE html>
     </p>
     <p>
       <span class="tag green">best RMSE</span>
-      <span class="tag green">45% OOD improvement</span>
+      <span class="tag green">10/10 seeds, p&lt;10<sup>&minus;14</sup></span>
       <span class="tag blue">separates knowledge from labels</span>
     </p>
   </div>
@@ -505,7 +507,7 @@ HTML = f"""<!DOCTYPE html>
       <td>Two-stage fine-tuning ★</td>
       <td class="rmse-val">1.907%</td>
       <td class="delta-neg">−10.6% ✓</td>
-      <td class="rmse-val">3.60%</td>
+      <td class="rmse-val">6.77%</td>
       <td>Literature as a feature, not labels</td>
     </tr>
   </tbody>
@@ -590,8 +592,9 @@ HTML = f"""<!DOCTYPE html>
   systematic 3.42 percentage point label shift. The approach that worked best treats
   literature knowledge as a signal to be reasoned about, not as ground truth to be
   trained on directly. By routing that knowledge through a pre-trained sub-model
-  feature, we got a 10.6% accuracy improvement and a 45% improvement on
-  completely new catalyst families.
+  feature, we got a 10.6% accuracy improvement on our own chemistry &mdash; repeatable
+  across 10 seeds and on a held-out test set. (An earlier claim of a 45% out-of-distribution
+  improvement was withdrawn as data leakage; the honest leak-free OOD gain is modest.)
 </div>
 
 <!-- ── Next steps ─────────────────────────────────────────────────────────── -->

@@ -128,7 +128,7 @@ Why? Because of exactly what I just showed you. The model now sees two samples w
 
 "Now the best method. **Two-stage fine-tuning with DRST-filtered pre-training.** This achieved RMSE 1.907 — a 10.6 percent improvement over baseline. More than double the gain of any individual method.
 
-At the bottom: the out-of-distribution test. We held out 2,139 literature samples from non-Impregnation preparation methods — catalysts the model had never seen in any form during training. The baseline scores 6.53 on these. Our two-stage method scores 3.60. That is a 45 percent reduction in error on completely new catalyst families. I will explain how this works on the next slide."
+At the bottom: the out-of-distribution test. We held out 2,139 literature samples from non-Impregnation preparation methods — catalysts the model had never seen in training. The baseline scores 6.53. I want to correct an earlier version here: it claimed our method scored 3.60, a 45 percent reduction, but that was data leakage — the Stage-1 prior had been trained on those very test samples and their labels. With a genuinely blind prior the leak-free OOD RMSE is about 6.0 to 6.8, roughly level with baseline. The real, defensible win is in-distribution, which I'll show is repeatable and significant on the next slide."
 
 ---
 
@@ -180,13 +180,13 @@ The two tables on the right summarise the key numbers.
 
 For in-distribution performance — predicting our own experiments — RMSE dropped from 2.133 to 1.907. That is a reduction of 0.226 percentage points. To put this in context: our model predicts C2 yield for catalysts we have never tested. Getting 0.226 percentage points closer to the true answer means that if we were screening 1,000 new catalysts and picking the top 50 by predicted yield, we would now rank more of the genuinely high-performing catalysts into that top 50.
 
-For out-of-distribution performance — predicting literature experiments our model had never seen — RMSE dropped from 6.53 to 3.60, a 45 percent reduction.
+For out-of-distribution performance, I need to correct an earlier claim. That version said RMSE dropped from 6.53 to 3.60, a 45 percent reduction, and called it the more important result. On re-examination that number came from data leakage: the Stage-1 prior was trained on the OOD test samples themselves, so it had effectively seen the answers. With a leak-free prior — trained only on chemistry that excludes the test set — the honest OOD RMSE is about 6.0 to 6.8, roughly level with baseline.
 
-This OOD number is actually the more important result scientifically. It tells us the model has genuinely learned transferable chemical knowledge, not just memorised our specific impregnation protocol. When we ask it to predict a sol-gel La/Ce catalyst from 1995, it can now make a reasonable estimate. Without transfer learning, it was essentially guessing."
+So the honest scientific statement is the reverse of what that slide said: the strong, defensible result is *in-distribution*, and it is repeatable — ten random seeds, PFT wins every time, p below ten-to-the-minus-fourteen, and it holds on a fully held-out test set. The model is very good in our operating regime; I would not oversell it as a literature-extrapolation engine."
 
 **[Note at the bottom of the table]**
 
-"The small print: OOD test set is 2,139 samples from non-Impregnation preparation methods, held out from all training. These samples were never used in any training fold, in any method, at any stage. This is a true independent test."
+"The small print: the OOD set is 2,139 non-Impregnation samples. The key fix versus the earlier version is that the Stage-1 prior must not be trained on those rows; once it isn't, the OOD gain is modest and honest."
 
 ---
 
@@ -262,7 +262,7 @@ Third: there is a methodological subtlety I want to be transparent about. In the
 
 Adding literature data naively makes performance worse because the datasets have a 3.4 percentage point systematic label difference and 78 percent of literature samples describe catalyst chemistries our model has not encountered before.
 
-Two-stage fine-tuning resolves this by routing literature knowledge through a pre-trained sub-model rather than through competing training labels, achieving a 10.6 percent improvement in-distribution and a 45 percent improvement on completely held-out external catalysts.
+Two-stage fine-tuning resolves this by routing literature knowledge through a pre-trained sub-model rather than through competing training labels, achieving a 10.6 percent in-distribution improvement that is repeatable across ten seeds (p below ten-to-the-minus-fourteen) and holds on a held-out test set. On out-of-distribution catalysts the honest, leak-free gain is modest — roughly baseline — after correcting an earlier leakage-inflated figure.
 
 The next step that would give the largest return is adding GHSV and methane-to-oxygen ratio as features, which would address the systematic under-prediction of high-yield catalysts that no algorithmic change can fix.
 
@@ -388,9 +388,9 @@ A: "Because 3,852 is not negligibly small compared to 89,000. It is 4.1% of the 
 
 ---
 
-**Q: "The OOD improvement is 45%. Is that reliable?"**
+**Q: "The OOD improvement was reported as 45%. Is that reliable?"**
 
-A: "It is reliable as a directional result — the two-stage model clearly extrapolates better to unseen preparation methods. The specific number (6.53 → 3.60) depends on the composition of the OOD test set, which is 2,139 samples from non-Impregnation methods. It is possible that a different composition of novel catalysts would show a different magnitude of improvement. What we can say with confidence is that the two-stage prior gives the model a chemistry map of regions it was not trained on, and this is consistently beneficial. The OOD test confirms the improvement is real, not just statistical variance on our own held-out data."
+A: "No — and I corrected it, which I think is the honest thing to do. That 45% (6.53 → 3.60) came from data leakage: the Stage-1 prior was trained on the very out-of-distribution samples we then tested on, together with their true yields, so the prior effectively handed the final model the answers through the feature. When I retrain the prior with those OOD rows removed — a genuinely blind test — the leak-free OOD RMSE is about 6.0 to 6.8, roughly level with baseline. So I no longer claim a large OOD win. The reliable, defensible result is in-distribution: a 10.6% improvement that holds across ten random seeds at p below ten-to-the-minus-fourteen and on a fully held-out test set. And there is a clean lesson underneath it — quantile normalisation is a dial that trades OOD extrapolation for in-distribution accuracy, and we chose in-distribution because our goal is predicting our own next experiment."
 
 ---
 
