@@ -180,7 +180,7 @@ for i, (k, v) in enumerate(rows_l):
 add_rect(s, Inches(6.95), Inches(1.2), Inches(6.0), Inches(2.6),
          fill=RGBColor(0xFF, 0xF5, 0xE8), line=AMBER)
 add_rect(s, Inches(6.95), Inches(1.2), Inches(6.0), Inches(0.42), fill=AMBER)
-add_text(s, "Published Literature (≤2019)", Inches(7.1), Inches(1.23),
+add_text(s, "Published Literature Data (≤2019)", Inches(7.1), Inches(1.23),
          Inches(5.7), Inches(0.36), size=13, bold=True, color=WHITE)
 rows_r = [("Samples", "3,852"), ("Year", "1982 – 2019"),
           ("Preparation", "15+ methods"),
@@ -298,8 +298,8 @@ add_text(s, "The validation rule", Inches(0.55), Inches(1.23),
          Inches(6.7), Inches(0.36), size=13, bold=True, color=WHITE)
 bullets(s, [
     "Our 89,074 samples split into 5 folds",
-    "Training fold = 4/5 of our data + any literature",
-    "Validation fold = 1/5 of our data only",
+    "Training fold = 4/5 of lab data + any literature",
+    "Validation fold = 1/5 of lab data only",
     "Literature never appears in validation",
 ], Inches(0.45), Inches(1.7), Inches(6.9), Inches(0.4), size=12, spacing=0.4)
 
@@ -323,7 +323,7 @@ add_text(s, "in units of percentage points of C₂ yield.\nAn RMSE of 2.1 means 
          size=11, color=DGRAY)
 
 # Fold visualization
-add_text(s, "5-fold split (our data, n=89,074)",
+add_text(s, "5-fold split (lab data, n=89,074)",
          Inches(7.7), Inches(2.85), Inches(5.3), Inches(0.4),
          size=12, bold=True, color=NAVY)
 
@@ -364,7 +364,7 @@ add_text(s, "CV RMSE", Inches(4.7), Inches(1.83), Inches(1.8), Inches(0.36),
          size=12, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
 add_rect(s, Inches(0.4), Inches(2.22), Inches(6.2), Inches(0.5),
          fill=LIGHT, line=LGRAY)
-add_text(s, "Baseline (our data only)",
+add_text(s, "Baseline (lab data only)",
          Inches(0.55), Inches(2.27), Inches(4.0), Inches(0.42),
          size=12, color=BLACK)
 add_text(s, "2.133", Inches(4.7), Inches(2.27), Inches(1.8), Inches(0.42),
@@ -392,7 +392,7 @@ add_rect(s, Inches(0.4), Inches(4.97), Inches(6.2), Inches(0.5),
 add_text(s, "Naive merge (3,852 lit rows)",
          Inches(0.55), Inches(5.02), Inches(4.0), Inches(0.42),
          size=12, bold=True, color=BLACK)
-add_text(s, "2.248", Inches(4.7), Inches(5.02), Inches(1.8), Inches(0.42),
+add_text(s, "2.241", Inches(4.7), Inches(5.02), Inches(1.8), Inches(0.42),
          size=12, bold=True, color=RDARK, align=PP_ALIGN.CENTER)
 add_text(s, "+5.4% worse than baseline.",
          Inches(0.4), Inches(5.6), Inches(6.2), Inches(0.4),
@@ -460,7 +460,7 @@ add_text(s, "Threshold sweep",
 sweep_rows = [
     ("τ = 0.10", "1168 kept", "2.068", False),
     ("τ = 0.20", "987 kept",  "2.034", False),
-    ("τ = 0.30", "782 kept",  "2.019", True),
+    ("best τ", "~200 kept",  "2.127", False),
     ("τ = 0.40", "543 kept",  "2.045", False),
 ]
 add_rect(s, Inches(8.5), Inches(4.25), Inches(4.5), Inches(0.4), fill=NAVY)
@@ -507,7 +507,7 @@ bullets(s, [
     "σ via median heuristic (parameter-free)",
 ], Inches(9.25), Inches(1.75), Inches(3.7), Inches(0.4), size=11, spacing=0.38)
 callout(s,
-        "KMM picks weights so the weighted literature cloud matches our data cloud. "
+        "KMM picks weights so the weighted literature cloud matches lab data cloud. "
         "Samples inside our chemistry earn weight; those outside fade to zero.",
         Inches(9.2), Inches(3.35), Inches(3.8), Inches(0.62),
         fill=RGBColor(0xE8, 0xF5, 0xFF), border=ACCENT, text_color=DGRAY, size=9, italic=False)
@@ -517,8 +517,8 @@ add_text(s, "Result",
          Inches(9.2), Inches(4.08), Inches(3.8), Inches(0.4),
          size=13, bold=True, color=NAVY)
 results_rows = [
-    ("KMM CV RMSE",        "2.035"),
-    ("Δ vs baseline",      "−4.6%"),
+    ("KMM CV RMSE",        "2.261"),
+    ("Δ vs baseline",      "+6.0% (worse)"),
     ("Near-zero weights",  "78.5%"),
     ("Agreement w/ DRST",  "r = 0.79"),
 ]
@@ -632,14 +632,14 @@ nav_bar(s, 10, TOTAL)
 add_img(s, "fig_walkthrough_results.png", Inches(0.3), Inches(1.25), Inches(8.3))
 
 # Right: CV table + OOD table
-add_text(s, "Cross-validation (our data)",
+add_text(s, "Cross-validation (lab data)",
          Inches(8.8), Inches(1.3), Inches(4.2), Inches(0.4),
          size=14, bold=True, color=NAVY)
 cv_rows = [
-    ("Naive merge",        "2.248", "+5.4%",  False, True),
+    ("Naive merge",        "2.241", "+5.1%",  False, True),
     ("Baseline",           "2.133", "—",      False, False),
-    ("KMM weighted",       "2.035", "−4.6%",  False, False),
-    ("DRST (τ=0.30)",      "2.019", "−5.3%",  False, False),
+    ("KMM weighted",       "2.261", "+6.0%",  False, True),
+    ("DRST (best)",        "2.127", "~0%",    False, False),
     ("Prior FT  ★",        "1.907", "−10.6%", True,  False),
 ]
 add_rect(s, Inches(8.8), Inches(1.75), Inches(4.2), Inches(0.4), fill=NAVY)

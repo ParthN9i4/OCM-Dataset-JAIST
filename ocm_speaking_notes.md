@@ -27,9 +27,9 @@ methods still can't do."
 ## Slide 2 — The Problem (Chapter 1)
 
 "This slide sets up why this isn't just 'download some data and append it'. The two cards
-show our lab data and the published literature side by side.
+show lab data and the published literature side by side.
 
-Our data: 89,074 experiments, all done with the impregnation preparation method, all in
+Lab data: 89,074 experiments, all done with the impregnation preparation method, all in
 2025, with a mean yield of 5.25%. The literature: 3,852 papers from 1982 to 2019, using
 15 different preparation methods, with a mean yield of 8.67%. That 3.42 percentage-point
 gap is not noise — the t-statistic is −32.2 with a p-value below 10 to the power of
@@ -84,8 +84,8 @@ projection. This figure makes it concrete. Each panel is a horizontal bar chart 
 15 elements by usage frequency — meaning what fraction of experiments in that dataset
 include a non-zero loading of that element.
 
-Our lab data is on the left, literature is on the right. The palettes are clearly
-different. Our data in 2025 focused on a specific set of active phases and promoters.
+Lab data is on the left, literature is on the right. The palettes are clearly
+different. Lab data in 2025 focused on a specific set of active phases and promoters.
 Literature, compiled over 40 years from dozens of independent research groups around the
 world, spreads across a broader and different mix — different rare-earth promoters,
 different support materials, different alkali metal choices.
@@ -125,7 +125,7 @@ data only — is 2.133. That is the target every subsequent method must beat."
 
 ## Slide 6 — Baseline + Why Naive Merging Fails (Chapter 4)
 
-"Step one: establish the baseline. Train on our data alone — no literature — and get RMSE
+"Step one: establish the baseline. Train on lab data alone — no literature — and get RMSE
 2.133. That's the number to beat. If a method returns anything higher, it has actively
 harmed the model.
 
@@ -149,7 +149,7 @@ selective about *which* samples we add and *how* we represent their information.
 ## Slide 7 — DRST — Filtering by Chemical Similarity (Chapter 5)
 
 "The first serious attempt: instead of adding all literature, only add the part that
-chemically resembles our data. DRST — Density-Ratio Selective Transfer — scores each
+chemically resembles lab data. DRST — Density-Ratio Selective Transfer — scores each
 literature sample on how much it looks like our chemistry.
 
 The scoring method: train a logistic classifier to separate our samples from literature,
@@ -178,7 +178,7 @@ binary decision throws away gradual similarity information."
 continuous. Instead of keep-or-discard, every literature sample gets a weight between 0
 and 10. We find the entire weight vector at once by solving an optimisation problem: choose
 weights so the weighted average of literature samples, in a kernel similarity space,
-matches the average of our data as closely as possible.
+matches the average of lab data as closely as possible.
 
 The RBF kernel measures similarity by distance in the 67-feature space. Catalysts with
 similar element profiles score high; chemically distant ones score near zero. The bandwidth
@@ -298,7 +298,7 @@ has access to."
 effect at high yields.
 
 The table breaks down prediction error by yield range. Below 6% yield — where the vast
-majority of our data lives — RMSE is 1.43 to 1.48, quite good. Between 6 and 10%, it
+majority of lab data lives — RMSE is 1.43 to 1.48, quite good. Between 6 and 10%, it
 rises to 1.95. Between 10 and 15%, 2.58 — still manageable. But above 15%, RMSE jumps to
 4.70, and there is a systematic bias of −4.2 percentage points. The model is not just
 imprecise at high yields — it is consistently and substantially under-predicting.
@@ -496,7 +496,7 @@ mistakes as it goes, which works much better here."
 - `FEATURES` lists temperature, the encoded prep method, and the 65 elements — 67 total.
   We pull those into `X_ours` and `X_lit`, and the yields into `y_ours` and `y_lit`.
 - The last three lines are the critical ones: `scaler.fit_transform(X_ours)` learns the
-  mean and standard deviation *from our data* and scales it; `scaler.transform(X_lit)`
+  mean and standard deviation *from lab data* and scales it; `scaler.transform(X_lit)`
   applies that *same* ruler to literature. Fit on ours, transform both.
 
 The output confirms 89,074 × 67 for us and 3,852 × 67 for literature."
@@ -531,7 +531,7 @@ Left panel, the yield distributions:
 orange isn't just shifted — it has a heavier right tail. That's the publication-bias skew.
 
 Right panel, the chemistry:
-- `idx_sub = np.random.choice(..., size=3000)` subsamples our data to 3,000 points, because
+- `idx_sub = np.random.choice(..., size=3000)` subsamples lab data to 3,000 points, because
   plotting all 89,000 would be a solid blob.
 - `np.vstack([X_ours_sc[idx_sub], X_lit_sc])` stacks our subsample *on top of* literature
   into one array — ours first, literature second. That stacking order is why, two lines
@@ -578,7 +578,7 @@ an RMSE of 2.1 means we're typically off by about 2.1 points. We square errors s
 misses hurt more than small ones, which matters when a bad prediction can waste a real
 experiment.
 
-The key design choice is **asymmetric** cross-validation. We split our data into five
+The key design choice is **asymmetric** cross-validation. We split lab data into five
 folds, rotate which one is held out, and average. But literature, when we use it, only
 ever goes into the *training* side — never the held-out test fold. The reason is that the
 question is 'how well do we predict *our* experiments?' If literature leaked into the test
@@ -606,7 +606,7 @@ function, so the comparison is always apples-to-apples."
   Why `random_state=42`? Reproducibility — we want the exact same folds every run so the
   comparison between methods is deterministic.
 - Inside the loop, the first two lines pull out the validation fold: `X_ours_sc[val_idx]`
-  and `y_ours[val_idx]`. This is *always our data* — that line never changes. That's the
+  and `y_ours[val_idx]`. This is *always lab data* — that line never changes. That's the
   asymmetry, right there.
 - The `if X_train_extra is not None` branch: `np.vstack` stacks our training fold on top of
   the extra literature, and `np.concatenate` does the same for the labels. The sample
@@ -626,7 +626,7 @@ So to test any method, you just hand this function a different `X_train_extra`."
 
 *(Two markdown cells.)*
 
-"First, the baseline: train on our data only, no literature. That gives RMSE 2.133 — the
+"First, the baseline: train on lab data only, no literature. That gives RMSE 2.133 — the
 number every method has to beat. Anything above it has *harmed* the model.
 
 Then the obvious experiment: just append all 3,852 literature rows and retrain. More data
@@ -671,7 +671,7 @@ full weight, even though they're almost identical. That's what KMM fixes."
 ## Code cell — DRST classifier (`156b2acf`)
 
 "Line by line:
-- `sub_idx = rng.choice(..., size=10_000)` subsamples our data to 10,000. Why subsample?
+- `sub_idx = rng.choice(..., size=10_000)` subsamples lab data to 10,000. Why subsample?
   Our 89,074 samples are already heavily dominant — using all of them would make the
   classifier's decision boundary overly biased toward the majority class and slow to train.
   10,000 is enough to characterise our distribution's shape without dominating.
@@ -726,7 +726,7 @@ number would come from a separate test split not used in τ selection."
 "KMM keeps DRST's goal but removes the cliff. Instead of keep-or-discard, every literature
 sample gets a continuous weight between 0 and 10. The clever part is that it doesn't score
 samples one at a time — it solves for the *whole set* of weights at once, choosing them so
-the weighted literature cloud looks, on average, like our data cloud. Samples sitting
+the weighted literature cloud looks, on average, like lab data cloud. Samples sitting
 inside our cloud earn weight; samples outside it have nothing to match and fade to zero.
 
 The result, 2.035, is basically the same as DRST. The interesting bit is the agreement:
@@ -751,9 +751,9 @@ next method breaks."
   actual spread of the feature space.
 - `K_ss` is literature-to-literature similarity — how similar each pair of literature
   samples is to each other. `K_st` is literature-to-ours — how similar each literature
-  sample is to our data as a whole.
+  sample is to lab data as a whole.
 - `kappa = (n_s / n_t) * K_st.sum(axis=1)` — for each literature sample, this aggregates
-  its total similarity to all our data points, scaled by the size ratio. High kappa means
+  its total similarity to all lab data points, scaled by the size ratio. High kappa means
   this literature sample is broadly similar to many of ours → it should get weight.
 - The `obj` and `grad` functions define the optimisation — minimise ½ wᵀK_ss·w − κ·w.
   Intuitively: minimising wᵀK_ss·w penalises assigning high weight to samples that are
@@ -833,7 +833,7 @@ due to leakage, which I've corrected."
 - Now the CV loop. For each fold:
   - `y_lit_qn = quantile_normalize_y(y_lit[mask], y_ours[train_idx])` — critical: we
     normalise *inside the fold*, using only the *training fold's* yields as the target
-    distribution. If we normalised once outside the loop using all our data, the
+    distribution. If we normalised once outside the loop using all lab data, the
     normalisation would 'see' the validation fold's yields — that's data leakage. Doing it
     inside the loop ensures the validation fold's yield distribution never influenced the
     normalisation.
@@ -890,7 +890,7 @@ Chapter 9."
 ## Code cell — SHAP (`76bea5fc`)
 
 "Line by line:
-- We retrain the whole pipeline once on *all* our data, outside the CV loop. Why retrain?
+- We retrain the whole pipeline once on *all* lab data, outside the CV loop. Why retrain?
   In cross-validation, each fold produces a different model — there's no single model to
   explain. Here we want one stable model to interrogate. Quantile-normalise the full
   literature, train Stage-1 `pre_shap` on all filtered literature, generate `prior_all`

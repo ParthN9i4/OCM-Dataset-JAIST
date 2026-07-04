@@ -84,11 +84,11 @@ The key fact in the top bullet: 78.5 percent of literature samples fall in regio
 
 **[Pause]**
 
-"The second and third bullets reinforce this. Our data is dominated by barium — Ba is the primary active phase in our impregnation protocol and it appears in one third of our samples. Literature data is dominated by silicon, sodium, and manganese — these elements are characteristic of sol-gel and coprecipitation catalyst families. Lanthanum, cerium, strontium, and calcium are shared — they appear meaningfully in both sets, which is actually a good sign for transfer learning."
+"The second and third bullets reinforce this. Lab data is dominated by barium — Ba is the primary active phase in our impregnation protocol and it appears in one third of our samples. Literature data is dominated by silicon, sodium, and manganese — these elements are characteristic of sol-gel and coprecipitation catalyst families. Lanthanum, cerium, strontium, and calcium are shared — they appear meaningfully in both sets, which is actually a good sign for transfer learning."
 
 **[Critical point — say this clearly]**
 
-"I want to be precise about what this means: the datasets differ in *emphasis*, not in completely disjoint chemistry. Both know about La, Ce, Sr, Mg, Li. But our data over-represents Ba and theirs over-represents Si, Na, Mn. This overlap is what makes it possible to transfer knowledge at all. If the chemistries were completely foreign to each other, no method would work."
+"I want to be precise about what this means: the datasets differ in *emphasis*, not in completely disjoint chemistry. Both know about La, Ce, Sr, Mg, Li. But lab data over-represents Ba and theirs over-represents Si, Na, Mn. This overlap is what makes it possible to transfer knowledge at all. If the chemistries were completely foreign to each other, no method would work."
 
 **[Transition]**
 
@@ -118,7 +118,7 @@ Why? Because of exactly what I just showed you. The model now sees two samples w
 
 "The next three methods are progressively more sophisticated attempts to deal with this. 
 
-**DRST** — Density Ratio Selective Transfer — asks the question: which of the 3,852 literature samples look the most like our data chemically? It trains a classifier to score each literature sample by how much it resembles our distribution and discards the ones that are too different. At the best threshold, we keep 782 samples — about 20 percent of literature. RMSE drops to 2.019, a 5.3 percent improvement over baseline.
+**DRST** — Density Ratio Selective Transfer — asks the question: which of the 3,852 literature samples look the most like lab data chemically? It trains a classifier to score each literature sample by how much it resembles our distribution and discards the ones that are too different. At the best threshold, we keep 782 samples — about 20 percent of literature. RMSE drops to 2.019, a 5.3 percent improvement over baseline.
 
 **KMM** — Kernel Mean Matching — takes a softer approach. Instead of a binary keep-or-discard decision, it assigns a continuous weight to each literature sample. Samples close to our distribution in chemical space get weight near 1 — they contribute fully. Samples far away get weight near zero — they effectively disappear. RMSE is 2.035, a 4.6 percent improvement. Very similar to DRST, which is reassuring — two different methods identify roughly the same samples as useful.
 
@@ -142,7 +142,7 @@ At the bottom: the out-of-distribution test. We held out 2,139 literature sample
 
 We take the 782 literature samples that passed the DRST filter. We train an XGBoost model on just those 782 rows. This model learns: given an element composition and temperature, what does the *literature* say the C2 yield should be?
 
-It does not see our data. It does not know our labels. It is purely a literature expert.
+It does not see lab data. It does not know our labels. It is purely a literature expert.
 
 Once trained, we run all 89,000 of our internal catalyst compositions through this literature expert. For every one of our experiments, the expert says: 'If this composition had been tested by a literature group, they would have predicted approximately X percent yield.'
 
@@ -156,7 +156,7 @@ Now we train a LightGBM model on our 89,000 internal samples. But each sample no
 
 Stage 2 trains only on our labels. Not on literature labels. It learns: given the element composition, temperature, preparation method, *and* what the literature expert would predict — what is our actual measured yield?
 
-The model can learn to trust the prior feature heavily in some regions and ignore it in others. If a Ba-dominant catalyst is presented, the prior might say 7 percent and our data says 5 percent — Stage 2 learns to discount the prior for that element combination. If a La/Ce catalyst is presented, which is common in both datasets, the prior might be more reliable and Stage 2 learns to weight it more heavily."
+The model can learn to trust the prior feature heavily in some regions and ignore it in others. If a Ba-dominant catalyst is presented, the prior might say 7 percent and lab data says 5 percent — Stage 2 learns to discount the prior for that element combination. If a La/Ce catalyst is presented, which is common in both datasets, the prior might be more reliable and Stage 2 learns to weight it more heavily."
 
 **[The key property — read this clearly]**
 
@@ -250,7 +250,7 @@ Methods like DANN — Domain Adversarial Neural Networks — use a neural networ
 
 "Before questions, I want to be explicit about the limitations of this work.
 
-First: the missing reaction conditions are not a minor issue. They are the primary accuracy ceiling. Every method we tried, including the best one, under-predicts high-yield catalysts systematically. The −10.6% RMSE improvement is real and correct, but it is measured primarily on the 0–10% yield range where most of our data lives. In the 15–22% range where the interesting catalysts are, we are still off by 4 percent on average.
+First: the missing reaction conditions are not a minor issue. They are the primary accuracy ceiling. Every method we tried, including the best one, under-predicts high-yield catalysts systematically. The −10.6% RMSE improvement is real and correct, but it is measured primarily on the 0–10% yield range where most of lab data lives. In the 15–22% range where the interesting catalysts are, we are still off by 4 percent on average.
 
 Second: the publication bias correction partially addresses why literature labels are higher on average. But it does not address the conditional bias — a literature Na/Si catalyst that reports 12% yield might have used conditions specifically optimised to achieve 12%. Our model will see the same composition at our standard conditions and reasonably predict 7%. That gap is real and not a model error.
 
@@ -384,7 +384,7 @@ A: "We considered it. For tabular data with 68 features and 89,000 rows, gradien
 
 **Q: "Why did naive merging hurt performance when we have 89,000 internal samples that should dominate?"**
 
-A: "Because 3,852 is not negligibly small compared to 89,000. It is 4.1% of the training set. In gradient boosting, each training sample contributes to which splits are made — the splits are chosen to minimise total loss across all samples. A literature sample with yield 10% in a region where our samples all have yield 5% will push split boundaries to accommodate both. Even at 4%, this creates a systematic distortion in the decision boundaries for the most common yield range. The model's RMSE on our data worsened by 5.4% purely from this contamination."
+A: "Because 3,852 is not negligibly small compared to 89,000. It is 4.1% of the training set. In gradient boosting, each training sample contributes to which splits are made — the splits are chosen to minimise total loss across all samples. A literature sample with yield 10% in a region where our samples all have yield 5% will push split boundaries to accommodate both. Even at 4%, this creates a systematic distortion in the decision boundaries for the most common yield range. The model's RMSE on lab data worsened by 5.4% purely from this contamination."
 
 ---
 
@@ -402,7 +402,7 @@ A: "The baseline RMSE would likely improve significantly just from more data. Th
 
 **Q: "When you say 'Stage 2 trains only on our labels,' what stops it from being biased by Stage 1?"**
 
-A: "Stage 2 can be affected by Stage 1's systematic errors — if Stage 1 consistently over-estimates yield for a certain element combination, Stage 2 might partially inherit that bias through the prior feature. However, Stage 2 has 89,000 internal samples with their true labels, which outnumber the indirect Stage 1 influence by a large margin. The LightGBM model will learn a correction to the prior wherever our data contradicts it. The direct label bias — literature's 3.42% higher mean — cannot enter Stage 2's training at all, because Stage 2's loss function is computed only on our labels."
+A: "Stage 2 can be affected by Stage 1's systematic errors — if Stage 1 consistently over-estimates yield for a certain element combination, Stage 2 might partially inherit that bias through the prior feature. However, Stage 2 has 89,000 internal samples with their true labels, which outnumber the indirect Stage 1 influence by a large margin. The LightGBM model will learn a correction to the prior wherever lab data contradicts it. The direct label bias — literature's 3.42% higher mean — cannot enter Stage 2's training at all, because Stage 2's loss function is computed only on our labels."
 
 ---
 

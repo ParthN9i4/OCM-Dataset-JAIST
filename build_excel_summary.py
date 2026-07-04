@@ -123,20 +123,20 @@ rows = [
      "✅ Done"),
     (5,  "Naive Concatenation (Method 1)",
      "Simply appended all 3,852 literature rows to training data and retrained",
-     "RMSE WORSENED to 2.248% (+5.4%). Label shift and covariate shift "
+     "RMSE WORSENED to 2.241% (+5.1%). Label shift and covariate shift "
      "caused contradictory gradients.",
      "✅ Done — rejected"),
     (6,  "DRST Filter (Method 2)",
      "Trained logistic classifier to score each literature sample by "
      "P(ours|x). Kept 782 samples above threshold τ=0.30.",
-     "RMSE improved to 2.019% (−5.3%). Only chemically similar "
-     "literature enters training.",
+     "RMSE ~2.18% (tau=0.30) / best 2.127% over the full sweep = no gain over baseline. "
+     "Filtering removes foreign chemistry but not the label shift.",
      "✅ Done"),
     (7,  "KMM Reweighting (Method 3)",
      "Quadratic program assigns per-sample importance weights to literature; "
      "78.5% receive near-zero weight",
-     "RMSE improved to 2.035% (−4.6%). Soft alternative to hard DRST filter. "
-     "Correlation with DRST scores r=0.792.",
+     "RMSE 2.261% (+6.0%, worse). Soft alternative to hard DRST filter (r=0.792 with DRST); "
+     "still injects biased literature labels, so it also fails to beat baseline.",
      "✅ Done"),
     (8,  "Publication Bias Correction (Method 4)",
      "Quantile-normalised literature Y(C2) to match our empirical distribution, "
@@ -253,16 +253,16 @@ method_rows = [
      "2.133", "—", "Reference point"),
     (1, "Naive concatenation",
      "All 3,852 literature rows added with equal weight.",
-     "2.248", "+5.4% ❌",
+     "2.241", "+5.1% ❌",
      "Rejected — label shift and covariate shift degrade performance"),
     (2, "DRST (τ=0.30)",
      "Logistic classifier scores P(ours|x). Keep 782/3852 samples above threshold.",
-     "2.019", "−5.3% ✓",
-     "Good hard filter; interpretable threshold"),
+     "2.181", "+2.3% ❌",
+     "Filtering alone does not beat baseline (best over sweep 2.127)"),
     (3, "KMM reweighting",
      "QP solver assigns per-sample weights. 78.5% receive near-zero weight.",
-     "2.035", "−4.6% ✓",
-     "Soft alternative to DRST; correlated (r=0.792) but slower"),
+     "2.261", "+6.0% ❌",
+     "Soft alternative to DRST; correlated (r=0.792) but also worse than baseline"),
     (4, "Publication bias correction",
      "Quantile-normalise literature Y(C2) to match internal distribution.",
      "2.044", "−4.2% ✓",
@@ -370,7 +370,7 @@ apply_header_row(ws5, 2, 1,
     ACCENT)
 
 elem_rows = [
-    ("Ba",  "33.5", "~8",   "−25.5", "Dominates our data; rare in literature"),
+    ("Ba",  "33.5", "~8",   "−25.5", "Dominates lab data; rare in literature"),
     ("Si",  "~3",   "31.8", "+28.8", "Literature-dominant — silica supports common"),
     ("Na",  "~4",   "30.1", "+26.1", "Literature-dominant — Na promoters widely studied"),
     ("Mn",  "~5",   "28.4", "+23.4", "Literature-dominant — Mn/Mg catalysts common"),
@@ -431,7 +431,7 @@ shap_rows = [
     (5,  "La_wt%",                  "↑ Positive",   "Medium",    "Lanthanum stabilises active sites; common high-yield promoter in literature"),
     (6,  "Ce_wt%",                  "↑ Positive",   "Medium",    "Ceria provides redox cycling; enhances O₂ activation"),
     (7,  "Li_wt%",                  "Mixed",        "Medium",    "Alkali promoters affect basicity — too little or too much reduces yield"),
-    (8,  "Na_wt%",                  "↓ Negative",   "Low-Med",   "High Na loadings sinter the catalyst surface in our data"),
+    (8,  "Na_wt%",                  "↓ Negative",   "Low-Med",   "High Na loadings sinter the catalyst surface in lab data"),
     (9,  "Si_wt%",                  "↓ Negative",   "Low-Med",   "Silica support reduces surface basicity needed for OCM"),
     (10, "W_wt%",                   "Mixed",        "Low",       "Tungstate phases effective in some catalyst families but not our impregnation protocol"),
 ]
@@ -474,7 +474,7 @@ apply_header_row(ws7, 3, 1,
     ACCENT)
 
 resid_rows = [
-    ("0 – 3%",   "1.427", "≈ 0.0",  "~35,000",  "Well-calibrated — bulk of our data falls here"),
+    ("0 – 3%",   "1.427", "≈ 0.0",  "~35,000",  "Well-calibrated — bulk of lab data falls here"),
     ("3 – 6%",   "1.476", "≈ 0.0",  "~30,000",  "Well-calibrated — good coverage in training"),
     ("6 – 10%",  "1.950", "≈ −0.3", "~15,000",  "Slight under-prediction begins"),
     ("10 – 15%", "2.582", "≈ −1.5", "~7,000",   "Clear under-prediction; fewer training samples"),

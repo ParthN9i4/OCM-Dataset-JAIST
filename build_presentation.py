@@ -42,7 +42,7 @@ S2 = """
         </ul>
       </div>
       <div class="data-card amber-card">
-        <div class="eyebrow">Published Literature</div>
+        <div class="eyebrow">Published Literature Data</div>
         <div class="hero-n">3,852</div>
         <div class="hero-sub">samples</div>
         <ul class="fact-list">
@@ -67,7 +67,7 @@ S3 = f"""
     <div class="cols-2 mt-4 align-mid">
       <div class="fig-wrap">
         {img("fig_pca_domain_gap.png")}
-        <p class="fig-cap">PCA of all 92,926 samples. Blue = our data, orange = literature.</p>
+        <p class="fig-cap">PCA of all 92,926 samples. Blue = lab data, orange = literature data.</p>
       </div>
       <div>
         <p class="lead">The two datasets live in<br><b>different corners of chemical space.</b></p>
@@ -98,7 +98,7 @@ S4 = """
       </thead>
       <tbody>
         <tr class="tr-base">
-          <td><b>Baseline</b></td><td>Our data only — no literature</td>
+          <td><b>Baseline</b></td><td>Lab data only — no literature</td>
           <td><b>2.133</b></td><td>—</td>
         </tr>
         <tr class="tr-bad">
@@ -135,7 +135,7 @@ S5 = """
     <h2>The insight — use literature as a feature, not a label</h2>
     <div class="pipeline mt-4">
       <div class="pnode blue-node">
-        <div class="pnode-title">Literature</div>
+        <div class="pnode-title">Literature Data</div>
         <div class="pnode-sub">3,852 samples<br>noisy labels, publication bias</div>
       </div>
       <div class="parr">→</div>
@@ -152,7 +152,7 @@ S5 = """
     <div class="pipe-join">↓ added as extra input feature ↓</div>
     <div class="pipeline">
       <div class="pnode green-node">
-        <div class="pnode-title">Our Data</div>
+        <div class="pnode-title">Lab Data</div>
         <div class="pnode-sub">89,074 samples<br>clean, unbiased labels</div>
       </div>
       <div class="parr">→</div>

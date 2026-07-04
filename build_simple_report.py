@@ -240,7 +240,7 @@ HTML = f"""<!DOCTYPE html>
 <div class="fig-wrap">
   {img("fig_pca_domain_gap.png")}
   <div class="fig-caption">
-    PCA of all 92,926 catalyst compositions. Blue = our lab data; red = literature.
+    PCA of all 92,926 catalyst compositions. Blue = lab data; red = literature data.
     The clouds overlap but are not the same &mdash; literature covers regions our model
     has never encountered.
   </div>
@@ -265,7 +265,7 @@ HTML = f"""<!DOCTYPE html>
 <!-- Method 0: Baseline -->
 <div class="method-card">
   <div class="card-header baseline">
-    <span class="card-title">Baseline &mdash; Our Data Only (no literature)</span>
+    <span class="card-title">Baseline &mdash; Lab Data Only (no literature)</span>
     <span class="card-rmse">RMSE 2.133%</span>
   </div>
   <div class="card-body">
@@ -283,7 +283,7 @@ HTML = f"""<!DOCTYPE html>
 <div class="method-card">
   <div class="card-header bad">
     <span class="card-title">Attempt 1 &mdash; Just Add All Literature</span>
-    <span class="card-rmse">RMSE 2.248% ▲</span>
+    <span class="card-rmse">RMSE 2.241% ▲</span>
   </div>
   <div class="card-body">
     <p>
@@ -292,8 +292,8 @@ HTML = f"""<!DOCTYPE html>
       model, right?
     </p>
     <p>
-      <strong>What happened:</strong> RMSE went from 2.133 to 2.248 &mdash; <em>worse</em>
-      by 5.4%. Adding the data actively hurt performance.
+      <strong>What happened:</strong> RMSE went from 2.133 to 2.241 &mdash; <em>worse</em>
+      by 5.1%. Adding the data actively hurt performance.
     </p>
     <p>
       <strong>Why it failed:</strong> The model now sees two catalysts with nearly
@@ -312,21 +312,20 @@ HTML = f"""<!DOCTYPE html>
 
 <!-- Method 2: DRST -->
 <div class="method-card">
-  <div class="card-header ok">
+  <div class="card-header bad">
     <span class="card-title">Attempt 2 &mdash; Only Keep Similar Literature (DRST)</span>
-    <span class="card-rmse">RMSE 2.019% ▼</span>
+    <span class="card-rmse">RMSE 2.18% ▲</span>
   </div>
   <div class="card-body">
     <p>
       <strong>The idea:</strong> If the problem is that 78.5% of literature samples are
-      chemically unlike our data, what if we only use the ones that <em>are</em> similar?
+      chemically unlike lab data, what if we only use the ones that <em>are</em> similar?
       We trained a classifier to score each literature sample by how much it resembles our
       data chemistry. We then kept only the ones above a threshold &mdash; 782 samples
       out of 3,852.
     </p>
     <p>
-      <strong>What happened:</strong> RMSE dropped to 2.019%, a 5.3% improvement over
-      baseline. The first method to actually help.
+      <strong>What happened:</strong> RMSE was 2.181% at &tau;=0.30 (best over the full 0&rarr;1 sweep: 2.127%) &mdash; essentially <em>no</em> improvement over the baseline.
     </p>
     <p>
       <strong>Why it works:</strong> The 782 kept samples describe catalyst chemistries
@@ -343,23 +342,20 @@ HTML = f"""<!DOCTYPE html>
 
 <!-- Method 3: KMM -->
 <div class="method-card">
-  <div class="card-header ok">
+  <div class="card-header bad">
     <span class="card-title">Attempt 3 &mdash; Soft Weights Per Sample (KMM)</span>
-    <span class="card-rmse">RMSE 2.035% ▼</span>
+    <span class="card-rmse">RMSE 2.261% ▲</span>
   </div>
   <div class="card-body">
     <p>
       <strong>The idea:</strong> Instead of a binary keep-or-discard decision,
       assign each literature sample a continuous weight between 0 and 10 based
-      on how similar its chemistry is to our data distribution. Samples very close
+      on how similar its chemistry is to lab data distribution. Samples very close
       to our distribution count almost fully; samples far away contribute almost nothing.
       This is solved with a quadratic optimisation program.
     </p>
     <p>
-      <strong>What happened:</strong> RMSE of 2.035%, a 4.6% improvement. Almost
-      identical to DRST. Importantly, 78.5% of samples received near-zero weight &mdash;
-      which agrees with DRST's hard filter. Two independent methods converging on the
-      same answer is reassuring.
+      <strong>What happened:</strong> RMSE of 2.261% &mdash; <em>worse</em> than baseline, like DRST. 78.5% of samples received near-zero weight, which agrees with DRST's hard filter (r=0.79). Two independent filtering methods converge &mdash; and both confirm that filtering alone does not beat the baseline.
     </p>
     <p>
       <strong>Why it works:</strong> Same logic as DRST but with softer boundaries.
@@ -422,7 +418,7 @@ HTML = f"""<!DOCTYPE html>
       It learns &ldquo;which element combinations does literature associate with high yield?&rdquo;
       For every one of our 89,074 experiments, we ask Stage 1 what it would predict.
       That answer becomes a 68th feature called <code>lit_prior_prediction</code>.
-      Stage 2 then trains our main LightGBM model on our data with this extra feature included.
+      Stage 2 then trains our main LightGBM model on lab data with this extra feature included.
     </p>
     <p>
       <strong>What happened:</strong> RMSE of 1.907%, a <strong>10.6% improvement</strong>
@@ -464,7 +460,7 @@ HTML = f"""<!DOCTYPE html>
   <tbody>
     <tr>
       <td>0</td>
-      <td>Baseline (our data only)</td>
+      <td>Baseline (lab data only)</td>
       <td class="rmse-val">2.133%</td>
       <td>&mdash;</td>
       <td class="rmse-val">6.53%</td>
@@ -473,24 +469,24 @@ HTML = f"""<!DOCTYPE html>
     <tr class="worst-row">
       <td>1</td>
       <td>Naive concatenation</td>
-      <td class="rmse-val">2.248%</td>
-      <td class="delta-pos">+5.4% ✗</td>
+      <td class="rmse-val">2.241%</td>
+      <td class="delta-pos">+5.1% ✗</td>
       <td class="rmse-val">6.21%</td>
       <td>Add everything equally</td>
     </tr>
     <tr>
       <td>2</td>
       <td>DRST filter (τ = 0.30)</td>
-      <td class="rmse-val">2.019%</td>
-      <td class="delta-neg">−5.3%</td>
+      <td class="rmse-val">2.181%</td>
+      <td class="delta-pos">+2.3% ✗</td>
       <td class="rmse-val">4.95%</td>
       <td>Keep only similar samples</td>
     </tr>
     <tr>
       <td>3</td>
       <td>KMM reweighting</td>
-      <td class="rmse-val">2.035%</td>
-      <td class="delta-neg">−4.6%</td>
+      <td class="rmse-val">2.261%</td>
+      <td class="delta-pos">+6.0% ✗</td>
       <td class="rmse-val">5.10%</td>
       <td>Soft per-sample weights</td>
     </tr>
