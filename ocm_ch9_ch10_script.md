@@ -169,7 +169,7 @@ separation is a lower bound; the rigorous measure of the gap is the DRST classif
 
 "I fit the PCA on the *combined* set — our lab points plus all the literature — because you can only
 judge whether two clouds overlap if they are drawn on the *same* axes. If I fit it on the literature
-alone, I would see the literature's internal structure but have no common frame to compare our data
+alone, I would see the literature's internal structure but have no common frame to compare lab data
 against. The general principle is: when your goal is *comparison*, define the projection on a shared
 basis — either fit on the union, or fit on one domain and project the other onto it. The trap to
 avoid is fitting on one domain and then reading the other domain's spread as if it were meaningful

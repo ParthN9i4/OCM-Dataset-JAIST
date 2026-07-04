@@ -131,7 +131,7 @@
     \end{column}
 
     \begin{column}{0.45\textwidth}
-      \begin{block}{Published Literature ($\leq$2019)}
+      \begin{block}{Published Literature Data ($\leq$2019)}
         \begin{tabular}{ll}
           \toprule
           \textbf{Samples}     & 3{,}852 \\
@@ -287,7 +287,7 @@
         \toprule
         Method & CV RMSE \\
         \midrule
-        Baseline (our data only) & \textbf{2.133} \\
+        Baseline (lab data only) & \textbf{2.133} \\
         \bottomrule
       \end{tabular}
       \vspace{4pt}\\
@@ -301,7 +301,7 @@
         \midrule
         Baseline & 2.133 \\
         \rowcolor{red!15}
-        Naive merge (3{,}852 lit rows) & \textbf{2.248} \\
+        Naive merge (3{,}852 lit rows) & \textbf{2.241} \\
         \bottomrule
       \end{tabular}
       \vspace{3pt}\\
@@ -363,7 +363,7 @@
         0.10 & 1168 & 2.068 \\
         0.20 &  987 & 2.034 \\
         \rowcolor{green!15}
-        \textbf{0.30} & \textbf{782} & \textbf{2.019} \\
+        0.30 & 782 & 2.181 \\
         0.40 &  543 & 2.045 \\
         \bottomrule
       \end{tabular}
@@ -401,8 +401,8 @@
       \footnotesize
       \begin{tabular}{lr}
         \toprule
-        KMM RMSE & \textbf{2.035} \\
-        vs baseline & $-4.6\%$ \\
+        KMM RMSE & \textbf{2.261} \\
+        vs baseline & $+6.0\%$ (worse) \\
         Near-zero weights & 78.5\% \\
         Agreement w/ DRST & $r = 0.79$ \\
         \bottomrule
@@ -475,15 +475,15 @@
     \begin{column}{0.35\textwidth}
       \vspace{2pt}
       \footnotesize
-      \textbf{Cross-validation (our data)}
+      \textbf{Cross-validation (lab data)}
       \begin{tabular}{lc}
         \toprule
         Method & RMSE \\
         \midrule
-        Naive merge & 2.248 \textcolor{red}{$\uparrow$} \\
+        Naive merge & 2.241 \textcolor{red}{$\uparrow$} \\
         Baseline    & 2.133 \\
-        KMM         & 2.035 \\
-        DRST        & 2.019 \\
+        KMM         & 2.261 \textcolor{red}{$\uparrow$} \\
+        DRST        & 2.127 \\
         \rowcolor{green!15}
         \textbf{Prior FT} & \textbf{1.907} \badge{green}{$-10.6\%$} \\
         \bottomrule
