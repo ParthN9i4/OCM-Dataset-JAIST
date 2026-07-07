@@ -48,3 +48,12 @@ if os.path.exists(CHROME):
         print("PDF FAILED:", r.stderr[-500:])
 else:
     print("chromium not found at", CHROME)
+
+# ---- editable DOCX via pandoc (pypandoc) ----
+try:
+    import pypandoc
+    pypandoc.convert_file(MD, 'docx', outputfile='ocm_worknote_taniike.docx',
+                          extra_args=['--resource-path=.', '--toc', '--toc-depth=2'])
+    print(f"wrote ocm_worknote_taniike.docx ({os.path.getsize('ocm_worknote_taniike.docx')//1024} KB)")
+except Exception as e:
+    print("docx skipped:", e)
