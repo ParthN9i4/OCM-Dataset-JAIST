@@ -106,7 +106,38 @@ loadings. Target column = `Y(C2), %`.
 13. After edits, re-render `.pdf` + `.docx` via `build_worknote_render.py` (needs `pypandoc-binary`;
     Chromium at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome` for PDF).
 
-## 7. How to run things
+## 7. Catalyst-grouped validation round (Prof. Taniike's feedback) — CURRENT TRUE STATE
+
+**Script/source of truth:** `taniike_validation.py` → `taniike_validation.json`. Every number below is
+labeled with its protocol; row-level and grouped numbers must never be shown unlabeled side-by-side.
+
+- **The lab data has only 917 unique catalysts** (~97 rows each: 5 temperatures × ~27 unrecorded
+  condition settings ≈ Taniike's "135 conditions"). Row-level CV leaks catalyst identity across folds.
+- **Headline (5 seeds, per-fold-mean RMSE; per-fold train-only DRST classifier + scaler — stricter
+  than the published setup, hence 1.912 here vs published 1.909):**
+  - Row-level: baseline **2.118 ± 0.004**, PFT-filtered **1.912 (−9.7%)** — reproduces the worknote.
+  - **Catalyst-grouped: baseline 2.943 ± 0.031, PFT-filtered 2.995 (+1.8%), PFT-all-lit 2.982 (+1.3%)**
+    — the published PFT gain does NOT survive; PFT ≈ marginally worse than baseline for unseen catalysts.
+- **Mechanism (identified via ablation):** Stage 1 trains jointly on literature + lab training rows;
+  under a row split those lab rows include the test catalysts (even same-temp replicates), so
+  `lit_prior_prediction` partly memorized test-catalyst yields (identity leakage). Evidence: lit-only
+  Stage 1 keeps only **−2.6%** row-level (2.062–2.067); under grouped CV joint variants (2.982–3.005)
+  are WORSE than lit-only (2.938–2.939 ≈ baseline 2.943).
+- **QN ablation (Taniike's follow-up email) — his hypothesis CONFIRMED:** QN ≈ raw ≈ pure ranks
+  (differences 0.001–0.005 RMSE in both protocols). Stage-2 trees consume only the prior's ordering.
+- **Catalyst-level metrics (grouped, unseen catalysts):** baseline Spearman(max-yield) **0.747**,
+  enrichment@top-10% **4.0×**, precision@20 **0.47**. PFT ≈ same. Screening is viable with baseline
+  alone; the literature prior currently adds ≈ nothing for unseen catalysts.
+- **Family holdout (seed 42):** ρ 0.60–0.75 / enrichment 4–6× for La/Ti/Zr/Ce; **Ba (largest family,
+  291 catalysts) is hard for all models** (ρ 0.43, enrichment ~2×; PFT worse). Ce with element-containing
+  literature included actively hurt RMSE (3.72 vs 3.03) — trust-gating the prior is a real need.
+- **Status vs external communication:** these results are NOT yet in the worknote/README/notebook and
+  NOT yet sent to Taniike. The honest message: his validation caught a real flaw; his QN simplification
+  is confirmed; baseline screening viability (ρ 0.75 / 4×) is the constructive result; next work =
+  making the literature prior genuinely help unseen catalysts (catalyst-level targets, similarity-gated
+  prior, family-aware tuning), then an uncertainty-ranked candidate list for prospective validation.
+
+## 8. How to run things
 
 - Env: `pip install xgboost lightgbm shap matplotlib nbformat pypandoc-binary openpyxl python-pptx`.
 - Experiments print authoritative numbers to stdout / write `*.json`.
