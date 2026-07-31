@@ -137,7 +137,22 @@ labeled with its protocol; row-level and grouped numbers must never be shown unl
   making the literature prior genuinely help unseen catalysts (catalyst-level targets, similarity-gated
   prior, family-aware tuning), then an uncertainty-ranked candidate list for prospective validation.
 
-## 8. How to run things
+## 8. Phase 1 (protocol reset) — DONE
+
+- **`ocm_eval.py`** is now the single shared implementation of the strict protocol (grouped folds,
+  per-fold train-only scaler + DRST, Stage-1 label treatments, row + catalyst metrics) — verified to
+  reproduce `taniike_validation.json` exactly. All new experiments must import it.
+- **Grouped-CV baseline re-tuned** (`grouped_tuning.py` → `grouped_tuning.json`; 30-config random
+  search, 2-seed search + 5-seed confirmation, folds shared between search and confirm → winner
+  carries mild selection optimism):
+  - Default params: **2.943 ± 0.031**, Spearman(max) 0.747, enrichment 4.02×.
+  - **Tuned params: 2.896 ± 0.030 (−1.6%), Spearman(max) 0.766, enrichment 4.13×** — overrides:
+    n_estimators=300, learning_rate=0.03, num_leaves=127, max_depth=-1, min_child_samples=20,
+    subsample=0.6, colsample_bytree=0.8, reg_alpha=0, reg_lambda=1.
+  - **The number Phase-3 literature-prior variants must beat: 2.896 (grouped protocol, tuned
+    params in Stage 2 for both arms).**
+
+## 9. How to run things
 
 - Env: `pip install xgboost lightgbm shap matplotlib nbformat pypandoc-binary openpyxl python-pptx`.
 - Experiments print authoritative numbers to stdout / write `*.json`.
