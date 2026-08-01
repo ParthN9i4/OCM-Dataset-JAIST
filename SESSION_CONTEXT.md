@@ -169,7 +169,29 @@ and it plugs directly into Phase-3b (catalyst-level literature prior) and Phase-
 screening (no need to predict 135 conditions per candidate). A remains the reference for row-level
 RMSE reporting.
 
-## 10. How to run things
+## 10. Phase 3 (earn back the literature prior) — DONE, honest NULL result
+
+`phase3_lit_prior.py` → `phase3_lit_prior.json`. Formulation B, grouped protocol, identical folds,
+5 seeds, tuned params. Pre-registered rule (Δspearman ≥ 0.01 AND Δenrich > 0 AND ≥4/5 seed wins):
+
+| Variant | Spearman | Δ vs V0 | Enrich | Verdict |
+|---|---|---|---|---|
+| V0 control (formulation B) | 0.761 ± 0.002 | — | 4.28× | reproduces Phase 2 (prec@20 0.44 vs 0.47 = scaling-induced numerical jitter, ~½ catalyst) |
+| V1 literature rank prior (lit-only expert) | 0.757 | −0.004 | 4.22× | null |
+| V2 similarity/distance features | 0.740 | −0.021 | 3.85× | hurts |
+| V3 gated prior (V1+V2) | 0.744 | −0.017 | 3.93× | hurts |
+| V4 catalyst-level direct merge (control) | 0.758 | −0.003 | 4.33× | null (as expected) |
+
+- **NO variant wins.** With the leakage channel closed, none of the literature-prior designs improves
+  unseen-catalyst screening. Phase-3d fallback applies: contribution = validation methodology +
+  baseline screening viability (Spearman 0.76 / 4.3× enrichment); framing to be decided with Taniike.
+- Instructive: V3's trees USE the prior (16% of gain) and distance features (17%) heavily yet
+  generalize worse — feature importance ≠ generalization value.
+- One anecdote worth a targeted follow-up: Ce family holdout (lit-excluded) V0 0.671 → V3 0.713
+  (single split, no seeds — anecdotal only). Ba holdout: V3 slightly worse (0.504 vs 0.522).
+- Phases 4 (Ba diagnosis) and 5 (ranked candidate list on V0) remain valuable regardless of the null.
+
+## 11. How to run things
 
 - Env: `pip install xgboost lightgbm shap matplotlib nbformat pypandoc-binary openpyxl python-pptx`.
 - Experiments print authoritative numbers to stdout / write `*.json`.
