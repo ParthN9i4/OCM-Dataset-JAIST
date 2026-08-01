@@ -152,7 +152,24 @@ labeled with its protocol; row-level and grouped numbers must never be shown unl
   - **The number Phase-3 literature-prior variants must beat: 2.896 (grouped protocol, tuned
     params in Stage 2 for both arms).**
 
-## 9. How to run things
+## 9. Phase 2 (catalyst-level reformulation) — DONE
+
+`catalyst_level.py` → `catalyst_level.json`. Grouped protocol, 5 seeds, identical catalyst-fold
+assignments across formulations, tuned LGBM params:
+
+| Formulation | Spearman(max) | Enrich@10% | Prec@20 |
+|---|---|---|---|
+| A row-level model → aggregate max | 0.766 ± 0.007 | 4.13× | 0.40 |
+| **B direct per-catalyst max model (917 rows, no temp)** | 0.760 ± 0.002 | **4.28×** | **0.47** |
+| B2 per (catalyst,temp) max → max over temps | 0.766 ± 0.007 | 4.28× | 0.43 |
+
+**Gate decision: adopt B as the primary screening formulation** — statistically equivalent ranking
+(all within noise), slightly better enrichment/precision, ~100× cheaper to train (917 vs 89k rows),
+and it plugs directly into Phase-3b (catalyst-level literature prior) and Phase-5 candidate
+screening (no need to predict 135 conditions per candidate). A remains the reference for row-level
+RMSE reporting.
+
+## 10. How to run things
 
 - Env: `pip install xgboost lightgbm shap matplotlib nbformat pypandoc-binary openpyxl python-pptx`.
 - Experiments print authoritative numbers to stdout / write `*.json`.
