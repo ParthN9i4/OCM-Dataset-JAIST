@@ -191,7 +191,31 @@ RMSE reporting.
   (single split, no seeds — anecdotal only). Ba holdout: V3 slightly worse (0.504 vs 0.522).
 - Phases 4 (Ba diagnosis) and 5 (ranked candidate list on V0) remain valuable regardless of the null.
 
-## 11. How to run things
+## 11. Phase 4 (family-holdout diagnosis) — DONE
+
+`phase4_family_diagnosis.py` → `phase4_family_diagnosis.json`. Formulation B, family holdouts,
+lit-excluded for prior variants, 5 model seeds.
+
+- **Why Ba fails — label-coverage, mechanistically proven.** Ba catalysts average max yield 13.76%
+  vs 8.95% for the rest; **78% of the global top-decile is Ba-containing**. Hold Ba out and training
+  has almost no high performers left. Drop-the-Ba-column check: predictions bit-identical (max diff
+  0.0000) — the model provably ignores Ba loading (constant 0 in training) and prices Ba catalysts
+  as if Ba were absent → best Ba catalysts underpredicted by **−9.8 yield points** on average
+  (predictions cap at 14.5 vs observed up to 21.2). Random-291 pseudo-family control scores
+  0.752 ± 0.028 (≈ grouped-CV 0.761) → failure is chemical/label-coverage, NOT size.
+- **Sr is not a learnable analogue**: only 67 catalysts, 4% of top decile, and 28% of Sr catalysts
+  also contain Ba — no independent group-2 promotion signal to transfer from.
+- **Ce anecdote KILLED by seeding**: V3 delta +0.007 ± noise (Phase-3 single-split +0.042 was luck).
+  Pre-registered skepticism worked exactly as intended.
+- **New hypothesis (one family only, do not over-claim):** Zr holdout, V1 lit-rank-prior:
+  0.653 → 0.678 (+0.025, std 0.004, consistent across seeds); V3 +0.023. Zr also has the lowest
+  element-specific literature coverage (57 comps). A targeted "prior for under-covered families"
+  test could follow, but n=1 family.
+- **Implication for Phase 5:** the candidate list must carry uncertainty/coverage flags — the model
+  cannot price promoter chemistry absent from training (the Ba lesson), so extrapolative candidates
+  need to be labeled as such.
+
+## 12. How to run things
 
 - Env: `pip install xgboost lightgbm shap matplotlib nbformat pypandoc-binary openpyxl python-pptx`.
 - Experiments print authoritative numbers to stdout / write `*.json`.
