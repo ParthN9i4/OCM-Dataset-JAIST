@@ -239,7 +239,48 @@ lit-excluded for prior variants, 5 model seeds.
 - **No meaningful tuning optimism**: true 20% catalyst holdout gives Spearman 0.791 (tuned) vs 0.783
   (default); holdout is not below the CV estimate.
 
-## 13. How to run things
+## 13. Our own experiments (not prompted by the review) — DONE
+
+`phase6_our_experiments.py` → `phase6_our_experiments.json`.
+
+### E1. Coverage-moderated prior hypothesis — **NOT SUPPORTED** (Zr was chance)
+
+28 families (every element with ≥50 lab catalysts), family holdout, V0 vs V1 (literature rank prior,
+element-containing literature excluded), 5 seeds each.
+
+- **Mean delta = −0.0025**; **14/28** families positive — a coin flip.
+- Strongest correlation with any coverage descriptor: **|ρ| = 0.276** (n_lit_compositions, p=0.155),
+  against a pre-registered threshold of **0.5**. Verdict: **NOT SUPPORTED**.
+- Zr reproduces exactly (V0 0.653 → V1 0.678, +0.025, 5/5 seeds) — but with 28 families tested,
+  several show 5/5 in each direction (Pd +0.036, Eu +0.045, Nd, Ni, W positive; Cs, Li, Na, Mn, Hf,
+  V, Tb, Fe negative). Zr was selection from noise. **Phase 3's null now stands unqualified.**
+- Honest caveat: per-family deltas are not uniformly zero, so family-specific structure may exist —
+  but it is *not* explained by literature coverage, lab size, top-decile share, or family mean yield.
+
+### E2. Family learning curve — **the actionable result**
+
+Hold out 30% of a family, vary how many *other* family members appear in training, 5 seeds.
+
+| Family | ρ with 0 seen | ρ fully seen | % of ceiling at zero | Gain from seeing family |
+|---|---|---|---|---|
+| **Ba** | 0.509 | 0.683 | **74.4%** | **+0.175** |
+| La | 0.678 | 0.731 | 92.7% | +0.053 |
+| Ti | 0.618 | 0.664 | 93.0% | +0.047 |
+| Zr | 0.646 | 0.724 | 89.2% | +0.078 |
+| Ce | 0.643 | 0.722 | 89.1% | +0.079 |
+
+- **Ba is uniquely non-transferable.** Every other family is already 89–93% of its ceiling with zero
+  family members in training (their behaviour is inferable from neighbouring chemistry); Ba reaches
+  only 74.4% and gains 2–3× more than any other family from seeing its own members.
+- Ba's curve: 0→0.509, 5→0.543, 10→0.565, 25→0.616, 50→0.651, 100→0.679, 200→0.687 — **still
+  climbing at n=200**, whereas the others saturate by n≈50.
+- **Practical rule for new chemistry:** a chemically distinctive promoter family needs ~50–100
+  labeled catalysts before the model prices it well; a family resembling existing chemistry needs
+  ~10–25. This converts the Phase-4 "unpriceable" limitation into an experimental-design budget.
+- Caveat on the JSON's `unlock_threshold_80pct` field: it is weakly defined (80% of ceiling is
+  already met at n=0 for four of five families) — use the "% of ceiling at zero" column instead.
+
+## 14. How to run things
 
 - Env: `pip install xgboost lightgbm shap matplotlib nbformat pypandoc-binary openpyxl python-pptx`.
 - Experiments print authoritative numbers to stdout / write `*.json`.
