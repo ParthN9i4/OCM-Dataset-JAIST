@@ -1,0 +1,115 @@
+{
+ "meta": {
+  "n_catalysts": 917,
+  "n_low_count": 47,
+  "protocol": "catalyst-grouped 5-fold CV, formulation B, tuned LGBM"
+ },
+ "A_confound": {
+  "spearman_n_vs_max": 0.29322588856203524,
+  "spearman_n_vs_p90": 0.2650978735314428,
+  "low_count_mean_max": 3.2801942182127664,
+  "high_count_mean_max": 10.86420041990115,
+  "low_count_in_global_top10pct": 0
+ },
+ "B_sampling_simulation": {
+  "n=1": {
+   "mean_max_deficit": -6.21688751967635,
+   "std": 2.4669327461898347
+  },
+  "n=5": {
+   "mean_max_deficit": -3.1839308025603352,
+   "std": 1.535658258140476
+  },
+  "n=10": {
+   "mean_max_deficit": -2.2235653319798883,
+   "std": 1.2472926155480386
+  },
+  "n=20": {
+   "mean_max_deficit": -1.4487440772906888,
+   "std": 0.9791529442419394
+  },
+  "n=50": {
+   "mean_max_deficit": -0.6197513655395529,
+   "std": 0.5718928058752588
+  }
+ },
+ "C_artifact_vs_selection": {
+  "auc_composition_predicts_lowcount_mean": 0.7717879948914433,
+  "auc_std": 0.13570285551215408,
+  "per_fold": [
+   0.9862068965517242,
+   0.5649425287356322,
+   0.7477650063856961,
+   0.743933588761175,
+   0.8160919540229885
+  ]
+ },
+ "D_sensitivity": {
+  "max/all_917": {
+   "n": 917,
+   "spearman_mean": 0.7606463927657198,
+   "spearman_std": 0.001989380913574362,
+   "enrichment_mean": 4.282608695652174,
+   "precision_at20_mean": 0.44000000000000006
+  },
+  "max/excl_lowcount": {
+   "n": 870,
+   "spearman_mean": 0.7589846856666668,
+   "spearman_std": 0.005986486510325348,
+   "enrichment_mean": 4.344827586206896,
+   "precision_at20_mean": 0.41
+  },
+  "p90/all_917": {
+   "n": 917,
+   "spearman_mean": 0.792839733558726,
+   "spearman_std": 0.0026953479974656433,
+   "enrichment_mean": 4.673913043478261,
+   "precision_at20_mean": 0.5900000000000001
+  },
+  "p90/excl_lowcount": {
+   "n": 870,
+   "spearman_mean": 0.790854005200673,
+   "spearman_std": 0.005487480857416109,
+   "enrichment_mean": 4.597701149425287,
+   "precision_at20_mean": 0.43000000000000005
+  },
+  "top5mean/all_917": {
+   "n": 917,
+   "spearman_mean": 0.7845539686430342,
+   "spearman_std": 0.0027823993392446754,
+   "enrichment_mean": 4.739130434782608,
+   "precision_at20_mean": 0.6
+  },
+  "top5mean/excl_lowcount": {
+   "n": 870,
+   "spearman_mean": 0.7832754794554789,
+   "spearman_std": 0.006886681018209558,
+   "enrichment_mean": 4.988505747126437,
+   "precision_at20_mean": 0.54
+  }
+ },
+ "E_bootstrap_ci": {
+  "spearman_ci95": [
+   0.7253448695517272,
+   0.7852792857541931
+  ],
+  "enrichment_ci95": [
+   3.0434782608695654,
+   4.891304347826087
+  ],
+  "precision_at20_ci95": [
+   0.15,
+   0.65
+  ]
+ },
+ "F_holdout_check": {
+  "tuned": {
+   "spearman_mean": 0.7910140309600658,
+   "spearman_std": 0.017771863251556202
+  },
+  "default": {
+   "spearman_mean": 0.783260233156931,
+   "spearman_std": 0.020592904941823427
+  }
+ }
+}
