@@ -215,7 +215,31 @@ lit-excluded for prior variants, 5 model seeds.
   cannot price promoter chemistry absent from training (the Ba lesson), so extrapolative candidates
   need to be labeled as such.
 
-## 12. How to run things
+## 12. P1 Target integrity audit — DONE, conclusions STAND
+
+`phase5_target_audit.py` → `phase5_target_audit.json`. Triggered by
+`Spearman(n_measurements, observed_max) = 0.293` and the 47 catalysts with <20 measurements
+(mean observed max 3.28 vs 10.86; none in the global top decile).
+
+- **Sampling bias is real and quantified** (chemistry held fixed — subsample well-measured
+  catalysts): n=1 → observed max **−6.22** points, n=5 → −3.18, n=10 → −2.22, n=20 → −1.45,
+  n=50 → −0.62. max-of-n genuinely understates poorly-measured catalysts.
+- **Cause is mixed**: AUC(composition → low-count) = **0.772 ± 0.136** — the lab preferentially
+  under-measured chemically distinguishable catalysts (selection) *and* the statistical artifact is
+  present. AUC is noisy (only 47 positives); do not over-claim either cause.
+- **Headline conclusions unaffected.** Excluding the 47 low-count catalysts moves Spearman by
+  **0.002** (0.761 → 0.759). Phases 2–4 stand as reported.
+- **The "better target" was an illusion — the control that matters.** Scored against their *own*
+  targets, p90 (0.793) and top5mean (0.785) beat max (0.761). Scored against the **same ground truth
+  (true max = Taniike's stated objective)**, differences collapse to noise: max **0.761 / 4.28× /
+  0.44**, p90 **0.768 / 4.30× / 0.47**, top5mean **0.765 / 4.24× / 0.44**. The apparent gain was
+  target *learnability*, not screening skill. **Decision: keep max.**
+- **Enrichment is far less precise than previously quoted.** Bootstrap 95% CIs (n=917): Spearman
+  **0.725–0.785**, enrichment **3.04–4.89×**. Quote enrichment as a range, never as "4.28×".
+- **No meaningful tuning optimism**: true 20% catalyst holdout gives Spearman 0.791 (tuned) vs 0.783
+  (default); holdout is not below the CV estimate.
+
+## 13. How to run things
 
 - Env: `pip install xgboost lightgbm shap matplotlib nbformat pypandoc-binary openpyxl python-pptx`.
 - Experiments print authoritative numbers to stdout / write `*.json`.
