@@ -280,7 +280,33 @@ Hold out 30% of a family, vary how many *other* family members appear in trainin
 - Caveat on the JSON's `unlock_threshold_80pct` field: it is weakly defined (80% of ceiling is
   already met at n=0 for four of five families) — use the "% of ceiling at zero" column instead.
 
-## 14. How to run things
+## 14. Candidate list — DONE
+
+`phase6_candidates.py` → `phase6_candidates.json` + `phase6_candidates.csv` (+ `_diverse.csv`).
+
+- **Design grammar derived from the lab's own 917** (not invented): all Impregnation; 1 support
+  ~90% + 2–3 promoters ~3.33%; 13-value loading grid; 9 supports (Ba, Ti, La, Zr, Ca, Mg, Al, Si,
+  Ce), 27 promoters (≥20 uses each). **26,414 unseen in-grammar candidates** enumerated.
+- **Model**: formulation B, tuned LGBM, 10-seed ensemble on all 917. **No literature prior** —
+  Phase 3 + the 28-family test both negative.
+- **Unpriceable safeguard VERIFIED**: Ag has zero lab support; full-model vs Ag-column-dropped
+  predictions differ by **0.0000** — an absent element is provably unpriceable, exactly as the
+  Phase-4 Ba mechanism predicts. Tiering: 24,635 IN_SUPPORT / 1,779 EXTRAPOLATIVE (nn cutoff 4.32 =
+  95th pct of training nearest-neighbour distance; every element ≥20 training catalysts).
+- **Top prediction**: `Ba(90) Mo(3.33) Zn(3.33) Fe(3.33)` at 18.79% ± 0.09 (training observed max
+  21.50%; ensemble max 18.79% — predictions compress at the extreme, so **ranking is the deliverable,
+  not the absolute value**).
+- **Honest expected hit rate**: retrospective grouped-CV precision@20 = 0.44, **95% CI 0.15–0.65**;
+  enrichment **3.04–4.89×**. The CI is wide — quote the range, never the point.
+- **Chemical monotony is real and unresolved**: all top-20 contain Ba, 15/20 contain Mo. A greedy
+  diversity constraint (min separation = median training NN distance) barely changed the list —
+  one-promoter swaps already exceed that separation in 66-dim space, and the model's preference for
+  Ba is strong and genuine (Ba = 78% of the lab's top decile). **`best_per_support` is the honest
+  diversity device**, showing the yield cost of each alternative support:
+  Ba 18.79 > Ti 16.49 > La 15.82 > Ca 15.54 > Mg 14.66 > Si 13.83 > Al 13.63 > Zr 13.02 > Ce 12.93.
+  A real campaign should probably mix the Ba/Mo optimum with several best-per-support entries.
+
+## 15. How to run things
 
 - Env: `pip install xgboost lightgbm shap matplotlib nbformat pypandoc-binary openpyxl python-pptx`.
 - Experiments print authoritative numbers to stdout / write `*.json`.

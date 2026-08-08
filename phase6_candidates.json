@@ -1,0 +1,617 @@
+{
+ "meta": {
+  "model": "formulation B (composition -> per-catalyst max yield), tuned LGBM, 10-seed ensemble on all 917",
+  "literature_prior_used": false,
+  "reason_no_prior": "Phase 3 null + 28-family coverage test (phase6_our_experiments.py) both negative",
+  "n_candidates_enumerated": 26414,
+  "grammar": "Impregnation; support ~90% + 2-3 promoters ~3.33%; supports/promoters taken from lab vocabulary",
+  "supports": [
+   "Ba",
+   "Ti",
+   "La",
+   "Zr",
+   "Ca",
+   "Mg",
+   "Al",
+   "Si",
+   "Ce"
+  ],
+  "promoters": [
+   "W",
+   "Cs",
+   "Mo",
+   "Li",
+   "Zn",
+   "Fe",
+   "Pd",
+   "K",
+   "Ce",
+   "Mn",
+   "Y",
+   "Nd",
+   "Hf",
+   "Ni",
+   "Na",
+   "Cu",
+   "Mg",
+   "La",
+   "Tb",
+   "Eu",
+   "V",
+   "Co",
+   "Sr",
+   "Ba",
+   "Zr",
+   "Ti",
+   "Ca"
+  ],
+  "tier_rule": "IN_SUPPORT if nn_distance <= 4.322 (95th pct of training NN) and every element appears in >= 20 training catalysts",
+  "honest_expected_hit_rate": {
+   "metric": "retrospective grouped-CV precision@20 vs true top-decile",
+   "point": 0.44,
+   "ci95": [
+    0.15,
+    0.65
+   ],
+   "enrichment_ci95": [
+    3.0434782608695654,
+    4.891304347826087
+   ],
+   "caveat": "ranking is the deliverable; absolute predicted yields regress to the mean (training observed max 21.50%, ensemble max 18.79%)"
+  }
+ },
+ "unpriceable_safeguard": {
+  "probe_element": "Ag",
+  "max_abs_pred_diff": 0.0,
+  "interpretation": "zero difference confirms an absent element is provably unpriceable"
+ },
+ "diversity_rule": "greedy: highest predicted first, each subsequent candidate >= 2.800 (median training NN distance) from all already chosen",
+ "shortlist_in_support": [
+  {
+   "support": "Ba",
+   "promoters": "Mo+Zn+Fe",
+   "formula": "Ba(90.0) Mo(3.33) Zn(3.33) Fe(3.33)",
+   "predicted_max_yield": 18.79,
+   "ensemble_std": 0.087,
+   "nn_distance": 2.435,
+   "min_element_support": 96,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Zn+Eu",
+   "formula": "Ba(90.0) Mo(3.33) Zn(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.572,
+   "ensemble_std": 0.149,
+   "nn_distance": 2.548,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Eu",
+   "formula": "Ba(93.3) Mo(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.557,
+   "ensemble_std": 0.159,
+   "nn_distance": 0.141,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+La+Eu",
+   "formula": "Ba(90.0) Mo(3.33) La(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.53,
+   "ensemble_std": 0.174,
+   "nn_distance": 0.157,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Y+La",
+   "formula": "Ba(90.0) Mo(3.33) Y(3.33) La(3.33)",
+   "predicted_max_yield": 18.456,
+   "ensemble_std": 0.172,
+   "nn_distance": 2.44,
+   "min_element_support": 84,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Eu+Sr",
+   "formula": "Ba(90.0) Mo(3.33) Eu(3.33) Sr(3.33)",
+   "predicted_max_yield": 18.384,
+   "ensemble_std": 0.193,
+   "nn_distance": 3.058,
+   "min_element_support": 67,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Na+Eu",
+   "formula": "Ba(90.0) Mo(3.33) Na(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.376,
+   "ensemble_std": 0.21,
+   "nn_distance": 2.913,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Fe+Y",
+   "formula": "Ba(90.0) Mo(3.33) Fe(3.33) Y(3.33)",
+   "predicted_max_yield": 18.363,
+   "ensemble_std": 0.142,
+   "nn_distance": 3.338,
+   "min_element_support": 84,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Li+Eu",
+   "formula": "Ba(90.0) Mo(3.33) Li(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.35,
+   "ensemble_std": 0.155,
+   "nn_distance": 2.493,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "W+Fe+Ti",
+   "formula": "Ba(90.0) W(3.33) Fe(3.33) Ti(3.33)",
+   "predicted_max_yield": 18.337,
+   "ensemble_std": 0.21,
+   "nn_distance": 2.292,
+   "min_element_support": 96,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Zn+La",
+   "formula": "Ba(90.0) Mo(3.33) Zn(3.33) La(3.33)",
+   "predicted_max_yield": 18.336,
+   "ensemble_std": 0.164,
+   "nn_distance": 0.153,
+   "min_element_support": 111,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+La+Sr",
+   "formula": "Ba(90.0) Mo(3.33) La(3.33) Sr(3.33)",
+   "predicted_max_yield": 18.332,
+   "ensemble_std": 0.159,
+   "nn_distance": 0.138,
+   "min_element_support": 67,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Fe",
+   "formula": "Ba(93.3) Mo(3.33) Fe(3.33)",
+   "predicted_max_yield": 18.324,
+   "ensemble_std": 0.118,
+   "nn_distance": 0.138,
+   "min_element_support": 96,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Zn+Fe+Eu",
+   "formula": "Ba(90.0) Zn(3.33) Fe(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.272,
+   "ensemble_std": 0.19,
+   "nn_distance": 3.059,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+La+Zr",
+   "formula": "Ba(90.0) Mo(3.33) La(3.33) Zr(3.33)",
+   "predicted_max_yield": 18.262,
+   "ensemble_std": 0.139,
+   "nn_distance": 0.285,
+   "min_element_support": 121,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Y+Eu",
+   "formula": "Ba(90.0) Mo(3.33) Y(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.258,
+   "ensemble_std": 0.172,
+   "nn_distance": 3.338,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Fe+Sr",
+   "formula": "Ba(90.0) Mo(3.33) Fe(3.33) Sr(3.33)",
+   "predicted_max_yield": 18.236,
+   "ensemble_std": 0.17,
+   "nn_distance": 3.033,
+   "min_element_support": 67,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Cs+Mo+Eu",
+   "formula": "Ba(90.0) Cs(3.33) Mo(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.218,
+   "ensemble_std": 0.143,
+   "nn_distance": 2.09,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "W+Mo+Ti",
+   "formula": "Ba(90.0) W(3.33) Mo(3.33) Ti(3.33)",
+   "predicted_max_yield": 18.174,
+   "ensemble_std": 0.112,
+   "nn_distance": 2.09,
+   "min_element_support": 121,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Nd+La",
+   "formula": "Ba(90.0) Mo(3.33) Nd(3.33) La(3.33)",
+   "predicted_max_yield": 18.147,
+   "ensemble_std": 0.168,
+   "nn_distance": 2.438,
+   "min_element_support": 83,
+   "tier": "IN_SUPPORT"
+  }
+ ],
+ "shortlist_diverse": [
+  {
+   "support": "Ba",
+   "promoters": "Mo+Zn+Fe",
+   "formula": "Ba(90.0) Mo(3.33) Zn(3.33) Fe(3.33)",
+   "predicted_max_yield": 18.79,
+   "ensemble_std": 0.087,
+   "nn_distance": 2.435,
+   "min_element_support": 96,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Zn+Eu",
+   "formula": "Ba(90.0) Mo(3.33) Zn(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.572,
+   "ensemble_std": 0.149,
+   "nn_distance": 2.548,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Y+La",
+   "formula": "Ba(90.0) Mo(3.33) Y(3.33) La(3.33)",
+   "predicted_max_yield": 18.456,
+   "ensemble_std": 0.172,
+   "nn_distance": 2.44,
+   "min_element_support": 84,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Eu+Sr",
+   "formula": "Ba(90.0) Mo(3.33) Eu(3.33) Sr(3.33)",
+   "predicted_max_yield": 18.384,
+   "ensemble_std": 0.193,
+   "nn_distance": 3.058,
+   "min_element_support": 67,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Na+Eu",
+   "formula": "Ba(90.0) Mo(3.33) Na(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.376,
+   "ensemble_std": 0.21,
+   "nn_distance": 2.913,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Fe+Y",
+   "formula": "Ba(90.0) Mo(3.33) Fe(3.33) Y(3.33)",
+   "predicted_max_yield": 18.363,
+   "ensemble_std": 0.142,
+   "nn_distance": 3.338,
+   "min_element_support": 84,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Li+Eu",
+   "formula": "Ba(90.0) Mo(3.33) Li(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.35,
+   "ensemble_std": 0.155,
+   "nn_distance": 2.493,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "W+Fe+Ti",
+   "formula": "Ba(90.0) W(3.33) Fe(3.33) Ti(3.33)",
+   "predicted_max_yield": 18.337,
+   "ensemble_std": 0.21,
+   "nn_distance": 2.292,
+   "min_element_support": 96,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Zn+La",
+   "formula": "Ba(90.0) Mo(3.33) Zn(3.33) La(3.33)",
+   "predicted_max_yield": 18.336,
+   "ensemble_std": 0.164,
+   "nn_distance": 0.153,
+   "min_element_support": 111,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+La+Sr",
+   "formula": "Ba(90.0) Mo(3.33) La(3.33) Sr(3.33)",
+   "predicted_max_yield": 18.332,
+   "ensemble_std": 0.159,
+   "nn_distance": 0.138,
+   "min_element_support": 67,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Zn+Fe+Eu",
+   "formula": "Ba(90.0) Zn(3.33) Fe(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.272,
+   "ensemble_std": 0.19,
+   "nn_distance": 3.059,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Y+Eu",
+   "formula": "Ba(90.0) Mo(3.33) Y(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.258,
+   "ensemble_std": 0.172,
+   "nn_distance": 3.338,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Fe+Sr",
+   "formula": "Ba(90.0) Mo(3.33) Fe(3.33) Sr(3.33)",
+   "predicted_max_yield": 18.236,
+   "ensemble_std": 0.17,
+   "nn_distance": 3.033,
+   "min_element_support": 67,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Cs+Mo+Eu",
+   "formula": "Ba(90.0) Cs(3.33) Mo(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.218,
+   "ensemble_std": 0.143,
+   "nn_distance": 2.09,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "W+Mo+Ti",
+   "formula": "Ba(90.0) W(3.33) Mo(3.33) Ti(3.33)",
+   "predicted_max_yield": 18.174,
+   "ensemble_std": 0.112,
+   "nn_distance": 2.09,
+   "min_element_support": 121,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Nd+La",
+   "formula": "Ba(90.0) Mo(3.33) Nd(3.33) La(3.33)",
+   "predicted_max_yield": 18.147,
+   "ensemble_std": 0.168,
+   "nn_distance": 2.438,
+   "min_element_support": 83,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Tb+Eu",
+   "formula": "Ba(90.0) Mo(3.33) Tb(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.111,
+   "ensemble_std": 0.144,
+   "nn_distance": 3.059,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "W+Eu+Ti",
+   "formula": "Ba(90.0) W(3.33) Eu(3.33) Ti(3.33)",
+   "predicted_max_yield": 18.108,
+   "ensemble_std": 0.119,
+   "nn_distance": 0.187,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+Nd+Eu",
+   "formula": "Ba(90.0) Mo(3.33) Nd(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.087,
+   "ensemble_std": 0.131,
+   "nn_distance": 3.114,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Mo+K+Eu",
+   "formula": "Ba(90.0) Mo(3.33) K(3.33) Eu(3.33)",
+   "predicted_max_yield": 18.083,
+   "ensemble_std": 0.137,
+   "nn_distance": 2.969,
+   "min_element_support": 74,
+   "tier": "IN_SUPPORT"
+  }
+ ],
+ "best_per_support": [
+  {
+   "support": "Ba",
+   "promoters": "Mo+Zn+Fe",
+   "formula": "Ba(90.0) Mo(3.33) Zn(3.33) Fe(3.33)",
+   "predicted_max_yield": 18.79,
+   "ensemble_std": 0.087,
+   "nn_distance": 2.435,
+   "min_element_support": 96,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ti",
+   "promoters": "W+Cs+K",
+   "formula": "Ti(90.0) W(3.33) Cs(3.33) K(3.33)",
+   "predicted_max_yield": 16.489,
+   "ensemble_std": 0.17,
+   "nn_distance": 2.969,
+   "min_element_support": 95,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "La",
+   "promoters": "Eu+Sr+Ba",
+   "formula": "La(90.0) Eu(3.33) Sr(3.33) Ba(3.33)",
+   "predicted_max_yield": 15.823,
+   "ensemble_std": 0.197,
+   "nn_distance": 3.223,
+   "min_element_support": 67,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ca",
+   "promoters": "W+Cs+Ti",
+   "formula": "Ca(90.0) W(3.33) Cs(3.33) Ti(3.33)",
+   "predicted_max_yield": 15.537,
+   "ensemble_std": 0.157,
+   "nn_distance": 2.288,
+   "min_element_support": 130,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Mg",
+   "promoters": "Cs+Eu+Sr",
+   "formula": "Mg(90.0) Cs(3.33) Eu(3.33) Sr(3.33)",
+   "predicted_max_yield": 14.664,
+   "ensemble_std": 0.127,
+   "nn_distance": 2.09,
+   "min_element_support": 67,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Si",
+   "promoters": "Na+Eu+Sr",
+   "formula": "Si(90.0) Na(3.33) Eu(3.33) Sr(3.33)",
+   "predicted_max_yield": 13.832,
+   "ensemble_std": 0.143,
+   "nn_distance": 3.906,
+   "min_element_support": 48,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Al",
+   "promoters": "Na+Eu+Sr",
+   "formula": "Al(90.0) Na(3.33) Eu(3.33) Sr(3.33)",
+   "predicted_max_yield": 13.632,
+   "ensemble_std": 0.216,
+   "nn_distance": 4.149,
+   "min_element_support": 58,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Zr",
+   "promoters": "W+Cs+Ti",
+   "formula": "Zr(90.0) W(3.33) Cs(3.33) Ti(3.33)",
+   "predicted_max_yield": 13.017,
+   "ensemble_std": 0.157,
+   "nn_distance": 2.098,
+   "min_element_support": 130,
+   "tier": "IN_SUPPORT"
+  },
+  {
+   "support": "Ce",
+   "promoters": "W+Cs+Ti",
+   "formula": "Ce(90.0) W(3.33) Cs(3.33) Ti(3.33)",
+   "predicted_max_yield": 12.925,
+   "ensemble_std": 0.307,
+   "nn_distance": 2.121,
+   "min_element_support": 130,
+   "tier": "IN_SUPPORT"
+  }
+ ],
+ "examples_extrapolative_flagged": [
+  {
+   "support": "Ba",
+   "promoters": "Nd+Eu+Sr",
+   "formula": "Ba(90.0) Nd(3.33) Eu(3.33) Sr(3.33)",
+   "predicted_max_yield": 16.974,
+   "ensemble_std": 0.117,
+   "nn_distance": 4.365,
+   "min_element_support": 67,
+   "tier": "EXTRAPOLATIVE"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Fe+Tb+Sr",
+   "formula": "Ba(90.0) Fe(3.33) Tb(3.33) Sr(3.33)",
+   "predicted_max_yield": 16.909,
+   "ensemble_std": 0.172,
+   "nn_distance": 4.426,
+   "min_element_support": 67,
+   "tier": "EXTRAPOLATIVE"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Na+Tb+Eu",
+   "formula": "Ba(90.0) Na(3.33) Tb(3.33) Eu(3.33)",
+   "predicted_max_yield": 16.628,
+   "ensemble_std": 0.154,
+   "nn_distance": 4.346,
+   "min_element_support": 74,
+   "tier": "EXTRAPOLATIVE"
+  },
+  {
+   "support": "Ba",
+   "promoters": "K+Tb+Eu",
+   "formula": "Ba(90.0) K(3.33) Tb(3.33) Eu(3.33)",
+   "predicted_max_yield": 16.466,
+   "ensemble_std": 0.131,
+   "nn_distance": 4.383,
+   "min_element_support": 74,
+   "tier": "EXTRAPOLATIVE"
+  },
+  {
+   "support": "Ba",
+   "promoters": "Y+Tb+Sr",
+   "formula": "Ba(90.0) Y(3.33) Tb(3.33) Sr(3.33)",
+   "predicted_max_yield": 16.338,
+   "ensemble_std": 0.129,
+   "nn_distance": 4.64,
+   "min_element_support": 67,
+   "tier": "EXTRAPOLATIVE"
+  }
+ ]
+}
