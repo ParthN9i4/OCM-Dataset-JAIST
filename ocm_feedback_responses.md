@@ -1,3 +1,9 @@
+> **⚠️ Superseded numbers.** The `1.907` / `−10.6%` prior-feature results quoted throughout this
+> document come from a **row-level** cross-validation split. Under catalyst-grouped validation the
+> improvement does not survive (baseline 2.943 vs. 2.995) — it was catalyst-identity leakage.
+> This document is retained as a record of the original analysis. For corrected numbers see
+> `ocm_worknote_taniike.md` (v2), `SESSION_CONTEXT.md` §7–14, and `taniike_validation.py` onward.
+
 # OCM Project — Responses to Presentation Feedback
 
 This document answers the 17 feedback points raised on the Chapter 1–8 presentation.
