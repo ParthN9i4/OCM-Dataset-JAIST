@@ -186,9 +186,20 @@ therefore also provide the best candidate per support, with its cost in predicte
 |---|---|---|---|---|---|---|---|---|---|
 | Best predicted max yield (%) | 18.79 | 16.49 | 15.82 | 15.54 | 14.66 | 13.83 | 13.63 | 13.02 | 12.93 |
 
-Whether a campaign should concentrate on the Ba/Mo optimum or spread across supports is a judgement
-we would rather leave to the laboratory: twenty near-identical catalysts test one hypothesis twenty
-times, but the alternative sacrifices predicted yield.
+**Our recommended campaign (17 catalysts, `campaign_shortlist.csv`).** Rather than submit twenty
+near-identical catalysts, we suggest splitting the budget:
+
+- **Tier A — 12 catalysts, the model's optimum** (predicted 18.33–18.79 %). This is where the expected
+  hits are. From the retrospective grouped-CV precision@20, we would expect roughly **2–8 of the 12**
+  to be genuine top-decile performers (95 % CI 0.15–0.65 — deliberately a wide interval).
+- **Tier B — 5 catalysts, one per alternative support** (Ti 16.49, La 15.82, Ca 15.54, Mg 14.66,
+  Si 13.83). These cost predicted yield and we do not expect them to win. They are an *information*
+  purchase: 78 % of the lab's existing top decile already contains Ba, so the model's strong Ba
+  preference may partly reflect that coverage rather than chemistry. If several Tier-B catalysts
+  outperform their predictions, that tells us something the Tier-A catalysts cannot.
+
+We would of course defer to your judgement on synthesis feasibility, and are happy to reweight the
+split.
 
 ## 9. Relation to prior work
 
