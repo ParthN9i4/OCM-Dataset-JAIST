@@ -306,7 +306,52 @@ Hold out 30% of a family, vary how many *other* family members appear in trainin
   Ba 18.79 > Ti 16.49 > La 15.82 > Ca 15.54 > Mg 14.66 > Si 13.83 > Al 13.63 > Zr 13.02 > Ce 12.93.
   A real campaign should probably mix the Ba/Mo optimum with several best-per-support entries.
 
-## 15. How to run things
+## 15. P3 Cross-preparation OOD re-test — DONE. **First positive result for literature data.**
+
+`phase7_prep_ood.py` → `phase7_prep_ood.json`. **Supersedes `qn_tradeoff.json`** (row-level; its
+6.531 / 6.772 / 6.047 / 3.615 must never be requoted).
+
+**Two confounds the original OOD design did not control, now handled:**
+- *Target-estimator mismatch*: lab labels are max-of-~97 measurements, literature labels max-of-~2.2.
+  Absolute RMSE across that boundary compares two estimators, not two skill levels — so **ranking
+  metrics are primary**; RMSE/bias are reported but flagged (`*_CONFOUNDED` keys in the JSON).
+- *Preparation shift entangled with source shift*: the lab is 100% impregnation, so two test sets
+  separate them. Also note the model is **preparation-blind by construction** — prep_enc is constant
+  in lab training, so trees never split on it (same mechanism as Ba).
+
+**A. Decomposing the shift** (lab-only model; 742 impregnation-lit / 1,003 non-impregnation-lit;
+9 literature compositions identical to a lab catalyst excluded as leakage):
+
+| Test set | Spearman | Enrichment@10% | Prec@20 |
+|---|---|---|---|
+| T1 impregnation literature (source shift only) | 0.398 | 1.97× | 0.22 |
+| T2 non-impregnation (source + preparation) | **0.238** | **0.42×** | 0.04 |
+
+Cost of *also* changing preparation: **−0.160 Spearman**. Note **enrichment 0.42× is BELOW random**:
+independently verified — the model's top-101 T2 picks average 11.35% true yield vs a population mean
+of 10.33%, while the actual top-101 average 21.88%. Out of preparation it finds mildly-above-average
+catalysts and essentially never the exceptional ones. (Control: same model scores ρ 0.861 on the lab
+catalysts it was trained on, so this is transfer failure, not a broken model.)
+
+**B. Can impregnation literature help predict OTHER preparations?** (T2, pre-registered rule:
+Δ Spearman ≥ 0.02 with ≥4/5 seeds)
+
+| Config | Spearman | Δ | Seeds | Verdict |
+|---|---|---|---|---|
+| C1 lab only | 0.238 ± 0.007 | — | — | — |
+| **C2 lab + impregnation-lit as training rows** | **0.388 ± 0.005** | **+0.150** | 5/5 | **HELPS** |
+| C3 lab + impregnation-lit rank prior (feature) | 0.318 ± 0.020 | +0.080 | 5/5 | **HELPS** |
+
+**This is the first setting in the project where literature data measurably helps** — and it is
+exactly what the worknote-v2 §9 scope statement predicted: the prior is a *local-coverage* tool, and
+the lab has zero coverage of non-impregnation chemistry. Two caveats: absolute performance stays poor
+(0.388 Spearman, 1.34× enrichment), and **plain merging (C2) beats the PFT-style prior (C3)** — so
+even here the specific two-stage architecture is not the answer.
+
+**C. Matched-estimator sensitivity**: lab labels recomputed as max-of-3 gives 0.206 vs 0.238
+(−0.033) → conclusions **unchanged**; the estimator mismatch does not drive the result.
+
+## 16. How to run things
 
 - Env: `pip install xgboost lightgbm shap matplotlib nbformat pypandoc-binary openpyxl python-pptx`.
 - Experiments print authoritative numbers to stdout / write `*.json`.

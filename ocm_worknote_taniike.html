@@ -292,7 +292,17 @@ al., ICML 2018) reweights to correct the label distribution.</p>
 <li><strong>The unrecorded reaction conditions are the largest single opportunity.</strong> If those ~27 variables
   exist in a retrievable form, the 18.2 % irreducible variance becomes partly learnable and
   condition-level modelling becomes meaningful.</li>
-<li><strong>Cross-preparation transfer remains to be re-tested</strong> under the corrected protocol.</li>
+<li><strong>Cross-preparation transfer is now measured, and it is where literature data finally helps.</strong>
+  Predicting <em>impregnation</em> literature (different source, same preparation) gives ρ = 0.398; predicting
+  <em>non-impregnation</em> literature gives ρ = 0.238 — so changing preparation costs a further 0.160. At that
+  range the model is not usable for selection out of preparation: its top-decile picks average 11.35 %
+  true yield against a population mean of 10.33 %, while the genuine top decile averages 21.88 %
+  (enrichment 0.42×, i.e. no better than random). <strong>But adding impregnation literature to training
+  raises ρ from 0.238 to 0.388 (+0.150, 5/5 seeds)</strong> — the first setting in this study where literature
+  data measurably helps, and consistent with the scope statement in §9: the lab has <em>no</em> coverage of
+  non-impregnation chemistry, so the literature supplies genuinely new information there. Two caveats:
+  absolute performance remains poor, and plain merging outperforms the prior-feature construction
+  (0.388 vs 0.318). Details in <code>phase7_prep_ood.py</code>; this supersedes the earlier row-level OOD numbers.</li>
 <li><strong>Prospective validation</strong> is the natural next step, and we would pre-register the expected hit rate
   (precision@20, CI 0.15–0.65) before any results arrive.</li>
 </ul>
