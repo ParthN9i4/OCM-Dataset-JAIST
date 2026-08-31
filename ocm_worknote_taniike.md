@@ -11,14 +11,14 @@
 ## What changed since version 1
 
 Version 1 reported that a two-stage prior-feature method ("PFT") improved C₂-yield prediction by
-about 10 % over a lab-only baseline. **Following the stricter validation Prof. Taniike proposed, that
+10.6 % over a lab-only baseline. **Following the stricter validation Prof. Taniike proposed, that
 improvement does not survive, and we withdraw the claim.**
 
 | Claim in v1 | Status in v2 |
 |---|---|
-| PFT improves CV RMSE by ≈10 % | **Withdrawn.** The gain was catalyst-identity leakage; under catalyst-grouped CV, PFT is 1.8 % *worse* than baseline |
+| PFT improves CV RMSE by 10.6 % (v1: 1.907 vs baseline 2.133) | **Withdrawn.** The gain was catalyst-identity leakage; under catalyst-grouped CV, PFT is 1.8 % *worse* than baseline |
 | Literature data measurably helps the lab model | **Not demonstrated.** Four honest designs, all ≤ the composition-only control |
-| Quantile normalisation is a necessary component | **Unnecessary.** Quantile-normalised ≈ raw ≈ rank priors (0.001–0.005 RMSE apart) |
+| Quantile normalisation is a necessary component | **Not supported.** Label treatment moves RMSE by 0.001–0.023, which at 3 seeds is inside run-to-run noise |
 | — | **New:** the composition-only model screens *unseen* catalysts usefully (ρ = 0.761, enrichment 3.04–4.89×) |
 | — | **New:** the Ba-family failure is mechanistically explained, and yields a data budget for new chemistry |
 
@@ -47,11 +47,11 @@ stages — sees training-fold data only.
 
 **Why the previous protocol was inadequate — a quantitative argument.** The 89,074 measurements
 comprise only **917 distinct catalysts** at 5 temperatures, giving ~4,400 unique input vectors each
-measured ~20 times. Because roughly 27 reaction-condition variables are not recorded as features,
+measured ~20 times. Because roughly 27 distinct reaction-condition settings per catalyst-temperature are not recorded as features,
 those repeats are *identical inputs with differing yields*. That within-group variance is **18.2 % of
 total yield variance**, so the best attainable row-level RMSE is **1.680**.
 
-Version 1 reported 1.912 — only 0.23 above that floor. In hindsight this should itself have prompted
+Version 1 reported 1.907 — only 0.23 above that floor. In hindsight this should itself have prompted
 suspicion: a model cannot approach the noise ceiling of data it should not be able to memorise.
 Point-wise RMSE is therefore not merely less relevant than catalyst-level metrics here; it is close to
 uninformative.
@@ -81,7 +81,7 @@ objective, so the label shift is unresolved.
 
 ![**Figure 4 — DRST scores.** Each literature record scored by how lab-like its chemistry is.](fig_drst_scores.png)
 
-![**Figure 5 — KMM weights.** Continuous weights agree closely with the DRST filter (r = 0.790).](fig_kmm_weights.png)
+![**Figure 5 — KMM weights.** Continuous weights agree closely with the DRST filter (r = 0.792).](fig_kmm_weights.png)
 
 **Prior-feature method (PFT).** Let the literature influence the final model only through a *predicted
 value used as an input feature*, never as a training label: Stage 1 trains an expert on literature
@@ -93,16 +93,25 @@ prediction as one extra feature, using lab labels only.
 ## 5. What the stricter validation showed
 
 **The improvement was leakage.** Under catalyst-grouped CV: baseline **2.943**, PFT **2.995** (+1.8 %).
-Three independent checks establish the mechanism:
+Three readings of the same ablation grid point to the mechanism (they share one 3-seed run, so we do
+not present them as independent experiments):
 
-1. Training Stage 1 on literature *alone* reduces the row-level gain from −9.7 % to **−2.6 %**
-2. Under grouped CV the joint variant (**2.982**) is *worse* than literature-only (**2.938**)
-3. Literature-only under grouped CV (2.938) is indistinguishable from baseline (2.943)
+1. Training Stage 1 on literature *alone* reduces the row-level gain from −9.7 % to **−2.4 %** (QN prior) or **−2.7 %** (rank prior)
+2. Under grouped CV the joint variant (**2.982**, 3 seeds) is worse than literature-only (**2.938**, rank prior, 3 seeds)
+3. On those same three seeds, literature-only (2.938) and the baseline (2.928) are indistinguishable
 
-**Your quantile-normalisation hypothesis was correct, and the effect is essentially exact.**
-Quantile-normalised, raw-yield and pure-rank priors differ by only 0.001–0.005 RMSE under both
-protocols. The Stage-2 trees consume only the prior's ordering, so the normalisation step can be
-removed with no loss.
+*(Seed counts differ between these checks and the headline table. The headline PFT figure of 2.995 is a
+5-seed mean; 2.982 is the same configuration over the first 3 seeds only. The ablation grid ran at 3
+seeds throughout.)*
+
+**Your quantile-normalisation hypothesis is supported, though we will not state it as strongly as we
+first did.** We compared the three label treatments you named under both protocols. The gaps are:
+row-level 0.006 (QN vs raw) and 0.006 (QN vs rank); catalyst-grouped 0.023 (QN vs raw) and 0.001
+(QN vs rank). The largest gap sits under our primary protocol, and it is close to the run-to-run
+spread there (per-configuration standard deviations of 0.022 and 0.035 over 3 seeds). The honest
+statement is therefore that **no label treatment is distinguishable from another at this seed
+count**, not that the effect is exact. On that evidence the normalisation step can be dropped without
+a measurable penalty, which is the practical conclusion you anticipated.
 
 **With the leakage channel closed, we retested literature integration properly** — a literature-only
 rank prior, similarity-to-literature features, a gated prior combining both, and a catalyst-level
@@ -119,7 +128,8 @@ Zr result was selection from noise, and we discarded it.
 ## 6. What the model can do: screening unseen catalysts
 
 Rebuilt at catalyst level — composition → maximum yield, 917 training examples, no temperature — the
-model matches the full 89,074-row model on ranking while training ~100× faster. On genuinely unseen
+model matches the full 89,074-row model on ranking (Spearman 0.760 vs 0.766, within seed noise) while
+training on ~100× fewer rows. On genuinely unseen
 catalysts:
 
 | Metric | Value | 95 % CI |
@@ -128,7 +138,7 @@ catalysts:
 | Enrichment of true top-decile among top-decile predicted | 4.28× | **3.04 – 4.89×** |
 | Precision@20 (of 20 nominated, fraction truly top-decile) | 0.44 | **0.15 – 0.65** |
 
-We quote intervals rather than point estimates: with ~18 catalysts in a test decile, these
+We quote intervals rather than point estimates: with 92 catalysts in the top decile of 917, these
 quantities are considerably less precise than a single number suggests.
 
 ![**Figure 8 — What drives achievable maximum yield.** Composition-only model. Ba dominates, followed by chemically sensible contributors. *(The corresponding figure in v1 ranked the literature prior first; that model was the leaked pipeline, so the figure illustrated the leak rather than the chemistry.)*](fig_shap_bar.png)
@@ -158,11 +168,17 @@ family are needed before the model can price it?**
 
 ![**Figure 9 — A data budget for new chemistry.** Left: performance against the number of family members already measured. Right: fraction of achievable performance reached having seen none.](fig_learning_curve.png)
 
-Ba is uniquely non-transferable: the other families are already at 89–93 % of their ceiling having
-never seen a member, because neighbouring chemistry carries the information. Ba's curve is still
-rising at n = 200 while the others saturate near n ≈ 50. **As a practical budget: a chemically
-distinctive new promoter family requires roughly 50–100 labelled catalysts before it can be modelled;
-a family resembling existing chemistry requires 10–25.**
+Ba is the most *consequential* family to lose, not the hardest to predict. Across all 28 families we
+tested, five score below Ba's 0.526: Pd 0.217, Cu 0.286, Al 0.329, Ni 0.329 and Co 0.493. What sets Ba
+apart is its weight. It holds 78 % of the top decile, so losing it removes the high-yield regime
+itself, and it gains far more than any other family from seeing its own members (+0.175, against
++0.047 to +0.079 elsewhere).
+
+**On the data budget**, our stored measure is the number of family members needed to reach 80 % of the
+achievable performance. That number is **10 for Ba and 0 for La, Ti, Zr and Ce** — those four already
+exceed 80 % having seen none. Reaching 95 % takes about 50 for Ba and 25–50 for the others. We would
+treat this as order-of-magnitude guidance only: for Ti and Zr the per-point seed spread (0.03–0.12) is
+comparable to the whole learning-curve gain, so those two curves are not resolved.
 
 ## 8. A candidate list for prospective validation
 
@@ -174,7 +190,10 @@ Every candidate carries a coverage flag, and the safeguard is verified rather th
 element absent from our data (Ag), predictions computed with and without its column differ by exactly
 zero — confirming such candidates are unpriceable and must be flagged rather than ranked.
 
-The highest-ranked candidate is **Ba(90) + Mo(3.33) + Zn(3.33) + Fe(3.33)**, predicted 18.79 % ± 0.09.
+The highest-ranked candidate is **Ba(90) + Mo(3.33) + Zn(3.33) + Fe(3.33)**, predicted 18.79 %. We
+deliberately do not attach an error bar to that figure. The ± 0.09 our ensemble reports is only the
+spread across 10 seeds; the model's actual catalyst-level error on held-out catalysts is about
+2.7 yield points (MAE). The number ranks candidates. It does not forecast a yield.
 
 Two caveats. Absolute predictions compress at the extreme — our ensemble maximum is 18.79 % while
 observed training yields reach 21.50 % — so the **ranking** is the deliverable, not the predicted
@@ -212,7 +231,7 @@ was our internal shorthand, not a standard term, and we note that "feature trans
 deterministic function of features the final model already has, `I(y; x, f(x)) = I(y; x)` — it cannot
 add information. It can only supply an inductive bias, or exploit source data covering regions the
 target data does not. Our results indicate neither applies here at the scale that matters, for three
-reasons: ~78.5 % of the literature is out-of-distribution relative to the lab; quantile normalisation
+reasons: ~79.7 % of the literature is out-of-distribution relative to the lab; quantile normalisation
 aligns marginal but not conditional distributions; and literature yields are measured under each
 paper's own conditions, whereas our target is the maximum over a standardised battery — semantically
 different quantities. **The honest scope statement is that this family of methods is a local-coverage
@@ -240,9 +259,9 @@ al., ICML 2018) reweights to correct the label distribution.
 - **Cross-preparation transfer is now measured, and it is where literature data finally helps.**
   Predicting *impregnation* literature (different source, same preparation) gives ρ = 0.398; predicting
   *non-impregnation* literature gives ρ = 0.238 — so changing preparation costs a further 0.160. At that
-  range the model is not usable for selection out of preparation: its top-decile picks average 11.35 %
-  true yield against a population mean of 10.33 %, while the genuine top decile averages 21.88 %
-  (enrichment 0.42×, i.e. no better than random). **But adding impregnation literature to training
+  range the model is not usable for selection out of preparation: its top-decile picks average 11.50 %
+  true yield against a population mean of 10.34 %, while the genuine top decile averages 21.92 %
+  (enrichment 0.42×, i.e. worse than picking at random). **But adding impregnation literature to training
   raises ρ from 0.238 to 0.388 (+0.150, 5/5 seeds)** — the first setting in this study where literature
   data measurably helps, and consistent with the scope statement in §9: the lab has *no* coverage of
   non-impregnation chemistry, so the literature supplies genuinely new information there. Two caveats:

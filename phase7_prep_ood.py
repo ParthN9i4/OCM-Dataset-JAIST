@@ -78,6 +78,15 @@ def metrics(yt, yp, ids):
     m = cat_metrics(ids, yt, yp)
     m['rmse_CONFOUNDED'] = float(np.sqrt(mean_squared_error(yt, yp)))
     m['mean_signed_bias_CONFOUNDED'] = float(np.mean(yp - yt))
+    # Top-decile diagnostic: what does the model's own top-ranked decile actually deliver?
+    # This is the number that says whether the ranking is usable for selection, so it is stored
+    # here rather than computed ad hoc.
+    K = max(1, int(round(0.10 * len(yt))))
+    top_pred = np.argsort(-yp)[:K]
+    m['topdecile_picks_mean_true_yield'] = float(yt[top_pred].mean())
+    m['population_mean_true_yield'] = float(yt.mean())
+    m['true_topdecile_mean_yield'] = float(np.sort(yt)[-K:].mean())
+    m['n_in_decile'] = int(K)
     return m
 
 def run(test_idx, config, seed, y_lab_use=None):
