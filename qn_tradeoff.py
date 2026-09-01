@@ -1,4 +1,11 @@
 """
+*** SUPERSEDED — DO NOT QUOTE THESE NUMBERS ***
+This script computed OOD results under a ROW-LEVEL protocol, which leaks catalyst
+identity across folds (see taniike_validation.py). Its outputs (baseline 6.531,
+PFT 6.772, best raw config 6.047, and the leaky 3.615) are retained only as a record.
+The corrected cross-preparation analysis is phase7_prep_ood.py -> phase7_prep_ood.json.
+"""
+"""
 qn_tradeoff.py
 ==============
 Clean, LEAK-FREE ablation to settle the OOD story.

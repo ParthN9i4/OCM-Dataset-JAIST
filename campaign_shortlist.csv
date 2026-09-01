@@ -1,0 +1,18 @@
+tier_role,formula,support,promoters,predicted_max_yield,ensemble_std,nn_distance,min_element_support
+A: model optimum,Ba(90.0) Mo(3.33) Zn(3.33) Fe(3.33),Ba,Mo+Zn+Fe,18.79,0.087,2.435,96
+A: model optimum,Ba(90.0) Mo(3.33) Zn(3.33) Eu(3.33),Ba,Mo+Zn+Eu,18.572,0.149,2.548,74
+A: model optimum,Ba(93.3) Mo(3.33) Eu(3.33),Ba,Mo+Eu,18.557,0.159,0.141,74
+A: model optimum,Ba(90.0) Mo(3.33) La(3.33) Eu(3.33),Ba,Mo+La+Eu,18.53,0.174,0.157,74
+A: model optimum,Ba(90.0) Mo(3.33) Y(3.33) La(3.33),Ba,Mo+Y+La,18.456,0.172,2.44,84
+A: model optimum,Ba(90.0) Mo(3.33) Eu(3.33) Sr(3.33),Ba,Mo+Eu+Sr,18.384,0.193,3.058,67
+A: model optimum,Ba(90.0) Mo(3.33) Na(3.33) Eu(3.33),Ba,Mo+Na+Eu,18.376,0.21,2.913,74
+A: model optimum,Ba(90.0) Mo(3.33) Fe(3.33) Y(3.33),Ba,Mo+Fe+Y,18.363,0.142,3.338,84
+A: model optimum,Ba(90.0) Mo(3.33) Li(3.33) Eu(3.33),Ba,Mo+Li+Eu,18.35,0.155,2.493,74
+A: model optimum,Ba(90.0) W(3.33) Fe(3.33) Ti(3.33),Ba,W+Fe+Ti,18.337,0.21,2.292,96
+A: model optimum,Ba(90.0) Mo(3.33) Zn(3.33) La(3.33),Ba,Mo+Zn+La,18.336,0.164,0.153,111
+A: model optimum,Ba(90.0) Mo(3.33) La(3.33) Sr(3.33),Ba,Mo+La+Sr,18.332,0.159,0.138,67
+B: support diversity,Ti(90.0) W(3.33) Cs(3.33) K(3.33),Ti,W+Cs+K,16.489,0.17,2.969,95
+B: support diversity,La(90.0) Eu(3.33) Sr(3.33) Ba(3.33),La,Eu+Sr+Ba,15.823,0.197,3.223,67
+B: support diversity,Ca(90.0) W(3.33) Cs(3.33) Ti(3.33),Ca,W+Cs+Ti,15.537,0.157,2.288,130
+B: support diversity,Mg(90.0) Cs(3.33) Eu(3.33) Sr(3.33),Mg,Cs+Eu+Sr,14.664,0.127,2.09,67
+B: support diversity,Si(90.0) Na(3.33) Eu(3.33) Sr(3.33),Si,Na+Eu+Sr,13.832,0.143,3.906,48

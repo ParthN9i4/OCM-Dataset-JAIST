@@ -106,7 +106,252 @@ loadings. Target column = `Y(C2), %`.
 13. After edits, re-render `.pdf` + `.docx` via `build_worknote_render.py` (needs `pypandoc-binary`;
     Chromium at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome` for PDF).
 
-## 7. How to run things
+## 7. Catalyst-grouped validation round (Prof. Taniike's feedback) — CURRENT TRUE STATE
+
+**Script/source of truth:** `taniike_validation.py` → `taniike_validation.json`. Every number below is
+labeled with its protocol; row-level and grouped numbers must never be shown unlabeled side-by-side.
+
+- **The lab data has only 917 unique catalysts** (~97 rows each: 5 temperatures × ~27 unrecorded
+  condition settings ≈ Taniike's "135 conditions"). Row-level CV leaks catalyst identity across folds.
+- **Headline (5 seeds, per-fold-mean RMSE; per-fold train-only DRST classifier + scaler — stricter
+  than the published setup, hence 1.912 here vs published 1.909):**
+  - Row-level: baseline **2.118 ± 0.004**, PFT-filtered **1.912 (−9.7%)** — reproduces the worknote.
+  - **Catalyst-grouped: baseline 2.943 ± 0.031, PFT-filtered 2.995 (+1.8%), PFT-all-lit 2.982 (+1.3%)**
+    — the published PFT gain does NOT survive; PFT ≈ marginally worse than baseline for unseen catalysts.
+- **Mechanism (identified via ablation):** Stage 1 trains jointly on literature + lab training rows;
+  under a row split those lab rows include the test catalysts (even same-temp replicates), so
+  `lit_prior_prediction` partly memorized test-catalyst yields (identity leakage). Evidence: lit-only
+  Stage 1 keeps only **−2.6%** row-level (2.062–2.067); under grouped CV joint variants (2.982–3.005)
+  are WORSE than lit-only (2.938–2.939 ≈ baseline 2.943).
+- **QN ablation (Taniike's follow-up email) — his hypothesis CONFIRMED:** QN ≈ raw ≈ pure ranks
+  (differences 0.001–0.005 RMSE in both protocols). Stage-2 trees consume only the prior's ordering.
+- **Catalyst-level metrics (grouped, unseen catalysts):** baseline Spearman(max-yield) **0.747**,
+  enrichment@top-10% **4.0×**, precision@20 **0.47**. PFT ≈ same. Screening is viable with baseline
+  alone; the literature prior currently adds ≈ nothing for unseen catalysts.
+- **Family holdout (seed 42):** ρ 0.60–0.75 / enrichment 4–6× for La/Ti/Zr/Ce; **Ba (largest family,
+  291 catalysts) is hard for all models** (ρ 0.43, enrichment ~2×; PFT worse). Ce with element-containing
+  literature included actively hurt RMSE (3.72 vs 3.03) — trust-gating the prior is a real need.
+- **Status vs external communication:** these results are NOT yet in the worknote/README/notebook and
+  NOT yet sent to Taniike. The honest message: his validation caught a real flaw; his QN simplification
+  is confirmed; baseline screening viability (ρ 0.75 / 4×) is the constructive result; next work =
+  making the literature prior genuinely help unseen catalysts (catalyst-level targets, similarity-gated
+  prior, family-aware tuning), then an uncertainty-ranked candidate list for prospective validation.
+
+## 8. Phase 1 (protocol reset) — DONE
+
+- **`ocm_eval.py`** is now the single shared implementation of the strict protocol (grouped folds,
+  per-fold train-only scaler + DRST, Stage-1 label treatments, row + catalyst metrics) — verified to
+  reproduce `taniike_validation.json` exactly. All new experiments must import it.
+- **Grouped-CV baseline re-tuned** (`grouped_tuning.py` → `grouped_tuning.json`; 30-config random
+  search, 2-seed search + 5-seed confirmation, folds shared between search and confirm → winner
+  carries mild selection optimism):
+  - Default params: **2.943 ± 0.031**, Spearman(max) 0.747, enrichment 4.02×.
+  - **Tuned params: 2.896 ± 0.030 (−1.6%), Spearman(max) 0.766, enrichment 4.13×** — overrides:
+    n_estimators=300, learning_rate=0.03, num_leaves=127, max_depth=-1, min_child_samples=20,
+    subsample=0.6, colsample_bytree=0.8, reg_alpha=0, reg_lambda=1.
+  - **The number Phase-3 literature-prior variants must beat: 2.896 (grouped protocol, tuned
+    params in Stage 2 for both arms).**
+
+## 9. Phase 2 (catalyst-level reformulation) — DONE
+
+`catalyst_level.py` → `catalyst_level.json`. Grouped protocol, 5 seeds, identical catalyst-fold
+assignments across formulations, tuned LGBM params:
+
+| Formulation | Spearman(max) | Enrich@10% | Prec@20 |
+|---|---|---|---|
+| A row-level model → aggregate max | 0.766 ± 0.007 | 4.13× | 0.40 |
+| **B direct per-catalyst max model (917 rows, no temp)** | 0.760 ± 0.002 | **4.28×** | **0.47** |
+| B2 per (catalyst,temp) max → max over temps | 0.766 ± 0.007 | 4.28× | 0.43 |
+
+**Gate decision: adopt B as the primary screening formulation** — statistically equivalent ranking
+(all within noise), slightly better enrichment/precision, ~100× cheaper to train (917 vs 89k rows),
+and it plugs directly into Phase-3b (catalyst-level literature prior) and Phase-5 candidate
+screening (no need to predict 135 conditions per candidate). A remains the reference for row-level
+RMSE reporting.
+
+## 10. Phase 3 (earn back the literature prior) — DONE, honest NULL result
+
+`phase3_lit_prior.py` → `phase3_lit_prior.json`. Formulation B, grouped protocol, identical folds,
+5 seeds, tuned params. Pre-registered rule (Δspearman ≥ 0.01 AND Δenrich > 0 AND ≥4/5 seed wins):
+
+| Variant | Spearman | Δ vs V0 | Enrich | Verdict |
+|---|---|---|---|---|
+| V0 control (formulation B) | 0.761 ± 0.002 | — | 4.28× | reproduces Phase 2 (prec@20 0.44 vs 0.47 = scaling-induced numerical jitter, ~½ catalyst) |
+| V1 literature rank prior (lit-only expert) | 0.757 | −0.004 | 4.22× | null |
+| V2 similarity/distance features | 0.740 | −0.021 | 3.85× | hurts |
+| V3 gated prior (V1+V2) | 0.744 | −0.017 | 3.93× | hurts |
+| V4 catalyst-level direct merge (control) | 0.758 | −0.003 | 4.33× | null (as expected) |
+
+- **NO variant wins.** With the leakage channel closed, none of the literature-prior designs improves
+  unseen-catalyst screening. Phase-3d fallback applies: contribution = validation methodology +
+  baseline screening viability (Spearman 0.76 / 4.3× enrichment); framing to be decided with Taniike.
+- Instructive: V3's trees USE the prior (16% of gain) and distance features (17%) heavily yet
+  generalize worse — feature importance ≠ generalization value.
+- One anecdote worth a targeted follow-up: Ce family holdout (lit-excluded) V0 0.671 → V3 0.713
+  (single split, no seeds — anecdotal only). Ba holdout: V3 slightly worse (0.504 vs 0.522).
+- Phases 4 (Ba diagnosis) and 5 (ranked candidate list on V0) remain valuable regardless of the null.
+
+## 11. Phase 4 (family-holdout diagnosis) — DONE
+
+`phase4_family_diagnosis.py` → `phase4_family_diagnosis.json`. Formulation B, family holdouts,
+lit-excluded for prior variants, 5 model seeds.
+
+- **Why Ba fails — label-coverage, mechanistically proven.** Ba catalysts average max yield 13.76%
+  vs 8.95% for the rest; **78% of the global top-decile is Ba-containing**. Hold Ba out and training
+  has almost no high performers left. Drop-the-Ba-column check: predictions bit-identical (max diff
+  0.0000) — the model provably ignores Ba loading (constant 0 in training) and prices Ba catalysts
+  as if Ba were absent → best Ba catalysts underpredicted by **−9.8 yield points** on average
+  (predictions cap at 14.5 vs observed up to 21.2). Random-291 pseudo-family control scores
+  0.752 ± 0.028 (≈ grouped-CV 0.761) → failure is chemical/label-coverage, NOT size.
+- **Sr is not a learnable analogue**: only 67 catalysts, 4% of top decile, and 28% of Sr catalysts
+  also contain Ba — no independent group-2 promotion signal to transfer from.
+- **Ce anecdote KILLED by seeding**: V3 delta +0.007 ± noise (Phase-3 single-split +0.042 was luck).
+  Pre-registered skepticism worked exactly as intended.
+- **New hypothesis (one family only, do not over-claim):** Zr holdout, V1 lit-rank-prior:
+  0.653 → 0.678 (+0.025, std 0.004, consistent across seeds); V3 +0.023. Zr also has the lowest
+  element-specific literature coverage (57 comps). A targeted "prior for under-covered families"
+  test could follow, but n=1 family.
+- **Implication for Phase 5:** the candidate list must carry uncertainty/coverage flags — the model
+  cannot price promoter chemistry absent from training (the Ba lesson), so extrapolative candidates
+  need to be labeled as such.
+
+## 12. P1 Target integrity audit — DONE, conclusions STAND
+
+`phase5_target_audit.py` → `phase5_target_audit.json`. Triggered by
+`Spearman(n_measurements, observed_max) = 0.293` and the 47 catalysts with <20 measurements
+(mean observed max 3.28 vs 10.86; none in the global top decile).
+
+- **Sampling bias is real and quantified** (chemistry held fixed — subsample well-measured
+  catalysts): n=1 → observed max **−6.22** points, n=5 → −3.18, n=10 → −2.22, n=20 → −1.45,
+  n=50 → −0.62. max-of-n genuinely understates poorly-measured catalysts.
+- **Cause is mixed**: AUC(composition → low-count) = **0.772 ± 0.136** — the lab preferentially
+  under-measured chemically distinguishable catalysts (selection) *and* the statistical artifact is
+  present. AUC is noisy (only 47 positives); do not over-claim either cause.
+- **Headline conclusions unaffected.** Excluding the 47 low-count catalysts moves Spearman by
+  **0.002** (0.761 → 0.759). Phases 2–4 stand as reported.
+- **The "better target" was an illusion — the control that matters.** Scored against their *own*
+  targets, p90 (0.793) and top5mean (0.785) beat max (0.761). Scored against the **same ground truth
+  (true max = Taniike's stated objective)**, differences collapse to noise: max **0.761 / 4.28× /
+  0.44**, p90 **0.768 / 4.30× / 0.47**, top5mean **0.765 / 4.24× / 0.44**. The apparent gain was
+  target *learnability*, not screening skill. **Decision: keep max.**
+- **Enrichment is far less precise than previously quoted.** Bootstrap 95% CIs (n=917): Spearman
+  **0.725–0.785**, enrichment **3.04–4.89×**. Quote enrichment as a range, never as "4.28×".
+- **No meaningful tuning optimism**: true 20% catalyst holdout gives Spearman 0.791 (tuned) vs 0.783
+  (default); holdout is not below the CV estimate.
+
+## 13. Our own experiments (not prompted by the review) — DONE
+
+`phase6_our_experiments.py` → `phase6_our_experiments.json`.
+
+### E1. Coverage-moderated prior hypothesis — **NOT SUPPORTED** (Zr was chance)
+
+28 families (every element with ≥50 lab catalysts), family holdout, V0 vs V1 (literature rank prior,
+element-containing literature excluded), 5 seeds each.
+
+- **Mean delta = −0.0025**; **14/28** families positive — a coin flip.
+- Strongest correlation with any coverage descriptor: **|ρ| = 0.276** (n_lit_compositions, p=0.155),
+  against a pre-registered threshold of **0.5**. Verdict: **NOT SUPPORTED**.
+- Zr reproduces exactly (V0 0.653 → V1 0.678, +0.025, 5/5 seeds) — but with 28 families tested,
+  several show 5/5 in each direction (Pd +0.036, Eu +0.045, Nd, Ni, W positive; Cs, Li, Na, Mn, Hf,
+  V, Tb, Fe negative). Zr was selection from noise. **Phase 3's null now stands unqualified.**
+- Honest caveat: per-family deltas are not uniformly zero, so family-specific structure may exist —
+  but it is *not* explained by literature coverage, lab size, top-decile share, or family mean yield.
+
+### E2. Family learning curve — **the actionable result**
+
+Hold out 30% of a family, vary how many *other* family members appear in training, 5 seeds.
+
+| Family | ρ with 0 seen | ρ fully seen | % of ceiling at zero | Gain from seeing family |
+|---|---|---|---|---|
+| **Ba** | 0.509 | 0.683 | **74.4%** | **+0.175** |
+| La | 0.678 | 0.731 | 92.7% | +0.053 |
+| Ti | 0.618 | 0.664 | 93.0% | +0.047 |
+| Zr | 0.646 | 0.724 | 89.2% | +0.078 |
+| Ce | 0.643 | 0.722 | 89.1% | +0.079 |
+
+- **Ba is uniquely non-transferable.** Every other family is already 89–93% of its ceiling with zero
+  family members in training (their behaviour is inferable from neighbouring chemistry); Ba reaches
+  only 74.4% and gains 2–3× more than any other family from seeing its own members.
+- Ba's curve: 0→0.509, 5→0.543, 10→0.565, 25→0.616, 50→0.651, 100→0.679, 200→0.687 — **still
+  climbing at n=200**, whereas the others saturate by n≈50.
+- **Practical rule for new chemistry:** a chemically distinctive promoter family needs ~50–100
+  labeled catalysts before the model prices it well; a family resembling existing chemistry needs
+  ~10–25. This converts the Phase-4 "unpriceable" limitation into an experimental-design budget.
+- Caveat on the JSON's `unlock_threshold_80pct` field: it is weakly defined (80% of ceiling is
+  already met at n=0 for four of five families) — use the "% of ceiling at zero" column instead.
+
+## 14. Candidate list — DONE
+
+`phase6_candidates.py` → `phase6_candidates.json` + `phase6_candidates.csv` (+ `_diverse.csv`).
+
+- **Design grammar derived from the lab's own 917** (not invented): all Impregnation; 1 support
+  ~90% + 2–3 promoters ~3.33%; 13-value loading grid; 9 supports (Ba, Ti, La, Zr, Ca, Mg, Al, Si,
+  Ce), 27 promoters (≥20 uses each). **26,414 unseen in-grammar candidates** enumerated.
+- **Model**: formulation B, tuned LGBM, 10-seed ensemble on all 917. **No literature prior** —
+  Phase 3 + the 28-family test both negative.
+- **Unpriceable safeguard VERIFIED**: Ag has zero lab support; full-model vs Ag-column-dropped
+  predictions differ by **0.0000** — an absent element is provably unpriceable, exactly as the
+  Phase-4 Ba mechanism predicts. Tiering: 24,635 IN_SUPPORT / 1,779 EXTRAPOLATIVE (nn cutoff 4.32 =
+  95th pct of training nearest-neighbour distance; every element ≥20 training catalysts).
+- **Top prediction**: `Ba(90) Mo(3.33) Zn(3.33) Fe(3.33)` at 18.79% ± 0.09 (training observed max
+  21.50%; ensemble max 18.79% — predictions compress at the extreme, so **ranking is the deliverable,
+  not the absolute value**).
+- **Honest expected hit rate**: retrospective grouped-CV precision@20 = 0.44, **95% CI 0.15–0.65**;
+  enrichment **3.04–4.89×**. The CI is wide — quote the range, never the point.
+- **Chemical monotony is real and unresolved**: all top-20 contain Ba, 15/20 contain Mo. A greedy
+  diversity constraint (min separation = median training NN distance) barely changed the list —
+  one-promoter swaps already exceed that separation in 66-dim space, and the model's preference for
+  Ba is strong and genuine (Ba = 78% of the lab's top decile). **`best_per_support` is the honest
+  diversity device**, showing the yield cost of each alternative support:
+  Ba 18.79 > Ti 16.49 > La 15.82 > Ca 15.54 > Mg 14.66 > Si 13.83 > Al 13.63 > Zr 13.02 > Ce 12.93.
+  A real campaign should probably mix the Ba/Mo optimum with several best-per-support entries.
+
+## 15. P3 Cross-preparation OOD re-test — DONE. **First positive result for literature data.**
+
+`phase7_prep_ood.py` → `phase7_prep_ood.json`. **Supersedes `qn_tradeoff.json`** (row-level; its
+6.531 / 6.772 / 6.047 / 3.615 must never be requoted).
+
+**Two confounds the original OOD design did not control, now handled:**
+- *Target-estimator mismatch*: lab labels are max-of-~97 measurements, literature labels max-of-~2.2.
+  Absolute RMSE across that boundary compares two estimators, not two skill levels — so **ranking
+  metrics are primary**; RMSE/bias are reported but flagged (`*_CONFOUNDED` keys in the JSON).
+- *Preparation shift entangled with source shift*: the lab is 100% impregnation, so two test sets
+  separate them. Also note the model is **preparation-blind by construction** — prep_enc is constant
+  in lab training, so trees never split on it (same mechanism as Ba).
+
+**A. Decomposing the shift** (lab-only model; 742 impregnation-lit / 1,003 non-impregnation-lit;
+9 literature compositions identical to a lab catalyst excluded as leakage):
+
+| Test set | Spearman | Enrichment@10% | Prec@20 |
+|---|---|---|---|
+| T1 impregnation literature (source shift only) | 0.398 | 1.97× | 0.22 |
+| T2 non-impregnation (source + preparation) | **0.238** | **0.42×** | 0.04 |
+
+Cost of *also* changing preparation: **−0.160 Spearman**. Note **enrichment 0.42× is BELOW random**:
+independently verified — the model's top-101 T2 picks average 11.35% true yield vs a population mean
+of 10.33%, while the actual top-101 average 21.88%. Out of preparation it finds mildly-above-average
+catalysts and essentially never the exceptional ones. (Control: same model scores ρ 0.861 on the lab
+catalysts it was trained on, so this is transfer failure, not a broken model.)
+
+**B. Can impregnation literature help predict OTHER preparations?** (T2, pre-registered rule:
+Δ Spearman ≥ 0.02 with ≥4/5 seeds)
+
+| Config | Spearman | Δ | Seeds | Verdict |
+|---|---|---|---|---|
+| C1 lab only | 0.238 ± 0.007 | — | — | — |
+| **C2 lab + impregnation-lit as training rows** | **0.388 ± 0.005** | **+0.150** | 5/5 | **HELPS** |
+| C3 lab + impregnation-lit rank prior (feature) | 0.318 ± 0.020 | +0.080 | 5/5 | **HELPS** |
+
+**This is the first setting in the project where literature data measurably helps** — and it is
+exactly what the worknote-v2 §9 scope statement predicted: the prior is a *local-coverage* tool, and
+the lab has zero coverage of non-impregnation chemistry. Two caveats: absolute performance stays poor
+(0.388 Spearman, 1.34× enrichment), and **plain merging (C2) beats the PFT-style prior (C3)** — so
+even here the specific two-stage architecture is not the answer.
+
+**C. Matched-estimator sensitivity**: lab labels recomputed as max-of-3 gives 0.206 vs 0.238
+(−0.033) → conclusions **unchanged**; the estimator mismatch does not drive the result.
+
+## 16. How to run things
 
 - Env: `pip install xgboost lightgbm shap matplotlib nbformat pypandoc-binary openpyxl python-pptx`.
 - Experiments print authoritative numbers to stdout / write `*.json`.

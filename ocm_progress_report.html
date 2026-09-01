@@ -1,0 +1,255 @@
+<!doctype html><html><head><meta charset='utf-8'><style>
+body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;
+ max-width:820px;margin:0 auto;padding:32px 40px;line-height:1.55;font-size:14px}
+h1{font-size:22px;border-bottom:3px solid #1f4e79;padding-bottom:8px;color:#12325a}
+h2{font-size:17px;color:#12325a;border-bottom:1px solid #ccc;padding-bottom:4px;margin-top:28px}
+h3{font-size:15px;color:#1f4e79;margin-top:20px}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13px}
+th,td{border:1px solid #ccc;padding:6px 9px;text-align:left}
+th{background:#1f4e79;color:#fff}
+tr:nth-child(even){background:#f6f8fa}
+code{background:#eef1f4;padding:1px 4px;border-radius:3px;font-size:12.5px}
+strong{color:#12325a}
+@page{margin:14mm}
+</style></head><body><h1>OCM Project — Progress Report</h1>
+<p><strong>From:</strong> Parth Nagar
+<strong>To:</strong> Dr. M S Srinath
+<strong>Date:</strong> 31 August 2026
+<strong>Covers:</strong> all work from the start of the project to today, including everything done after Prof. Taniike's review</p>
+<hr />
+<h2>1. What we set out to do</h2>
+<p>We predict C₂ yield for OCM catalysts from their composition.</p>
+<p>We hold two datasets. The <strong>lab data</strong> has 89,074 measurements from 2025. The <strong>literature data</strong> has 3,852 measurements published between 1982 and 2019.</p>
+<p>We asked one question. Can the literature data make the lab model more accurate?</p>
+<p>Two problems make this hard.</p>
+<ul>
+<li><strong>Label shift.</strong> Published papers report higher yields than the lab sees. The gap is 3.4 percentage points.</li>
+<li><strong>Covariate shift.</strong> The two datasets use different chemistry.</li>
+</ul>
+<hr />
+<h2>2. The five methods we tried first</h2>
+<p>We tried five methods, in this order. Each one answered a problem the previous one exposed.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Method</th>
+<th>What it does</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Baseline</strong></td>
+<td>Train LightGBM on lab data only.</td>
+<td>The number to beat.</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Direct merge</strong></td>
+<td>Pool lab and literature data. Train one model.</td>
+<td>Worse. The label shift pulls predictions up.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Selective merge (DRST)</strong></td>
+<td>Keep only literature that looks like lab chemistry. Then merge.</td>
+<td>No real gain.</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Selective merge (KMM)</strong></td>
+<td>Weight each literature record instead of filtering. Then merge.</td>
+<td>Worse.</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>PFT (our method)</strong></td>
+<td>Train a model on literature. Feed its <em>prediction</em> into the lab model as an extra input. Never use literature yields as training labels.</td>
+<td>Best result at the time.</td>
+</tr>
+</tbody>
+</table>
+<p>Methods 2, 3 and 4 all failed for the same reason. They all put literature yields into the training target. The label shift then biases the model.</p>
+<p>Method 5 avoided that. It passed literature knowledge as a <em>feature</em>, not a <em>label</em>. We reported a 10.6% improvement. We sent this to Prof. Taniike.</p>
+<hr />
+<h2>3. What Prof. Taniike found</h2>
+<p>He replied with six technical points. One of them changed the project.</p>
+<p><strong>His main point:</strong> our test was not measuring what we claimed.</p>
+<p>The lab data holds 89,074 rows. But it only holds <strong>917 distinct catalysts</strong>. Each catalyst was measured about 97 times under different conditions.</p>
+<p>We split the data randomly by row. So the same catalyst appeared in both training and testing. The model had already seen the catalyst it was being tested on.</p>
+<p>He was right.</p>
+<hr />
+<h2>4. What we did about each of his six points</h2>
+<h3>Point 1 and 2 — Split by catalyst, not by row</h3>
+<p>We rebuilt the evaluation. Now every measurement of a catalyst stays in one fold.</p>
+<p>The result reversed:</p>
+<table>
+<thead>
+<tr>
+<th>Split method</th>
+<th>Baseline</th>
+<th>Our method (PFT)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>By row (what we sent him)</td>
+<td>2.118</td>
+<td>1.912 — <strong>9.7% better</strong></td>
+</tr>
+<tr>
+<td><strong>By catalyst (correct)</strong></td>
+<td><strong>2.943</strong></td>
+<td><strong>2.995 — 1.8% worse</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Our improvement disappeared. We withdrew the claim.</p>
+<p><strong>We also found the cause.</strong> Our Stage-1 model trained on literature <em>plus lab training rows</em>. Under a row split, those rows included the test catalysts. So the feature was carrying memorised answers, not literature chemistry.</p>
+<p>We made catalyst-based splitting the default in all our code. It cannot be skipped by accident now.</p>
+<h3>Point 3 — Hold out whole catalyst families</h3>
+<p>We did this for 28 element families.</p>
+<p>We found the Ba family fails badly. We then proved why. When no Ba catalysts appear in training, the model cannot use the Ba column at all. We deleted the column and got identical predictions. That proves the model ignores it.</p>
+<p>Ba matters because it holds 78% of the lab's best catalysts. Remove Ba, and you remove the high-yield chemistry from training.</p>
+<p>We then asked a more useful question. <strong>How many catalysts of a new family must we measure before the model can predict it?</strong> Our answer: about 10 for Ba, and none for La, Ti, Zr and Ce. Those four are already predictable from neighbouring chemistry.</p>
+<h3>Point 4 — Predict the best yield per catalyst, not the best condition</h3>
+<p>He explained the real goal. His lab tests every catalyst under a fixed set of conditions. So the model does not need to pick the condition. It needs to say whether a catalyst can reach a high yield at all.</p>
+<p>We rebuilt the model to predict each catalyst's <strong>maximum</strong> yield. It now trains on 917 rows instead of 89,074. It ranks just as well.</p>
+<h3>Point 5 — Use catalyst-level metrics</h3>
+<p>We replaced point-wise RMSE with ranking metrics. These are what a screening campaign actually cares about.</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+<th>95% range</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rank correlation of predicted vs real best yield</td>
+<td>0.761</td>
+<td>0.725 – 0.785</td>
+</tr>
+<tr>
+<td>Enrichment of top performers</td>
+<td>4.28×</td>
+<td>3.04 – 4.89×</td>
+</tr>
+<tr>
+<td>Hit rate in a 20-catalyst shortlist</td>
+<td>0.44</td>
+<td>0.15 – 0.65</td>
+</tr>
+</tbody>
+</table>
+<p>We report ranges, not single numbers. The ranges are wide, and we say so.</p>
+<h3>Point 6 — Test whether the rescaling step matters</h3>
+<p>He suspected our quantile-normalisation step did nothing. Tree models read the <em>order</em> of a feature, not its scale.</p>
+<p>We tested three versions: normalised, raw yields, and plain ranks. The differences run from 0.001 to 0.023 RMSE. At three seeds, that sits inside run-to-run noise.</p>
+<p>So we cannot separate them. We can drop the normalisation step without a measurable penalty. He was right.</p>
+<hr />
+<h2>5. What we tried after that, to rescue the method</h2>
+<p>The leak explained the old result. It did not prove literature data is useless. So we tested four honest ways to use it.</p>
+<table>
+<thead>
+<tr>
+<th>Design</th>
+<th>Rank correlation</th>
+<th>vs. control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Composition only (control)</td>
+<td><strong>0.761</strong></td>
+<td>—</td>
+</tr>
+<tr>
+<td>Literature rank prior</td>
+<td>0.757</td>
+<td>−0.004</td>
+</tr>
+<tr>
+<td>Similarity-to-literature features</td>
+<td>0.740</td>
+<td>−0.021</td>
+</tr>
+<tr>
+<td>Both combined</td>
+<td>0.744</td>
+<td>−0.017</td>
+</tr>
+<tr>
+<td>Catalyst-level direct merge</td>
+<td>0.758</td>
+<td>−0.003</td>
+</tr>
+</tbody>
+</table>
+<p>We fixed the success criteria before running. <strong>None of them beat composition alone.</strong></p>
+<p>We also tested one idea of our own. One family (Zr) suggested literature helps where our own data is thin. We tested that across all 28 families. The effect vanished. We discarded our own idea.</p>
+<hr />
+<h2>6. The one place literature data does help</h2>
+<p>We then asked a different question. Can the lab model predict catalysts made by <em>other</em> preparation methods?</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Rank correlation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Literature made by impregnation (same method as lab)</td>
+<td>0.398</td>
+</tr>
+<tr>
+<td>Literature made by other methods</td>
+<td>0.238</td>
+</tr>
+<tr>
+<td><strong>Other methods, after adding impregnation literature to training</strong></td>
+<td><strong>0.388</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Adding literature raised performance by 0.150, on every one of five seeds.</p>
+<p>This is the first time literature data measurably helped. The reason is simple. Our lab only uses impregnation. So for other preparation methods, the lab has no data at all, and the literature is the only information we have.</p>
+<p>Two honest caveats. Absolute performance is still poor. And plain merging beat our two-stage method here.</p>
+<hr />
+<h2>7. Where we stand today</h2>
+<p><strong>What works.</strong> The composition-only model ranks unseen catalysts usefully. A campaign guided by it finds good catalysts about 3 to 5 times faster than random choice.</p>
+<p><strong>What does not work.</strong> Our PFT method does not improve prediction for lab catalysts. No literature-integration design does.</p>
+<p><strong>What we cannot do.</strong> The model cannot price a promoter family it has never seen. This is structural, not a coding problem.</p>
+<p><strong>What we produced.</strong> We enumerated 26,414 candidate catalysts using the lab's own design rules. We recommend a 17-catalyst campaign: 12 at the model's best predictions, and 5 spanning alternative supports to test whether the model's preference for Ba is real chemistry.</p>
+<hr />
+<h2>8. A correction we made to our own report</h2>
+<p>We audited our own work note before sending it. We found eight factual errors and fixed them all.</p>
+<p>The most serious ones:</p>
+<ol>
+<li>We misquoted what version 1 said. Version 1 reported 1.907. Our draft said 1.912.</li>
+<li>We claimed the rescaling ablation differed by "0.001–0.005 RMSE". The true range is 0.001–0.023.</li>
+<li>We claimed Ba is uniquely hard to predict. Our own data shows five families score worse.</li>
+<li>We quoted a data budget that contradicted our own stored measurement.</li>
+<li>We presented an ensemble spread (±0.09) next to a predicted yield. A reader would take it as an error bar. The real error is about 2.7 yield points.</li>
+</ol>
+<p>We caught all of these before sending anything. Every number in the corrected note now traces to a stored file.</p>
+<hr />
+<h2>9. What comes next</h2>
+<ol>
+<li><strong>Send the corrected work note and reply to Prof. Taniike.</strong> Both are ready.</li>
+<li><strong>Run the prospective validation.</strong> He offered to synthesise our candidates. This is the strongest path to publication.</li>
+<li><strong>Ask for the missing condition data.</strong> About 27 reaction conditions are not recorded as features. They cause 18% of the yield variance that no model can currently explain. Getting them would help more than any modelling change.</li>
+</ol>
+<hr />
+<h2>10. What we can claim honestly</h2>
+<p>We can claim three things.</p>
+<ol>
+<li><strong>A validation finding.</strong> We documented a case where a literature-transfer method looked strong under standard cross-validation and failed under catalyst-grouped validation. We identified the mechanism. Random splits are common in this field, so this is worth reporting.</li>
+<li><strong>A working screening tool.</strong> The model ranks unseen catalysts well enough to guide synthesis.</li>
+<li><strong>A scoping result.</strong> Literature data does not help where our own coverage is good. It does help where our coverage is absent.</li>
+</ol>
+<p>We cannot claim that PFT improves prediction. We tested it properly, and it does not.</p></body></html>

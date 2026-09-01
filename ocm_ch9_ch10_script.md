@@ -1,3 +1,9 @@
+> **⚠️ Superseded numbers.** The `1.907` / `−10.6%` prior-feature results quoted throughout this
+> document come from a **row-level** cross-validation split. Under catalyst-grouped validation the
+> improvement does not survive (baseline 2.943 vs. 2.995) — it was catalyst-identity leakage.
+> This document is retained as a record of the original analysis. For corrected numbers see
+> `ocm_worknote_taniike.md` (v2), `SESSION_CONTEXT.md` §7–14, and `taniike_validation.py` onward.
+
 # Verbatim Presenter Script — Chapters 9 & 10
 
 First-person spoken script. Every claim is tied to a specific number or reason — nothing vague.

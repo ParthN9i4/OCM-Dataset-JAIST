@@ -2,3 +2,4 @@
 feedback_run.log
 tau1_run.log
 *.log
+__pycache__/

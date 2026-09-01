@@ -1,221 +1,275 @@
-# Work Note — Incorporating Published Literature Data into the Lab OCM Yield Model
+# Work Note (v2) — Incorporating Published Literature Data into the Lab OCM Yield Model
 
 **To:** Prof. Taniike
-**Topic:** A domain-adaptation approach for C₂-yield prediction in Oxidative Coupling of Methane (OCM)
-**Companion notebook (all code, reproducible):** `ocm_methodology.ipynb`
+**Topic:** A domain-adaptation study for C₂-yield prediction in Oxidative Coupling of Methane (OCM)
+**Supersedes:** version 1 of this note. **Companion code:** `ocm_methodology.ipynb`,
+`taniike_validation.py`, `phase3_lit_prior.py`, `phase4_family_diagnosis.py`,
+`phase5_target_audit.py`, `phase6_our_experiments.py`, `phase6_candidates.py`
 
 ---
 
+## What changed since version 1
+
+Version 1 reported that a two-stage prior-feature method ("PFT") improved C₂-yield prediction by
+10.6 % over a lab-only baseline. **Following the stricter validation Prof. Taniike proposed, that
+improvement does not survive, and we withdraw the claim.**
+
+| Claim in v1 | Status in v2 |
+|---|---|
+| PFT improves CV RMSE by 10.6 % (v1: 1.907 vs baseline 2.133) | **Withdrawn.** The gain was catalyst-identity leakage; under catalyst-grouped CV, PFT is 1.8 % *worse* than baseline |
+| Literature data measurably helps the lab model | **Not demonstrated.** Four honest designs, all ≤ the composition-only control |
+| Quantile normalisation is a necessary component | **Not supported.** Label treatment moves RMSE by 0.001–0.023, which at 3 seeds is inside run-to-run noise |
+| — | **New:** the composition-only model screens *unseen* catalysts usefully (ρ = 0.761, enrichment 3.04–4.89×) |
+| — | **New:** the Ba-family failure is mechanistically explained, and yields a data budget for new chemistry |
+
+The cause was specific and is now understood: our Stage-1 expert was trained on literature data
+*together with the lab training rows*, so under a random row split it had seen the very catalysts it
+was later asked to help predict. What follows is the corrected study.
+
+![**Figure 1 — The central finding.** Identical models under two evaluation protocols. When every measurement of a catalyst is confined to one fold, the reported improvement inverts.](fig_protocol_comparison.png)
+
 ## 1. Objective
 
-We maintain a machine-learning model that predicts C₂ yield from catalyst composition, trained on the
-lab's own **lab data** (89,074 in-house experiments, 2025, impregnation route). A large body of
-**literature data** (3,852 published experiments, 1982–2019) is also available. The objective of this
-work is to determine whether, and how, the literature data can be used to **improve the accuracy of the
-lab-data model without degrading it**.
+We predict C₂ yield from catalyst composition using the lab's own data (89,074 measurements, 2025,
+impregnation route). A body of published literature data (3,852 measurements, 1982–2019) is also
+available. The question is whether the literature can improve the lab model without degrading it.
 
-Two well-understood distributional differences make this a **domain-adaptation** problem — the same
-prediction task, but two datasets drawn from different distributions:
+Two distributional differences make this a **domain-adaptation** problem: a **label shift** (literature
+mean 8.670 % vs. lab 5.245 %, a +3.425 pp gap reflecting publication practice) and a **covariate
+shift** (the two collections emphasise different chemistry).
 
-- **Label shift.** The literature reports a mean C₂ yield of **8.670 %** versus **5.245 %** in the lab — a
-  systematic **+3.425 percentage-point** difference. This reflects the different operating conditions and
-  reporting practices of published work (published studies tend to report high-yield results), and is a
-  property of the two collections, not an error in either.
-- **Covariate shift.** The two datasets emphasise different elements and preparation methods, so they
-  occupy overlapping but distinct regions of catalyst-composition space.
+## 2. Evaluation methodology
 
-Combining the two therefore requires care: if the higher published yields are used directly as training
-targets, they shift the model's predictions upward. This note evaluates the established options for this
-situation and describes the approach we adopted.
+**Catalyst-grouped cross-validation is now our default protocol.** All measurements of a given
+catalyst are assigned to exactly one fold, so every reported number answers: *how well do we predict
+a catalyst nobody has made yet?* Anything fitted on data — scaler, domain classifier, both model
+stages — sees training-fold data only.
 
-## 2. Evaluation methodology (applied identically to every method)
+**Why the previous protocol was inadequate — a quantitative argument.** The 89,074 measurements
+comprise only **917 distinct catalysts** at 5 temperatures, giving ~4,400 unique input vectors each
+measured ~20 times. Because roughly 27 distinct reaction-condition settings per catalyst-temperature are not recorded as features,
+those repeats are *identical inputs with differing yields*. That within-group variance is **18.2 % of
+total yield variance**, so the best attainable row-level RMSE is **1.680**.
 
-Every method is compared under one protocol so the numbers are directly comparable:
+Version 1 reported 1.907 — only 0.23 above that floor. In hindsight this should itself have prompted
+suspicion: a model cannot approach the noise ceiling of data it should not be able to memorise.
+Point-wise RMSE is therefore not merely less relevant than catalyst-level metrics here; it is close to
+uninformative.
 
-- **Asymmetric 5-fold cross-validation.** The 89,074 lab records are split into 5 folds; each is held out
-  for testing once while the model trains on the other four. **Literature data, when used, enters only the
-  training side — never the test fold.** Every reported number therefore answers the same question: *how
-  accurately does the model predict the lab's own experiments?*
-- **Metric.** Root-mean-square error (RMSE) of C₂ yield, in yield-% units; lower is better.
-- **Reproducibility.** For the sake of repeatable experiments, all random splits and model seeds are fixed,
-  hyper-parameters are held constant across every method (no per-method tuning), and each headline result
-  is repeated across 10 independent random seeds (Section 5). Every value in this note is a stored output
-  of `ocm_methodology.ipynb`.
+**Primary metrics** are consequently catalyst-level, as proposed: Spearman correlation between
+predicted and observed *maximum* yield, and enrichment of true high performers among top-ranked
+predictions.
 
 ## 3. Baseline and the two datasets
 
-**Baseline model.** A LightGBM gradient-boosted-tree regressor trained on lab data only — input: 67 catalyst
-features (temperature, preparation code, 65 element loadings); output: predicted C₂ yield. **CV RMSE =
-2.133.** This is the reference every subsequent method must improve upon.
+A LightGBM regressor trained on lab data only. Under the grouped protocol its CV RMSE is **2.943**
+(row-level: 2.118 — the difference is the leakage, not a change of model).
 
-The two distributional differences that shape the study are shown below.
+![**Figure 2 — Label shift.** The literature (orange) is centred about 3.4 points above the lab data (blue). Systematic, not noise.](fig_mean_shift.png)
 
-![**Figure 1 — Label shift.** Y(C₂) distributions of the two datasets: the literature (orange) is centred about 3.4 points above the lab data (blue). The gap is systematic, not noise.](fig_mean_shift.png)
-
-![**Figure 2 — Covariate shift.** The most-used elements differ between the two datasets: the lab and the literature emphasise different chemistry.](fig_element_usage.png)
+![**Figure 3 — Covariate shift.** The most-used elements differ between the two collections.](fig_element_usage.png)
 
 ## 4. Approaches evaluated
 
-We first evaluated the established options for combining datasets of this kind, then developed the method we
-adopted. The established options are described briefly; the adopted method (Section 4.3) is described in
-full.
+**Direct merge.** Pool all literature records with the lab data. The label shift enters the training
+target and accuracy is not improved.
 
-### 4.1 Direct merge — a reference point
+**Selective merge.** Make the literature more lab-like before merging — either a hard filter (DRST: a
+logistic-regression domain classifier scoring each record by `P(lab | features)`, retaining 20.3 % at
+τ = 0.30) or continuous importance weights (KMM). Both still place literature yields in the training
+objective, so the label shift is unresolved.
 
-Pool all 3,852 literature records with the lab data and train a single LightGBM. Because the literature
-carries the +3.4-point label shift, using its yields directly as training targets moves the combined model's
-predictions upward, and accuracy is not improved. **CV RMSE = 2.241.** This shows that the two datasets
-cannot simply be concatenated as-is — the label shift needs to be handled — which motivates the selective
-approaches below.
+![**Figure 4 — DRST scores.** Each literature record scored by how lab-like its chemistry is.](fig_drst_scores.png)
 
-### 4.2 Selective merge — filtering (DRST) and weighting (KMM)
+![**Figure 5 — KMM weights.** Continuous weights agree closely with the DRST filter (r = 0.792).](fig_kmm_weights.png)
 
-A natural refinement is to make the literature more representative of the lab's chemistry before merging.
-This is the standard covariate-shift toolkit, in two forms:
+**Prior-feature method (PFT).** Let the literature influence the final model only through a *predicted
+value used as an input feature*, never as a training label: Stage 1 trains an expert on literature
+data whose yields are rank-rescaled onto the lab scale; Stage 2 trains on lab data with that
+prediction as one extra feature, using lab labels only.
 
-- **DRST (hard filter).** A logistic-regression domain classifier scores each literature record by how much
-  its chemistry resembles the lab data, `P(lab | features)`; records above a threshold are kept. At
-  **τ = 0.30** this retains **782 / 3,852 = 20.3 %** of the literature. *(LogReg selector → LightGBM.)*
-- **KMM (soft weighting).** Kernel Mean Matching assigns every literature record a continuous importance
-  weight so the weighted literature distribution matches the lab distribution. *(KMM weights → weighted
-  LightGBM.)*
+![**Figure 6 — Stage-1 rescaling.** Literature yields (orange) mapped onto the lab range (green). *Note: the ablation in §5 shows this rescaling is not actually necessary — the final model uses only the prior's ordering.*](fig_bias_correction.png)
 
-![**Figure 3 — DRST scores.** Each literature record scored by how lab-like its chemistry is; the high-scoring subset (right tail) is what the filter keeps.](fig_drst_scores.png)
+## 5. What the stricter validation showed
 
-![**Figure 4 — KMM weights.** The continuous importance weights closely agree with the DRST filter (their scores correlate at r = 0.790) — two independent methods reaching the same view of which literature is lab-like.](fig_kmm_weights.png)
+**The improvement was leakage.** Under catalyst-grouped CV: baseline **2.943**, PFT **2.995** (+1.8 %).
+Three readings of the same ablation grid point to the mechanism (they share one 3-seed run, so we do
+not present them as independent experiments):
 
-**Result.** Best DRST **CV RMSE = 2.127**; KMM **CV RMSE = 2.261** — both close to, and not better than, the
-baseline. Correcting *which* records are used addresses the covariate shift, but these methods still use the
-literature's yields as training targets, so the label shift is not resolved.
+1. Training Stage 1 on literature *alone* reduces the row-level gain from −9.7 % to **−2.4 %** (QN prior) or **−2.7 %** (rank prior)
+2. Under grouped CV the joint variant (**2.982**, 3 seeds) is worse than literature-only (**2.938**, rank prior, 3 seeds)
+3. On those same three seeds, literature-only (2.938) and the baseline (2.928) are indistinguishable
 
-**Reading of Sections 4.1–4.2.** Every approach that places the literature yields into the training objective
-is limited by the label shift. The open question is whether the literature's *chemical information* can be
-used without its *yields* entering the objective. That is what the adopted method does.
+*(Seed counts differ between these checks and the headline table. The headline PFT figure of 2.995 is a
+5-seed mean; 2.982 is the same configuration over the first 3 seeds only. The ablation grid ran at 3
+seeds throughout.)*
 
-### 4.3 Adopted method — a two-stage prior-feature approach (stacking-based domain adaptation) ★
+**Your quantile-normalisation hypothesis is supported, though we will not state it as strongly as we
+first did.** We compared the three label treatments you named under both protocols. The gaps are:
+row-level 0.006 (QN vs raw) and 0.006 (QN vs rank); catalyst-grouped 0.023 (QN vs raw) and 0.001
+(QN vs rank). The largest gap sits under our primary protocol, and it is close to the run-to-run
+spread there (per-configuration standard deviations of 0.022 and 0.035 over 3 seeds). The honest
+statement is therefore that **no label treatment is distinguishable from another at this seed
+count**, not that the effect is exact. On that evidence the normalisation step can be dropped without
+a measurable penalty, which is the practical conclusion you anticipated.
 
-**Core idea.** Let the literature influence the final model **only through a predicted value used as an input
-feature**, never as a training label. Concretely, three stages:
+**With the leakage channel closed, we retested literature integration properly** — a literature-only
+rank prior, similarity-to-literature features, a gated prior combining both, and a catalyst-level
+direct merge. Success criteria were fixed before running. **None improved on composition alone.**
 
-- **Stage 0 — (optional) selection.** Choose the literature used to build the expert: either the
-  DRST-filtered subset (782 records, τ = 0.30) or all 3,852 records. We tested both (Section 4.4); the
-  choice makes a negligible difference, so this stage is optional.
-- **Stage 1 — literature expert.** Train an XGBoost regressor on the chosen literature. Its published yields
-  are first **rank-rescaled onto the lab yield range** (quantile normalisation — a monotone, rank-preserving
-  map), so the expert's outputs are expressed on the lab scale. *(Input: literature catalyst features;
-  output: an expert yield estimate.)*
+![**Figure 7 — No literature variant beats composition alone.** Catalyst-grouped protocol; the dashed line is the composition-only control. Deltas in parentheses.](fig_grouped_results.png)
 
-![**Figure 5 — Stage 1 rescaling.** The literature yields (orange, mean 8.670 %) are mapped onto the lab yield range (green, ≈ blue lab data, mean 5.245 %), preserving their ordering. This lets the expert express its estimates on the lab scale.](fig_bias_correction.png)
+We also tested a hypothesis of our own — that the prior might help specifically where our own
+coverage is thin, suggested by one family (Zr) showing a consistent gain. Across **all 28 element
+families with ≥50 catalysts** the mean effect was **−0.0025**, 14/28 positive, and the strongest
+correlation with any coverage measure was |ρ| = 0.276 against a pre-registered threshold of 0.5. The
+Zr result was selection from noise, and we discarded it.
 
-- **Stage 2 — final model.** Train a LightGBM on the lab data, adding the Stage-1 expert's prediction as one
-  additional input feature, `lit_prior_prediction`, and training on **lab labels only**. The literature's
-  yields never enter this model's objective.
+## 6. What the model can do: screening unseen catalysts
 
-**Why this addresses the label-shift limitation.** The literature's scale now resides in a *feature value*,
-which the final model can weight, discount, or recalibrate per sample using the lab data — rather than in the
-training target. The systematic offset is contained within a feature instead of propagating into the
-objective.
+Rebuilt at catalyst level — composition → maximum yield, 917 training examples, no temperature — the
+model matches the full 89,074-row model on ranking (Spearman 0.760 vs 0.766, within seed noise) while
+training on ~100× fewer rows. On genuinely unseen
+catalysts:
 
-**Result. CV RMSE = 1.907 — a 10.6 % improvement over the baseline**, and the only approach evaluated that
-improves on it.
+| Metric | Value | 95 % CI |
+|---|---|---|
+| Spearman ρ (predicted vs. observed max yield) | 0.761 | 0.725 – 0.785 |
+| Enrichment of true top-decile among top-decile predicted | 4.28× | **3.04 – 4.89×** |
+| Precision@20 (of 20 nominated, fraction truly top-decile) | 0.44 | **0.15 – 0.65** |
 
-### 4.4 Does the Stage-0 filter matter? Filtered vs. all literature
+We quote intervals rather than point estimates: with 92 catalysts in the top decile of 917, these
+quantities are considerably less precise than a single number suggests.
 
-Because Stage 2 uses the expert only as a feature it can down-weight, the expert can be built from **all**
-literature — including records whose chemistry is unlike the lab's. We compared both, across 10 seeds:
+![**Figure 8 — What drives achievable maximum yield.** Composition-only model. Ba dominates, followed by chemically sensible contributors. *(The corresponding figure in v1 ranked the literature prior first; that model was the leaked pipeline, so the figure illustrated the leak rather than the chemistry.)*](fig_shap_bar.png)
 
-| Stage-1 training data | CV RMSE | MAE | R² |
+## 7. Why the Ba family fails, and how much data a new family needs
+
+Family holdouts behave reasonably for La, Ti, Zr and Ce (ρ 0.62–0.68) but poorly for Ba (0.526). The
+cause is quantifiable: Ba catalysts average **13.76 %** maximum yield against **8.95 %** for the rest,
+and **78 % of the lab's top decile contains Ba**. Removing them removes the high-yield regime itself.
+
+The mechanism is provable rather than inferred. With no Ba catalysts in training, the Ba column is
+constant, so no tree splits on it — and retraining with that column **deleted entirely** produces
+**bit-identical predictions**. The model prices Ba catalysts as though Ba were absent, underpredicting
+the best of them by **9.8 yield points**. Ten random pseudo-families of equal size score 0.752, so
+this is chemistry and label coverage, not sample size.
+
+That raised a question we found more useful than *whether* it fails: **how many labelled members of a
+family are needed before the model can price it?**
+
+| Family | ρ, none seen | ρ, fully seen | % of ceiling at zero |
 |---|---|---|---|
-| DRST-filtered (782, 20.3 %) | **1.909 ± 0.002** | 1.386 | 0.765 |
-| All literature (3,852) | **1.917 ± 0.002** | 1.395 | 0.763 |
+| **Ba** | 0.509 | 0.683 | **74.4 %** |
+| La | 0.678 | 0.731 | 92.7 % |
+| Ti | 0.618 | 0.664 | 93.0 % |
+| Zr | 0.646 | 0.724 | 89.2 % |
+| Ce | 0.643 | 0.722 | 89.1 % |
 
-Both improve on the baseline on **10 / 10** seeds; the filter contributes only a **0.008 RMSE (~0.4 %)**
-edge. This answers a useful question — *how can information be drawn from records that do not look like the
-lab's data?* The gain comes from the two-stage design rather than the filter, and the method is **robust to
-including literature unlike the lab's chemistry**: because that information arrives as a *feature* (not a
-label), the final model weights it appropriately per sample instead of being pulled off-scale. Stage 0 is
-therefore optional; we report the filtered variant as the primary result and note the all-literature variant
-is essentially equivalent.
+![**Figure 9 — A data budget for new chemistry.** Left: performance against the number of family members already measured. Right: fraction of achievable performance reached having seen none.](fig_learning_curve.png)
 
-## 5. Robustness of the result
+Ba is the most *consequential* family to lose, not the hardest to predict. Across all 28 families we
+tested, five score below Ba's 0.526: Pd 0.217, Cu 0.286, Al 0.329, Ni 0.329 and Co 0.493. What sets Ba
+apart is its weight. It holds 78 % of the top decile, so losing it removes the high-yield regime
+itself, and it gains far more than any other family from seeing its own members (+0.175, against
++0.047 to +0.079 elsewhere).
 
-- **Repeatability across 10 seeds.** Baseline **2.121 ± 0.005** vs. adopted method **1.909 ± 0.002**; the
-  method improves on the baseline on **10 / 10** seeds, with a paired t-test **p ≈ 4 × 10⁻¹⁵**.
+**On the data budget**, our stored measure is the number of family members needed to reach 80 % of the
+achievable performance. That number is **10 for Ba and 0 for La, Ti, Zr and Ce** — those four already
+exceed 80 % having seen none. Reaching 95 % takes about 50 for Ba and 25–50 for the others. We would
+treat this as order-of-magnitude guidance only: for Ti and Zr the per-point seed spread (0.03–0.12) is
+comparable to the whole learning-curve gain, so those two curves are not resolved.
 
-![**Figure 6 — Repeatability.** Per-seed CV RMSE across 10 random seeds; the adopted method (lower line) is below the baseline on every seed. The effect is reproducible across CV splits and model initialisations.](fig_repeated_runs.png)
+## 8. A candidate list for prospective validation
 
-- **Held-out test, used nowhere in the pipeline.** A random 20 % of the lab data (17,814 records) was set
-  aside at the outset and used in **no** part of the pipeline — not the domain classifier, not Stage 1, not
-  Stage 2 (verified by rebuilding the domain classifier on the training portion only). On this untouched set:
-  baseline RMSE **2.097** → adopted method **1.890** (R² = 0.763) — the same ~10 % improvement, confirming
-  the result is not an artefact of the cross-validation splits.
+We enumerated **26,414 unseen candidates** in the laboratory's own design grammar — impregnation, one
+support at ~90 % with 2–3 promoters at ~3.33 %, drawn from the supports and promoters already in use —
+and scored them with a 10-seed ensemble. No literature prior is used.
 
-## 6. What drives the improvement
+Every candidate carries a coverage flag, and the safeguard is verified rather than assumed: for an
+element absent from our data (Ag), predictions computed with and without its column differ by exactly
+zero — confirming such candidates are unpriceable and must be flagged rather than ranked.
 
-Using SHAP (a standard feature-attribution method), the engineered feature `lit_prior_prediction` — the
-literature expert's estimate — is the **most influential input by a wide margin** (roughly an order of
-magnitude above the next feature), followed by chemically sensible drivers (temperature and known OCM
-promoters such as Ba, Mn, La, Ce). This confirms that the transferred chemical information, delivered as a
-feature, is what produces the gain.
+The highest-ranked candidate is **Ba(90) + Mo(3.33) + Zn(3.33) + Fe(3.33)**, predicted 18.79 %. We
+deliberately do not attach an error bar to that figure. The ± 0.09 our ensemble reports is only the
+spread across 10 seeds; the model's actual catalyst-level error on held-out catalysts is about
+2.7 yield points (MAE). The number ranks candidates. It does not forecast a yield.
 
-![**Figure 7 — Feature importance (SHAP).** `lit_prior_prediction` (the literature expert's estimate) ranks first by a wide margin, ahead of temperature and known OCM promoters.](fig_shap_bar.png)
+Two caveats. Absolute predictions compress at the extreme — our ensemble maximum is 18.79 % while
+observed training yields reach 21.50 % — so the **ranking** is the deliverable, not the predicted
+value. And the top 20 are chemically monotonous: all contain Ba, most contain Mo. A diversity
+constraint did not meaningfully change this, because the model's preference for Ba is genuine. We
+therefore also provide the best candidate per support, with its cost in predicted yield:
 
-## 7. Relation to prior work and our contribution
+| Support | Ba | Ti | La | Ca | Mg | Si | Al | Zr | Ce |
+|---|---|---|---|---|---|---|---|---|---|
+| Best predicted max yield (%) | 18.79 | 16.49 | 15.82 | 15.54 | 14.66 | 13.83 | 13.63 | 13.02 | 12.93 |
 
-The individual ingredients are established; **the contribution here is the specific pipeline and its
-application.**
+**Our recommended campaign (17 catalysts, `campaign_shortlist.csv`).** Rather than submit twenty
+near-identical catalysts, we suggest splitting the budget:
 
-- **Positioning.** Because the lab and the literature share the *same* prediction task and differ only in
-  distribution, this is a **domain-adaptation** problem (a sub-field of transfer learning), not transfer to a
-  new task. Using a model's *prediction as an input feature* is **stacked generalisation** (Wolpert, *Neural
-  Networks* 5, 1992, 241–259) applied across distributions — a documented family sometimes termed *stacked
-  transfer learning*. The mechanism is therefore not itself new.
-- **On the name.** We use "Prior Feature Transfer (PFT)" only as an internal shorthand; it is not a standard
-  term. We note that "feature transfer" in the literature usually denotes *feature-representation* transfer
-  (learning a shared feature space), which is **not** what this method does. A precise description is
-  *stacking-based domain adaptation using a literature-derived prior feature* (a clear alternative name would
-  be "Literature-Prior Stacking").
-- **Distinctions from related methods.**
-  - *Δ-machine-learning / multi-fidelity* (Ramakrishnan, Dral, Rupp, von Lilienfeld, *J. Chem. Theory
-    Comput.* 11, 2015, 2087) combines a source estimate with a learned correction as
-    `final = source_estimate + Δ`, so the source value is added into the output and its scale is inherited.
-    Our method instead supplies the source estimate **only as a feature** the final model may weight or
-    ignore.
-  - *Importance weighting for covariate shift* (Huang, Gretton, Borgwardt, Schölkopf, Smola — KMM, NIPS
-    2006; Sugiyama, Krauledat, Müller, *JMLR* 8, 2007, 985) corrects which records are used but keeps the
-    source labels in the objective — our DRST and KMM baselines are instances, which is why they do not
-    overcome the label shift.
-  - *Label-shift correction* (Lipton, Wang, Smola — BBSE, ICML 2018) reweights examples to correct the label
-    distribution; our method keeps the source labels out of the objective entirely.
-- **What is genuinely ours (an applied/methodological contribution):** the specific pipeline — *(optionally)
-  select literature by chemistry → build an expert whose yields are rescaled to the lab scale → use its
-  prediction as the sole channel into a lab-labelled final model* — applied to **OCM literature→lab yield
-  transfer under simultaneous covariate and label shift**, together with the empirical finding that it is the
-  only evaluated approach to improve on the baseline, verified across 10 seeds and on an untouched held-out
-  set.
+- **Tier A — 12 catalysts, the model's optimum** (predicted 18.33–18.79 %). This is where the expected
+  hits are. From the retrospective grouped-CV precision@20, we would expect roughly **2–8 of the 12**
+  to be genuine top-decile performers (95 % CI 0.15–0.65 — deliberately a wide interval).
+- **Tier B — 5 catalysts, one per alternative support** (Ti 16.49, La 15.82, Ca 15.54, Mg 14.66,
+  Si 13.83). These cost predicted yield and we do not expect them to win. They are an *information*
+  purchase: 78 % of the lab's existing top decile already contains Ba, so the model's strong Ba
+  preference may partly reflect that coverage rather than chemistry. If several Tier-B catalysts
+  outperform their predictions, that tells us something the Tier-A catalysts cannot.
 
-## 8. Results summary
+We would of course defer to your judgement on synthesis feasibility, and are happy to reweight the
+split.
 
-| # | Approach | Model(s) | Literature used as | CV RMSE | vs. baseline |
-|---|---|---|---|---|---|
-| 1 | Baseline (lab only) | LightGBM | — | 2.133 | — |
-| 2 | Direct merge | LightGBM | training labels | 2.241 | +5.1 % |
-| 3 | Selective merge — DRST filter | LogReg → LightGBM | filtered training labels | 2.127 | ≈ 0 % |
-| 3 | Selective merge — KMM weights | KMM → LightGBM | weighted training labels | 2.261 | +6.0 % |
-| 4 | **Prior-feature method (adopted)** | **XGBoost → LightGBM** | **a predicted feature** | **1.907** | **−10.6 %** |
+## 9. Relation to prior work
 
-![**Figure 8 — All approaches.** 5-fold CV RMSE on lab data; only the prior-feature method improves on the baseline (dashed line).](fig_worknote_results.png)
+The mechanism of PFT — using a model's prediction as an input feature — is **stacked generalisation**
+(Wolpert, *Neural Networks* 5, 1992, 241–259) applied across distributions. "Prior Feature Transfer"
+was our internal shorthand, not a standard term, and we note that "feature transfer" usually denotes
+*representation* transfer, which this is not.
 
-## 9. Limitations and next steps
+**Our corrected understanding of when such a method can help.** Because the prior `p = f(x)` is a
+deterministic function of features the final model already has, `I(y; x, f(x)) = I(y; x)` — it cannot
+add information. It can only supply an inductive bias, or exploit source data covering regions the
+target data does not. Our results indicate neither applies here at the scale that matters, for three
+reasons: ~79.7 % of the literature is out-of-distribution relative to the lab; quantile normalisation
+aligns marginal but not conditional distributions; and literature yields are measured under each
+paper's own conditions, whereas our target is the maximum over a standardised battery — semantically
+different quantities. **The honest scope statement is that this family of methods is a local-coverage
+tool, not a global-information tool.**
 
-- **Operating regime.** The improvement is established for prediction on lab-like chemistry (the lab's
-  operating regime). Predicting *very different* catalyst families (out-of-distribution) is a separate
-  objective; a preliminary check indicates that the current rescaling — tuned to the lab yield range — does
-  not by itself improve out-of-distribution accuracy. Extending the method for that use-case (e.g. building
-  the expert from all literature and retaining the literature scale) is a direction we will examine next.
-- **Domain knowledge.** Incorporating explicit chemical or process knowledge — for example known promoter
-  groupings, or reaction-condition variables such as gas hourly space velocity and CH₄:O₂ ratio (not present
-  in the current dataset) — is a promising avenue for a future iteration.
-- **Reproducibility.** All hyper-parameters were fixed across every method (LightGBM `num_leaves = 63`,
-  `max_depth = 7`; XGBoost `max_depth = 6`), with no validation-set tuning; all results are stored outputs of
-  `ocm_methodology.ipynb`.
+Related approaches remain distinct: Δ-machine-learning (Ramakrishnan et al., *JCTC* 11, 2015, 2087)
+adds a source estimate as an additive baseline, inheriting its scale; importance weighting (Huang et
+al., NIPS 2006; Sugiyama et al., *JMLR* 8, 2007) corrects which records are used but keeps source
+labels in the objective — our DRST and KMM baselines are instances; label-shift correction (Lipton et
+al., ICML 2018) reweights to correct the label distribution.
+
+## 10. Limitations and next steps
+
+- **The literature contribution is not demonstrated.** Four designs plus a 28-family follow-up all
+  returned null. We report this rather than continue searching for a variant that scores well.
+- **Novel promoter families cannot be priced.** This is structural, not a modelling deficiency — but
+  §7 quantifies the data required to remove the limitation.
+- **The target carries a measurement-effort confound.** 47 catalysts have fewer than 20 measurements
+  and systematically low maxima; part is a pure sampling effect, part appears to be deliberate early
+  stopping. Excluding them changes our headline metric by 0.002, so nothing hinges on it — but we
+  would welcome confirmation of which it is.
+- **The unrecorded reaction conditions are the largest single opportunity.** If those ~27 variables
+  exist in a retrievable form, the 18.2 % irreducible variance becomes partly learnable and
+  condition-level modelling becomes meaningful.
+- **Cross-preparation transfer is now measured, and it is where literature data finally helps.**
+  Predicting *impregnation* literature (different source, same preparation) gives ρ = 0.398; predicting
+  *non-impregnation* literature gives ρ = 0.238 — so changing preparation costs a further 0.160. At that
+  range the model is not usable for selection out of preparation: its top-decile picks average 11.50 %
+  true yield against a population mean of 10.34 %, while the genuine top decile averages 21.92 %
+  (enrichment 0.42×, i.e. worse than picking at random). **But adding impregnation literature to training
+  raises ρ from 0.238 to 0.388 (+0.150, 5/5 seeds)** — the first setting in this study where literature
+  data measurably helps, and consistent with the scope statement in §9: the lab has *no* coverage of
+  non-impregnation chemistry, so the literature supplies genuinely new information there. Two caveats:
+  absolute performance remains poor, and plain merging outperforms the prior-feature construction
+  (0.388 vs 0.318). Details in `phase7_prep_ood.py`; this supersedes the earlier row-level OOD numbers.
+- **Prospective validation** is the natural next step, and we would pre-register the expected hit rate
+  (precision@20, CI 0.15–0.65) before any results arrive.
+
+*All numbers in this note are stored outputs of the scripts named at the head of the document; each
+figure is generated from the corresponding experiment's JSON so that figures cannot drift from the
+experiments that produced them.*
