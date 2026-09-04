@@ -46,15 +46,28 @@ a catalyst nobody has made yet?* Anything fitted on data — scaler, domain clas
 stages — sees training-fold data only.
 
 **Why the previous protocol was inadequate — a quantitative argument.** The 89,074 measurements
-comprise only **917 distinct catalysts** at 5 temperatures, giving ~4,400 unique input vectors each
-measured ~20 times. Because roughly 27 distinct reaction-condition settings per catalyst-temperature are not recorded as features,
-those repeats are *identical inputs with differing yields*. That within-group variance is **18.2 % of
-total yield variance**, so the best attainable row-level RMSE is **1.680**.
+comprise only **917 distinct catalysts** at 5 temperatures, giving 4,399 (catalyst, temperature)
+cells holding 20.2 rows on average. Your description of these rows as measurements *under different
+reaction conditions* is borne out by the row counts themselves, and we should have taken it more
+literally than we first did. Cell sizes have a hard ceiling at exactly **27**, a second at exactly
+**54 = 2 × 27**, and nothing above; **15 catalysts hold exactly 135 rows, and all 15 decompose as
+exactly (27, 27, 27, 27, 27)**. That is **5 temperatures × 27 condition settings = 135**, matching
+the 135 conditions you describe. We also tested the competing reading that 27 was an export cut-off
+rather than a design size, and rejected it: the spacing between the two lowest values in a 27-row
+cell is 2.03× the interior spacing, whereas artificially truncating a larger cell to 27 rows gives
+0.90× — the signature of a complete sample rather than a truncated one.
 
-Version 1 reported 1.907 — only 0.23 above that floor. In hindsight this should itself have prompted
-suspicion: a model cannot approach the noise ceiling of data it should not be able to memorise.
-Point-wise RMSE is therefore not merely less relevant than catalyst-level metrics here; it is close to
-uninformative.
+The consequence is that these rows are **not replicates**, and the variation across them is not
+measurement noise. Because those 27 condition settings are absent from the feature table, **19.9 %
+of total yield variance lies within cells** and cannot be reached from composition and temperature
+alone, which floors row-level RMSE at **1.757**. This is a property of the missing columns, not an
+irreducible physical limit — recovering the condition data would make most of it learnable.
+
+Version 1 reported 1.907 — only 0.15 above that floor. In hindsight this should itself have prompted
+suspicion: a model cannot approach a floor that assumes knowledge of each catalyst's own cell means
+unless it has, in effect, memorised those catalysts. Point-wise RMSE is therefore not merely less
+relevant than catalyst-level metrics here; it is close to uninformative — and it is precisely the
+metric that a catalyst-identity leak flatters most.
 
 **Primary metrics** are consequently catalyst-level, as proposed: Spearman correlation between
 predicted and observed *maximum* yield, and enrichment of true high performers among top-ranked
@@ -249,13 +262,25 @@ al., ICML 2018) reweights to correct the label distribution.
   returned null. We report this rather than continue searching for a variant that scores well.
 - **Novel promoter families cannot be priced.** This is structural, not a modelling deficiency — but
   §7 quantifies the data required to remove the limitation.
-- **The target carries a measurement-effort confound.** 47 catalysts have fewer than 20 measurements
-  and systematically low maxima; part is a pure sampling effect, part appears to be deliberate early
-  stopping. Excluding them changes our headline metric by 0.002, so nothing hinges on it — but we
-  would welcome confirmation of which it is.
-- **The unrecorded reaction conditions are the largest single opportunity.** If those ~27 variables
-  exist in a retrievable form, the 18.2 % irreducible variance becomes partly learnable and
-  condition-level modelling becomes meaningful.
+- **The target carries a measurement-effort confound, and grid coverage is not random.** 47 catalysts
+  have fewer than 20 measurements and systematically low maxima. More generally, how much of the
+  135-condition grid was actually run tracks how well the catalyst performed: Spearman(cell size,
+  cell maximum yield) = **+0.441**, and mean cell yield rises monotonically from 2.22 % in cells with
+  1–5 rows to 6.05 % in cells with 27. Only 811 of 917 catalysts have all five temperatures present,
+  and 186 catalyst–temperature cells are absent entirely. This reads as unpromising combinations
+  being abandoned partway through the grid. Excluding the low-count catalysts changes our headline
+  metric by 0.002, so no conclusion here hinges on it — but we would welcome confirmation of whether
+  the incomplete cells were stopped deliberately, since that decides whether the bias is correctable
+  or is itself informative.
+- **The unrecorded reaction conditions are the largest single opportunity.** If those ~27 condition
+  settings per catalyst–temperature exist in a retrievable form, the 19.9 % of variance now
+  unreachable from composition and temperature becomes largely learnable, condition-level modelling
+  becomes meaningful, and row-level RMSE becomes a well-posed target again rather than a floor
+  artefact. One further question would settle a reading we could not resolve from the file alone:
+  are the ~27 measurements per catalyst–temperature **distinct reaction conditions**, or successive
+  **time-on-stream samples** at a single condition? If the latter, a catalyst's maximum is a
+  fresh-catalyst transient rather than an achievable optimum, which would change the target we
+  should be predicting.
 - **Cross-preparation transfer is now measured, and it is where literature data finally helps.**
   Predicting *impregnation* literature (different source, same preparation) gives ρ = 0.398; predicting
   *non-impregnation* literature gives ρ = 0.238 — so changing preparation costs a further 0.160. At that

@@ -179,7 +179,7 @@ We caught all of these before sending anything. Every number in the corrected no
 
 1. **Send the corrected work note and reply to Prof. Taniike.** Both are ready.
 2. **Run the prospective validation.** He offered to synthesise our candidates. This is the strongest path to publication.
-3. **Ask for the missing condition data.** About 27 reaction conditions are not recorded as features. They cause 18% of the yield variance that no model can currently explain. Getting them would help more than any modelling change.
+3. **Ask for the missing condition data.** Each catalyst is run at 5 temperatures under about 27 reaction-condition settings each. That is 135 runs per catalyst, and it matches the number Prof. Taniike quotes. We can see the structure in the row counts: 15 catalysts hold exactly 135 rows, and every one of them splits as exactly 27 rows at each of the 5 temperatures. But the file does not record what those 27 settings are. Because they are missing, 19.9% of the yield variance cannot be explained by composition and temperature alone. This is not noise. It is real chemistry we simply cannot see. Getting those columns would help more than any modelling change.
 
 ---
 

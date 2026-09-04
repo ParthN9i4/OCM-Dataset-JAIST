@@ -79,16 +79,41 @@ full = d.dl_lab[['Preparation','Temperature_C']+el].astype(str).agg('|'.join, ax
 vc = full.value_counts()
 print(f"\\nunique input vectors                  : {len(vc):,}")
 print(f"rows per identical input vector (mean) : {vc.mean():.1f}")
-print("\\n-> Rows with the SAME input have DIFFERENT yields, because ~27 reaction-condition")
-print("   settings are not recorded as features. That noise is unlearnable by construction.")
 
+# Those rows are NOT replicates. They are a designed grid of reaction conditions that this
+# file does not record. The grid size is recoverable from the row counts alone:
+cell = d.dl_lab.groupby([d.groups, d.dl_lab.Temperature_C]).size()
+per_cat = d.dl_lab.groupby(d.groups).size()
+sizes = cell.reset_index(name='n')
+exact135 = per_cat[per_cat == 135].index
+full_grid = [c for c in exact135 if sorted(sizes[sizes['level_0'] == c].n) == [27]*5]
+print(f"\\nmost common rows per (catalyst, temperature) : {cell.mode().iloc[0]}")
+print(f"largest such cell anywhere                  : {cell.max()}  (= 2 x 27)")
+print(f"cells larger than 54                        : {(cell > 54).sum()}")
+print(f"catalysts with exactly 135 rows             : {len(exact135)}")
+print(f"   ...splitting as exactly (27,27,27,27,27) : {len(full_grid)} of {len(exact135)}")
+print("\\n-> 5 temperatures x 27 condition settings = 135, which is the number of conditions")
+print("   Prof. Taniike states each catalyst is run under. Rows sharing an input vector are")
+print("   therefore DIFFERENT REACTION CONDITIONS, not repeats of one measurement.")
+
+# Variance not reachable from the recorded features. Use the pooled within-cell sum of squares:
+# an unweighted mean of per-cell variances would weight a 2-row cell like a 27-row cell.
 g = d.dl_lab.groupby(full.values)[TARGET]
-within = g.var().mean(); total = d.dl_lab[TARGET].var()
-print(f"\\nirreducible share of yield variance    : {100*within/total:.1f}%")
-print(f"best possible row-level RMSE           : {np.sqrt(within):.3f}")""")
+n_i, v_i = g.size(), g.var()
+within_SS = ((n_i - 1) * v_i).fillna(0).sum()
+total_SS = ((d.dl_lab[TARGET] - d.dl_lab[TARGET].mean()) ** 2).sum()
+print(f"\\nyield variance not reachable from these features : {100*within_SS/total_SS:.1f}%")
+print(f"best attainable row-level RMSE with these features: {np.sqrt(within_SS/len(d.y_lab)):.3f}")""")
 
 md("""**Why this matters.** A random split by *row* puts the same catalyst on both sides. The model is
-then asked to predict a catalyst it has already trained on. That measures recall, not discovery.""")
+then asked to predict a catalyst it has already trained on. That measures recall, not discovery.
+
+Note what the last two numbers are and are not. They are not a measurement-noise floor. The
+condition settings that drive the within-cell spread are real and reproducible — they are simply
+absent from this file. So that share of the variance is unreachable *with these features*, not
+irreducible in principle: recovering the condition columns would make most of it learnable. The
+RMSE figure also assumes the model already knows each catalyst's own cell means, which requires
+having seen that catalyst — so it is not a headroom target for the unseen-catalyst task at all.""")
 
 md("""## 2. The validation flaw, demonstrated
 

@@ -119,7 +119,8 @@ labeled with its protocol; row-level and grouped numbers must never be shown unl
   - **Catalyst-grouped: baseline 2.943 ± 0.031, PFT-filtered 2.995 (+1.8%), PFT-all-lit 2.982 (+1.3%)**
     — the published PFT gain does NOT survive; PFT ≈ marginally worse than baseline for unseen catalysts.
 - **Mechanism (identified via ablation):** Stage 1 trains jointly on literature + lab training rows;
-  under a row split those lab rows include the test catalysts (even same-temp replicates), so
+  under a row split those lab rows include the test catalysts (even other conditions at the same
+  temperature), so
   `lit_prior_prediction` partly memorized test-catalyst yields (identity leakage). Evidence: lit-only
   Stage 1 keeps only **−2.6%** row-level (2.062–2.067); under grouped CV joint variants (2.982–3.005)
   are WORSE than lit-only (2.938–2.939 ≈ baseline 2.943).
