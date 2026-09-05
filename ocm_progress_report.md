@@ -81,7 +81,13 @@ We found the Ba family fails badly. We then proved why. When no Ba catalysts app
 
 Ba matters because it holds 78% of the lab's best catalysts. Remove Ba, and you remove the high-yield chemistry from training.
 
-We then asked a more useful question. **How many catalysts of a new family must we measure before the model can predict it?** Our answer: about 10 for Ba, and none for La, Ti, Zr and Ce. Those four are already predictable from neighbouring chemistry.
+We then asked a more useful question. **How many catalysts of a new family must we measure before the model can predict it?**
+
+The answer depends on how you define "predictable enough", and the two sensible definitions differ by a factor of five. For Ba the curve runs 0.509 with no Ba in training, 0.565 after 10 Ba catalysts, 0.616 after 25, 0.651 after 50, and 0.683 with all 204.
+
+Our stored number, **10**, comes from asking when the model reaches 80% of its *final score*. But Ba already reaches 0.509 having seen no Ba at all, so that bar is nearly cleared by seeing nothing. If we instead ask when the model captures 80% of the *improvement* that seeing Ba brings, the answer is about **50**. We now think 50 is the more honest figure, and we report both.
+
+The same caution applies to La, Ti, Zr and Ce, where our stored answer is "none needed". That says more about how lenient the first definition is than about those families.
 
 ### Point 4 — Predict the best yield per catalyst, not the best condition
 
@@ -93,13 +99,37 @@ We rebuilt the model to predict each catalyst's **maximum** yield. It now trains
 
 We replaced point-wise RMSE with ranking metrics. These are what a screening campaign actually cares about.
 
-| Metric | Value | 95% range |
-|---|---|---|
-| Rank correlation of predicted vs real best yield | 0.761 | 0.725 – 0.785 |
-| Enrichment of top performers | 4.28× | 3.04 – 4.89× |
-| Hit rate in a 20-catalyst shortlist | 0.44 | 0.15 – 0.65 |
+| Metric | All 917 catalysts | 95% range | Equal-effort set (771) |
+|---|---|---|---|
+| Rank correlation of predicted vs real best yield | 0.761 | 0.725 – 0.785 | **0.724** |
+| Enrichment of top performers | 4.28× | 3.04 – 4.89× | **3.77×** |
+| Hit rate in a 20-catalyst shortlist | 0.44 | 0.15 – 0.65 | 0.35 |
 
 We report ranges, not single numbers. The ranges are wide, and we say so.
+
+**The last column is new, and it lowers our own score.** The lab did not run every catalyst equally.
+Catalysts that were tested more thoroughly also tend to look better. So part of our score could be a
+record of which experiments the lab decided to finish, rather than chemistry. We checked how much.
+
+The "equal-effort set" is the 771 catalysts that got at least 20 measurements at one temperature. On
+that set, the link between how much a catalyst was measured and how good it looks disappears: the
+correlation falls from 0.293 to 0.003. Our score on that set is lower. We report both numbers.
+
+We also ruled out the obvious objection, that the drop is just from scoring fewer catalysts. We drew
+300 random groups of 771 from the same predictions. Those score 0.767, in a range of 0.756 to 0.780.
+Our equal-effort score of 0.724 is below that range. So the drop is real.
+
+**The test we trust most.** We trained the same model to predict *how many times a catalyst was
+measured*. It never saw a yield. Ranking catalysts by that alone gives a rank correlation of 0.400
+with real best yield — but it finds top performers at 0.87×, which is no better than picking at
+random. So rank correlation can be partly bought with experimental effort. Enrichment cannot. That is
+why we treat enrichment as our main metric.
+
+**One limit this exposes.** Among the catalysts the model ranks highest, its internal ordering is
+close to meaningless: rank correlation inside its top 150 picks is 0.179, and inside its top 20 it is
+−0.066. The model picks a good *set* — its top 20 average 17.3% best yield against about 10.5% for
+the whole library — but it cannot tell you which one inside that set is best. A shortlist should be
+treated as a group to test, not as a ranking to trust.
 
 ### Point 6 — Test whether the rescaling step matters
 

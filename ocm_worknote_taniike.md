@@ -19,7 +19,7 @@ improvement does not survive, and we withdraw the claim.**
 | PFT improves CV RMSE by 10.6 % (v1: 1.907 vs baseline 2.133) | **Withdrawn.** The gain was catalyst-identity leakage; under catalyst-grouped CV, PFT is 1.8 % *worse* than baseline |
 | Literature data measurably helps the lab model | **Not demonstrated.** Four honest designs, all ≤ the composition-only control |
 | Quantile normalisation is a necessary component | **Not supported.** Label treatment moves RMSE by 0.001–0.023, which at 3 seeds is inside run-to-run noise |
-| — | **New:** the composition-only model screens *unseen* catalysts usefully (ρ = 0.761, enrichment 3.04–4.89×) |
+| — | **New:** the composition-only model screens *unseen* catalysts usefully (ρ = 0.761 over all 917 catalysts, 0.724 on the 771 with comparable measurement effort; enrichment 3.04–4.89×) |
 | — | **New:** the Ba-family failure is mechanistically explained, and yields a data budget for new chemistry |
 
 The cause was specific and is now understood: our Stage-1 expert was trained on literature data
@@ -145,14 +145,42 @@ model matches the full 89,074-row model on ranking (Spearman 0.760 vs 0.766, wit
 training on ~100× fewer rows. On genuinely unseen
 catalysts:
 
-| Metric | Value | 95 % CI |
-|---|---|---|
-| Spearman ρ (predicted vs. observed max yield) | 0.761 | 0.725 – 0.785 |
-| Enrichment of true top-decile among top-decile predicted | 4.28× | **3.04 – 4.89×** |
-| Precision@20 (of 20 nominated, fraction truly top-decile) | 0.44 | **0.15 – 0.65** |
+| Metric | All 917 catalysts | 95 % CI | Equal-effort set (771) |
+|---|---|---|---|
+| Spearman ρ (predicted vs. observed max yield) | 0.761 | 0.725 – 0.785 | **0.724** |
+| Enrichment of true top-decile among top-decile predicted | 4.28× | **3.04 – 4.89×** | **3.77×** |
+| Precision@20 (of 20 nominated, fraction truly top-decile) | 0.44 | **0.15 – 0.65** | 0.35 |
 
 We quote intervals rather than point estimates: with 92 catalysts in the top decile of 917, these
 quantities are considerably less precise than a single number suggests.
+
+**Why the second column exists, and why we consider it the honest one.** Grid coverage in your data
+is coupled to performance — cells that were run further contain better yields — so a score computed
+over all 917 catalysts is partly a record of which experiments were carried to completion. The
+*equal-effort set* is the 771 catalysts with at least 20 measurements in at least one temperature
+cell; on that set the coupling is gone by measurement rather than by assumption, with
+Spearman(measurement count, observed maximum) falling from **+0.293** to **+0.003**. Moving to it
+costs us 0.037 Spearman and 0.51× enrichment.
+
+That drop is not an artifact of scoring fewer catalysts. Drawing 300 **random** 771-catalyst subsets
+from the *same* predictions gives Spearman 0.767 with a 95 % range of 0.756 – 0.780; the equal-effort
+value of 0.724 lies below that range.
+
+**A negative control we think is worth more than either number.** We refitted the identical model
+with the *number of measurements* as its target — it never sees a yield — and ranked catalysts by
+predicted measurement effort. That ranking reaches **Spearman 0.400** against observed maximum yield,
+but its enrichment is **0.87×**, i.e. no better than choosing at random. So rank correlation is
+partly purchasable from experimental effort, whereas enrichment is not. This is the concrete reason
+we treat enrichment, not ρ, as the primary screening metric — and it is the sharpest test we could
+devise of whether the model is merely recognising which catalysts you chose to finish.
+
+One consequence for campaign design. Inside the model's own top-ranked catalysts — the only regime a
+synthesis campaign ever occupies — the internal ranking carries little information: ρ within the top
+150 predictions is **0.179**, and within the top 20 it is **−0.066**. The model *selects* well (its
+top 20 average 17.3 % observed maximum against ~10.5 % for the library as a whole) but does not
+*order* within its own selection. A shortlist should therefore be treated as a set to be tested, not
+as a league table, and a campaign small enough to fit inside that regime cannot by itself confirm or
+refute the model.
 
 ![**Figure 8 — What drives achievable maximum yield.** Composition-only model. Ba dominates, followed by chemically sensible contributors. *(The corresponding figure in v1 ranked the literature prior first; that model was the leaked pipeline, so the figure illustrated the leak rather than the chemistry.)*](fig_shap_bar.png)
 
@@ -187,11 +215,21 @@ apart is its weight. It holds 78 % of the top decile, so losing it removes the h
 itself, and it gains far more than any other family from seeing its own members (+0.175, against
 +0.047 to +0.079 elsewhere).
 
-**On the data budget**, our stored measure is the number of family members needed to reach 80 % of the
-achievable performance. That number is **10 for Ba and 0 for La, Ti, Zr and Ce** — those four already
-exceed 80 % having seen none. Reaching 95 % takes about 50 for Ba and 25–50 for the others. We would
-treat this as order-of-magnitude guidance only: for Ti and Zr the per-point seed spread (0.03–0.12) is
-comparable to the whole learning-curve gain, so those two curves are not resolved.
+**On the data budget**, the threshold depends entirely on how "80 % of achievable performance" is
+defined, and the two natural readings differ by a factor of five. We give both rather than quote one.
+
+For Ba the learning curve runs 0.509 (no Ba in training) → 0.565 (10 members) → 0.616 (25) → 0.651
+(50) → 0.683 (all 204). Taking 80 % of the **final level** (0.8 × 0.683 = 0.547) puts the threshold at
+**10 members**; taking 80 % of the **gain from seeing the family** (0.509 + 0.8 × 0.174 = 0.648) puts
+it at roughly **50**. Our stored figure uses the first definition. We now think the second is the more
+meaningful one, because Ba already reaches 0.509 having seen no Ba catalysts at all — so 80 % of the
+level is a bar that is nearly cleared by seeing nothing, and the "10" understates what is actually
+required. The same caution applies to the **0 for La, Ti, Zr and Ce**: those four exceed 80 % of their
+final level having seen none, which says more about the leniency of that bar than about the families.
+
+Reaching 95 % takes about 50 for Ba and 25–50 for the others. We would treat all of this as
+order-of-magnitude guidance only: for Ti and Zr the per-point seed spread (0.03–0.12) is comparable to
+the whole learning-curve gain, so those two curves are not resolved.
 
 ## 8. A candidate list for prospective validation
 
@@ -232,6 +270,27 @@ near-identical catalysts, we suggest splitting the budget:
 
 We would of course defer to your judgement on synthesis feasibility, and are happy to reweight the
 split.
+
+**A limit we should state plainly before you spend reactor time.** Seventeen catalysts, all drawn from
+the model's top-ranked region and with no control arm, cannot confirm or refute the model. As noted in
+§6, the model's internal ordering inside that region is close to uninformative (ρ = 0.179 within its
+top 150, −0.066 within its top 20), so a campaign drawn entirely from it has very wide error bars on
+any correlation it measures. The list is a reasonable set of catalysts to *try*; it is not a test.
+
+If a test is wanted, our retrospective replay on your own archive suggests a different allocation of
+the same reactor budget. Measuring 5 conditions at each of 750, 800, 850 and 900 °C — 20 runs rather
+than 135 — reproduces the ranking of your 811 fully-measured catalysts at ρ = **0.955** (systematically
+low by 1.31 yield points, a bias that can be pre-declared). That buys roughly 72 catalysts screened
+instead of 17 measured exhaustively, with the best few then confirmed at full coverage, and with part
+of the batch drawn at random from the same candidate grammar as a control arm. The cost is more
+syntheses for the same number of reactor runs, which may or may not suit your constraints.
+
+This depends on one thing we could not determine from the data file, and it is the question we would
+most like answered: **are the ~27 measurements per catalyst–temperature distinct reaction conditions,
+or successive time-on-stream samples at a single condition?** If the latter, then selecting 5 of 27
+saves analysis rather than reactor hours, the arithmetic above changes, and — more importantly — a
+catalyst's observed maximum is a fresh-catalyst transient rather than an achievable optimum, which
+would change what our target quantity means.
 
 ## 9. Relation to prior work
 

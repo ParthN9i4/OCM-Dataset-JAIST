@@ -237,6 +237,71 @@ by this model finds top-decile catalysts roughly four times faster than picking 
 
 These are point estimates. The honest intervals are wide — we report them in section 8.""")
 
+md("""### 4b. How much of that score is chemistry, and how much is measurement effort?
+
+The lab did not measure every catalyst equally, and cells that were run further contain better yields.
+So part of the score above could be a record of which experiments were carried to completion. Three
+checks, computed live below.""")
+
+code("""n_cat = len(yc)
+n_rows_cat = d.dl_lab.groupby(d.groups).size().values
+max_cell   = d.dl_lab.groupby([d.groups, d.dl_lab.Temperature_C]).size().groupby(level=0).max().values
+EE = max_cell >= 20                      # equal-effort set
+
+def oof_pred(target, seed):
+    f = fold_assignment(seed); yp = np.empty(n_cat)
+    for k in range(5):
+        tr, va = np.where(f != k)[0], np.where(f == k)[0]
+        s_ = StandardScaler().fit(Xc[tr])
+        m = lgb.LGBMRegressor(**lgb_params(seed, **TUNED)).fit(s_.transform(Xc[tr]), target[tr])
+        yp[va] = m.predict(s_.transform(Xc[va]))
+    return yp
+
+P = np.mean([oof_pred(yc, s) for s in SEEDS], axis=0)                        # real model
+E = np.mean([oof_pred(n_rows_cat.astype(float), s) for s in SEEDS], axis=0)  # effort-only control
+
+def sc(mask, pred):
+    m = cat_metrics(np.arange(int(mask.sum())), yc[mask], pred[mask])
+    return m['spearman_max'], m['enrichment_top10pct']
+
+ALL = np.ones(n_cat, bool)
+print(f"equal-effort set (>=20 rows in >=1 cell): {EE.sum()} of {n_cat} catalysts\\n")
+for nm, msk, pr in [("REAL model, all catalysts", ALL, P), ("REAL model, equal-effort", EE, P),
+                    ("EFFORT-ONLY control, all", ALL, E), ("EFFORT-ONLY control, equal-effort", EE, E)]:
+    a, b = sc(msk, pr); print(f"  {nm:36s} spearman {a:.4f}   enrichment {b:.2f}x")
+
+# Is the drop just from scoring fewer catalysts? Random subsets of the SAME predictions.
+rng = np.random.default_rng(3)
+vals = []
+for _ in range(300):
+    idx = rng.choice(n_cat, int(EE.sum()), replace=False)
+    m = np.zeros(n_cat, bool); m[idx] = True
+    vals.append(sc(m, P)[0])
+lo, hi = np.percentile(vals, 2.5), np.percentile(vals, 97.5)
+print(f"\\n  300 RANDOM subsets of size {int(EE.sum())}: spearman {np.mean(vals):.4f}  95% [{lo:.4f}, {hi:.4f}]")
+print(f"  equal-effort value {sc(EE,P)[0]:.4f} -> {'BELOW the interval: the drop is REAL' if sc(EE,P)[0] < lo else 'inside: could be a size artifact'}")
+print(f"\\n  Spearman(measurements, observed max): all {spearmanr(n_rows_cat, yc)[0]:+.4f}"
+      f"  ->  equal-effort {spearmanr(n_rows_cat[EE], yc[EE])[0]:+.4f}")
+
+print("\\n  Inside the model's own top-K (the regime a campaign lives in):")
+for K in [20, 150]:
+    t = np.argsort(-P)[:K]
+    print(f"    top-{K:<4d} internal spearman {spearmanr(yc[t], P[t])[0]:+.3f}   mean observed max {yc[t].mean():.2f}%")""")
+
+md("""**Read those four numbers together.** The equal-effort score is lower, and the random-subset
+control shows that is a real coverage effect rather than an artifact of scoring fewer catalysts.
+
+The effort-only control is the sharpest test here. A model trained *only* to predict how many times a
+catalyst was measured — it never sees a yield — still reaches a rank correlation around 0.40 against
+observed maximum yield. But its enrichment is below 1x, i.e. no better than picking at random. So rank
+correlation is partly purchasable from experimental effort; enrichment is not. That is the concrete
+reason enrichment, not the correlation, is our primary metric.
+
+The last block is a limit worth stating before any synthesis campaign. Inside the model's own
+top-ranked catalysts the internal ordering carries almost no information. The model picks a good
+*set* — its top 20 average far above the library mean — but it cannot rank within that set. A
+shortlist should be treated as a group to test, not as a league table.""")
+
 md("""## 5. Does literature data help?
 
 The leak explained the old result. It did not prove literature data is useless. So we tested four

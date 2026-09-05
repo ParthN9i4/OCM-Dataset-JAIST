@@ -1,0 +1,136 @@
+{
+ "meta": {
+  "protocol": "formulation B, composition-only, tuned LGBM, catalyst-grouped 5-fold",
+  "seeds": [
+   0,
+   1,
+   2,
+   7,
+   13
+  ],
+  "min_cell_for_equal_effort": 20,
+  "n_random_subset_draws": 300,
+  "n_bootstrap": 3000,
+  "predictions": "seed-averaged before scoring"
+ },
+ "results": {
+  "real_model": {
+   "all_917": {
+    "n": 917,
+    "spearman": 0.7671721643756007,
+    "enrichment": 4.3478260869565215,
+    "precision_at20": 0.45,
+    "spearman_ci95": [
+     0.7363328546420865,
+     0.7950086301511785
+    ]
+   },
+   "equal_effort": {
+    "n": 771,
+    "spearman": 0.7235161262197009,
+    "enrichment": 3.7662337662337664,
+    "precision_at20": 0.35,
+    "spearman_ci95": [
+     0.6841513293463583,
+     0.7578328385798867
+    ]
+   }
+  },
+  "effort_only_control": {
+   "all_917": {
+    "n": 917,
+    "spearman": 0.3995507133150937,
+    "enrichment": 0.8695652173913043,
+    "precision_at20": 0.1
+   },
+   "equal_effort": {
+    "n": 771,
+    "spearman": 0.22437550353116573,
+    "enrichment": 1.0389610389610389,
+    "precision_at20": 0.1
+   }
+  },
+  "headline_conventions": {
+   "per_seed_mean_spearman_all": 0.7606463927657198,
+   "seed_averaged_spearman_all": 0.7671721643756007,
+   "note": "these are two different quantities; 0.761 elsewhere is the per-seed mean"
+  },
+  "random_subset_control": {
+   "n_draws": 300,
+   "subset_size": 771,
+   "spearman_mean": 0.7670548668417261,
+   "ci95_low": 0.755603874764779,
+   "ci95_high": 0.7799673452593253,
+   "equal_effort_spearman": 0.7235161262197009,
+   "equal_effort_below_interval": true,
+   "interpretation": "if equal_effort_below_interval is true the drop is a real coverage effect, not an artifact of evaluating on fewer catalysts"
+  },
+  "coupling": {
+   "spearman_nrows_vs_observed_max_all": 0.29322588856203524,
+   "spearman_nrows_vs_observed_max_equal_effort": 0.002886357858041414,
+   "spearman_prediction_vs_nrows_all": 0.27900921064341316
+  },
+  "by_coverage_quartile": {
+   "Q1_fewest": {
+    "n": 231,
+    "spearman": 0.7189402052220644,
+    "enrichment": 5.217391304347825,
+    "precision_at20": 0.6,
+    "mean_n_rows": 44.683982683982684,
+    "label_sd": 5.131013670057996
+   },
+   "Q2": {
+    "n": 229,
+    "spearman": 0.7851998041429759,
+    "enrichment": 4.3478260869565215,
+    "precision_at20": 0.45,
+    "mean_n_rows": 94.91703056768559,
+    "label_sd": 4.742287463963659
+   },
+   "Q3": {
+    "n": 228,
+    "spearman": 0.7241760211081153,
+    "enrichment": 3.0434782608695654,
+    "precision_at20": 0.3,
+    "mean_n_rows": 113.96052631578948,
+    "label_sd": 4.7185960478240645
+   },
+   "Q4_most": {
+    "n": 229,
+    "spearman": 0.64499215572632,
+    "enrichment": 3.9130434782608696,
+    "precision_at20": 0.45,
+    "mean_n_rows": 135.51528384279476,
+    "label_sd": 4.732331265188609
+   }
+  },
+  "restricted_to_model_top_k": {
+   "top_20": {
+    "spearman_within": -0.06616541353383458,
+    "mean_observed_max": 17.333073481999996
+   },
+   "top_50": {
+    "spearman_within": 0.05277310924369748,
+    "mean_observed_max": 17.3364630752
+   },
+   "top_100": {
+    "spearman_within": 0.14078607860786077,
+    "mean_observed_max": 16.9210337439
+   },
+   "top_150": {
+    "spearman_within": 0.17874394417529668,
+    "mean_observed_max": 16.71127947406666
+   },
+   "top_300": {
+    "spearman_within": 0.4924085823175812,
+    "mean_observed_max": 15.177686619493334
+   },
+   "note": "a synthesis campaign only ever operates inside this regime; the library-wide Spearman is not the number that governs whether a campaign of a given size can detect anything"
+  },
+  "verdict": {
+   "headline_should_be_reported_as": "Spearman 0.767 across all 917 catalysts, and 0.724 on the 771 whose measurement effort is comparable; enrichment@10% 4.35x and 3.77x respectively",
+   "why_the_effort_control_matters": "a model trained only to predict how many measurements a catalyst received -- it never sees a yield -- reaches Spearman 0.400 against the observed max, but its enrichment is only 0.87x. Rank correlation is partly purchasable from experimental effort; enrichment is not. This is why enrichment stays primary.",
+   "not_done": "target relabeling for coverage (rarefaction, deficit-extrapolation, coverage-weighted training) -- all piloted, all null; the correction belongs in the evaluation"
+  }
+ }
+}
