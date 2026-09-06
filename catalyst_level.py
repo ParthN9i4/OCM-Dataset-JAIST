@@ -9,7 +9,8 @@ SAME catalyst-fold assignments (per seed) so the comparison is apples-to-apples:
   A  row-level model (tuned params) -> predict all ~97 rows/catalyst -> take max per catalyst.
   B  direct model: one row per catalyst (prep + 65 element loadings; temperature dropped),
      target = max observed yield across all that catalyst's rows. 917 training examples.
-  B2 middle ground: one row per (catalyst, temperature) [max over the ~20 replicate rows],
+  B2 middle ground: one row per (catalyst, temperature) [max over the ~20 rows of that cell,
+     which are different unrecorded reaction-condition settings, not replicates],
      model keeps temperature, predict -> max over the 5 temperatures per catalyst.
 
 Metrics (catalyst level, primary): Spearman/Pearson of predicted vs observed max yield,

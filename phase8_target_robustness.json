@@ -1,0 +1,302 @@
+{
+ "meta": {
+  "protocol": "formulation B, composition-only, tuned LGBM, catalyst-grouped 5-fold CV",
+  "seeds": [
+   0,
+   1,
+   2,
+   7,
+   13
+  ],
+  "n_bootstrap": 3000,
+  "control": "q1.00",
+  "scored_against": "TRUE observed max in every case",
+  "supersedes": "phase8_denoised_target.py / phase8_denoised_target.json"
+ },
+ "condition_grid_evidence": {
+  "n_cells": 4399,
+  "mean_rows_per_cell": 20.248692884746532,
+  "modal_cell_size": 27,
+  "max_cell_size": 54,
+  "cells_above_54": 0,
+  "catalysts_with_exactly_135_rows": 15,
+  "of_which_split_as_27x5": 15
+ },
+ "seed_averaging_gain_no_target_change": 0.0065257716098808816,
+ "results": {
+  "q0.50": {
+   "target_mean": 6.8026065086690295,
+   "spearman_mean": 0.7665313384487995,
+   "spearman_std": 0.0023825466159211857,
+   "enrichment_mean": 4.260869565217391,
+   "precision_at20_mean": 0.45999999999999996,
+   "spearman_seed_averaged_predictions": 0.772080217799977,
+   "per_seed_spearman": [
+    0.7691398081905384,
+    0.7682257721097602,
+    0.7666701880259165,
+    0.7630560637543196,
+    0.7655648601634626
+   ],
+   "catalyst_bootstrap": {
+    "delta_spearman_mean": 0.004872460015030407,
+    "ci95_low": -0.0020950933535395064,
+    "ci95_high": 0.01198983268766917,
+    "p_better_than_control": 0.917,
+    "clears_zero": false
+   },
+   "seed_wins_vs_control": 5,
+   "delta_spearman_vs_control_seedmean": 0.005884945683079734
+  },
+  "q0.60": {
+   "target_mean": 7.22827900876096,
+   "spearman_mean": 0.7666399352831488,
+   "spearman_std": 0.0019533193889194555,
+   "enrichment_mean": 4.239130434782608,
+   "precision_at20_mean": 0.49000000000000005,
+   "spearman_seed_averaged_predictions": 0.7718392822866893,
+   "per_seed_spearman": [
+    0.7687589520423979,
+    0.7685685317494771,
+    0.7657658161329368,
+    0.7642618306863801,
+    0.7658445458045521
+   ],
+   "catalyst_bootstrap": {
+    "delta_spearman_mean": 0.004659696245732765,
+    "ci95_low": -0.0019912990493142213,
+    "ci95_high": 0.011353931483379449,
+    "p_better_than_control": 0.9143333333333333,
+    "clears_zero": false
+   },
+   "seed_wins_vs_control": 5,
+   "delta_spearman_vs_control_seedmean": 0.005993542517429007
+  },
+  "q0.70": {
+   "target_mean": 7.70392691935627,
+   "spearman_mean": 0.7679452231249119,
+   "spearman_std": 0.001274300775446102,
+   "enrichment_mean": 4.260869565217391,
+   "precision_at20_mean": 0.51,
+   "spearman_seed_averaged_predictions": 0.773158996367417,
+   "per_seed_spearman": [
+    0.7688048919496143,
+    0.769154561250173,
+    0.7685565565602485,
+    0.7662000839111385,
+    0.7670100219533853
+   ],
+   "catalyst_bootstrap": {
+    "delta_spearman_mean": 0.005977619967389001,
+    "ci95_low": -3.217909841411173e-05,
+    "ci95_high": 0.012000595679466096,
+    "p_better_than_control": 0.9743333333333334,
+    "clears_zero": false
+   },
+   "seed_wins_vs_control": 5,
+   "delta_spearman_vs_control_seedmean": 0.007298830359192099
+  },
+  "q0.75": {
+   "target_mean": 7.974269173113686,
+   "spearman_mean": 0.7683497339674432,
+   "spearman_std": 0.0011527962560701607,
+   "enrichment_mean": 4.326086956521739,
+   "precision_at20_mean": 0.45999999999999996,
+   "spearman_seed_averaged_predictions": 0.7735093348427519,
+   "per_seed_spearman": [
+    0.7693873109968976,
+    0.7681526915527516,
+    0.7688144861070667,
+    0.7664455947412905,
+    0.7689485864392094
+   ],
+   "catalyst_bootstrap": {
+    "delta_spearman_mean": 0.006317911472745289,
+    "ci95_low": 0.0006610190650258279,
+    "ci95_high": 0.012226919006958617,
+    "p_better_than_control": 0.9826666666666667,
+    "clears_zero": true
+   },
+   "seed_wins_vs_control": 5,
+   "delta_spearman_vs_control_seedmean": 0.007703341201723446
+  },
+  "q0.80": {
+   "target_mean": 8.27273808800131,
+   "spearman_mean": 0.7679393685855876,
+   "spearman_std": 0.0009066241536426566,
+   "enrichment_mean": 4.434782608695651,
+   "precision_at20_mean": 0.45,
+   "spearman_seed_averaged_predictions": 0.7732760871051755,
+   "per_seed_spearman": [
+    0.768365459307313,
+    0.7690836905396499,
+    0.7679089314793484,
+    0.7677217188274534,
+    0.7666170427741736
+   ],
+   "catalyst_bootstrap": {
+    "delta_spearman_mean": 0.006052179374970703,
+    "ci95_low": 0.0006379311466209681,
+    "ci95_high": 0.011527878879229087,
+    "p_better_than_control": 0.985,
+    "clears_zero": true
+   },
+   "seed_wins_vs_control": 5,
+   "delta_spearman_vs_control_seedmean": 0.007292975819867875
+  },
+  "q0.85": {
+   "target_mean": 8.617454600613522,
+   "spearman_mean": 0.7676153677446388,
+   "spearman_std": 0.0015901036737065585,
+   "enrichment_mean": 4.239130434782608,
+   "precision_at20_mean": 0.44000000000000006,
+   "spearman_seed_averaged_predictions": 0.772967393341994,
+   "per_seed_spearman": [
+    0.7673230498204948,
+    0.7694664297259927,
+    0.7689406341043219,
+    0.7655873806343941,
+    0.7667593444379908
+   ],
+   "catalyst_bootstrap": {
+    "delta_spearman_mean": 0.005750331018539773,
+    "ci95_low": 0.000665706540405861,
+    "ci95_high": 0.010815987134667422,
+    "p_better_than_control": 0.987,
+    "clears_zero": true
+   },
+   "seed_wins_vs_control": 5,
+   "delta_spearman_vs_control_seedmean": 0.006968974978919018
+  },
+  "q0.90": {
+   "target_mean": 9.03601263248277,
+   "spearman_mean": 0.7674090458961554,
+   "spearman_std": 0.0025022905292475268,
+   "enrichment_mean": 4.260869565217392,
+   "precision_at20_mean": 0.49000000000000005,
+   "spearman_seed_averaged_predictions": 0.7727058533448158,
+   "per_seed_spearman": [
+    0.7654004211290439,
+    0.7697753102403675,
+    0.7700019517846589,
+    0.764461354922776,
+    0.7674061914039314
+   ],
+   "catalyst_bootstrap": {
+    "delta_spearman_mean": 0.005510791608060555,
+    "ci95_low": 0.0010832519612984039,
+    "ci95_high": 0.010043868015709872,
+    "p_better_than_control": 0.993,
+    "clears_zero": true
+   },
+   "seed_wins_vs_control": 5,
+   "delta_spearman_vs_control_seedmean": 0.00676265313043567
+  },
+  "q0.95": {
+   "target_mean": 9.594104397465376,
+   "spearman_mean": 0.7656590809137906,
+   "spearman_std": 0.0007056546186462511,
+   "enrichment_mean": 4.1521739130434785,
+   "precision_at20_mean": 0.47000000000000003,
+   "spearman_seed_averaged_predictions": 0.7712801911324215,
+   "per_seed_spearman": [
+    0.7660643866240964,
+    0.7654217570412372,
+    0.7666110979758821,
+    0.7647543618896943,
+    0.7654438010380434
+   ],
+   "catalyst_bootstrap": {
+    "delta_spearman_mean": 0.0041021751068961426,
+    "ci95_low": 0.0005849169462022244,
+    "ci95_high": 0.007801374419889433,
+    "p_better_than_control": 0.987,
+    "clears_zero": true
+   },
+   "seed_wins_vs_control": 5,
+   "delta_spearman_vs_control_seedmean": 0.005012688148070876
+  },
+  "q1.00": {
+   "target_mean": 10.475489087862595,
+   "spearman_mean": 0.7606463927657198,
+   "spearman_std": 0.001989380913574362,
+   "enrichment_mean": 4.282608695652174,
+   "precision_at20_mean": 0.44000000000000006,
+   "spearman_seed_averaged_predictions": 0.7671721643756007,
+   "per_seed_spearman": [
+    0.7577861616292846,
+    0.7621572691019042,
+    0.7617824122201025,
+    0.7593294066825625,
+    0.7621767141947453
+   ]
+  },
+  "nearest_rank_upper_quartile": {
+   "target_mean": 8.085619233751363,
+   "spearman_mean": 0.7680369940020709,
+   "spearman_std": 0.0020417022302709853,
+   "enrichment_mean": 4.282608695652174,
+   "precision_at20_mean": 0.45,
+   "spearman_seed_averaged_predictions": 0.7733238944877372,
+   "per_seed_spearman": [
+    0.7682786683647158,
+    0.7709719732367826,
+    0.768510787838323,
+    0.7669582013104069,
+    0.765465339260126
+   ],
+   "catalyst_bootstrap": {
+    "delta_spearman_mean": 0.006134654032438623,
+    "ci95_low": 0.0005212247245434899,
+    "ci95_high": 0.011922717020694978,
+    "p_better_than_control": 0.9823333333333333,
+    "clears_zero": true
+   },
+   "seed_wins_vs_control": 5,
+   "delta_spearman_vs_control_seedmean": 0.0073906012363511575
+  },
+  "median_of_all_raw_rows": {
+   "target_mean": 4.8169284712628135,
+   "spearman_mean": 0.7566341612590225,
+   "spearman_std": 0.0018251127092841983,
+   "enrichment_mean": 4.282608695652174,
+   "precision_at20_mean": 0.42000000000000004,
+   "spearman_seed_averaged_predictions": 0.7626010658494095,
+   "per_seed_spearman": [
+    0.7580202186091414,
+    0.7569426072015495,
+    0.7573873854936237,
+    0.7534424535028946,
+    0.7573781414879033
+   ],
+   "catalyst_bootstrap": {
+    "delta_spearman_mean": -0.004566677826518438,
+    "ci95_low": -0.014690159276289402,
+    "ci95_high": 0.005119601481259334,
+    "p_better_than_control": 0.179,
+    "clears_zero": false
+   },
+   "seed_wins_vs_control": 1,
+   "delta_spearman_vs_control_seedmean": -0.0040122315066972725
+  }
+ },
+ "verdict": {
+  "recommendation": "KEEP the observed maximum (q=1.00) as the training label and the evaluation target",
+  "reasons": [
+   "enrichment@10%, the metric named as primary, shows no trend across the sweep (4.15x-4.43x; control 4.28x)",
+   "seed-averaging alone, with no target change, gains +0.0065 Spearman - comparable to the whole target effect",
+   "under a catalyst-level bootstrap the q=0.50 label does not clear zero against the control",
+   "the observed maximum is an actual measured yield; an interpolated percentile is not"
+  ],
+  "what_to_report_instead": "The catalyst ranking is insensitive to how the 135 conditions are collapsed into one label: Spearman is flat at 0.766-0.768 for every quantile from 0.50 to 0.95, and enrichment@10% is unchanged throughout. We report the observed maximum, and no conclusion depends on that choice.",
+  "if_a_summarised_label_is_ever_adopted": "use nearest_rank_upper_quartile, not an interpolated percentile - it scores equivalently and every label remains a literal measured yield from a real experiment",
+  "banned_vocabulary": [
+   "repeats",
+   "replicates",
+   "denoising",
+   "noise floor",
+   "irreducible",
+   "identical inputs"
+  ]
+ }
+}

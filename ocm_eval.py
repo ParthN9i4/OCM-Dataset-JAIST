@@ -11,8 +11,13 @@ PROTOCOL RULES (established after Prof. Taniike's validation round — see SESSI
   historical numbers and must always be labeled as such.
 - Anything fit on data (scaler, DRST classifier, Stage 1, Stage 2) sees training-fold data only.
 - Catalyst-level metrics (max-yield Spearman, enrichment@10%, precision@20) are primary for the
-  screening objective; row RMSE is secondary (it has an irreducible noise floor from ~27 unrecorded
-  condition settings per catalyst-temperature).
+  screening objective; row RMSE is secondary and must be labeled as such. Each (catalyst,
+  temperature) cell holds up to 27 measurements taken under 27 DIFFERENT reaction-condition
+  settings that this file does not record (5 x 27 = 135 conditions per catalyst). Those rows are
+  not replicates: 19.9% of total yield variance sits within cells and is therefore unreachable
+  from composition and temperature alone, which floors row-level RMSE at 1.757. That floor is a
+  property of the missing feature columns, not measurement noise, and it assumes the model already
+  knows each catalyst's cell means — so it is not attainable for an unseen catalyst.
 
 Usage:
     from ocm_eval import Data, grouped_folds, row_folds, run_fold, run_cv, lgb_params, xgb_params

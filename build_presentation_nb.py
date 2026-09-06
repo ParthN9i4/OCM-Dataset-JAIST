@@ -79,16 +79,41 @@ full = d.dl_lab[['Preparation','Temperature_C']+el].astype(str).agg('|'.join, ax
 vc = full.value_counts()
 print(f"\\nunique input vectors                  : {len(vc):,}")
 print(f"rows per identical input vector (mean) : {vc.mean():.1f}")
-print("\\n-> Rows with the SAME input have DIFFERENT yields, because ~27 reaction-condition")
-print("   settings are not recorded as features. That noise is unlearnable by construction.")
 
+# Those rows are NOT replicates. They are a designed grid of reaction conditions that this
+# file does not record. The grid size is recoverable from the row counts alone:
+cell = d.dl_lab.groupby([d.groups, d.dl_lab.Temperature_C]).size()
+per_cat = d.dl_lab.groupby(d.groups).size()
+sizes = cell.reset_index(name='n')
+exact135 = per_cat[per_cat == 135].index
+full_grid = [c for c in exact135 if sorted(sizes[sizes['level_0'] == c].n) == [27]*5]
+print(f"\\nmost common rows per (catalyst, temperature) : {cell.mode().iloc[0]}")
+print(f"largest such cell anywhere                  : {cell.max()}  (= 2 x 27)")
+print(f"cells larger than 54                        : {(cell > 54).sum()}")
+print(f"catalysts with exactly 135 rows             : {len(exact135)}")
+print(f"   ...splitting as exactly (27,27,27,27,27) : {len(full_grid)} of {len(exact135)}")
+print("\\n-> 5 temperatures x 27 condition settings = 135, which is the number of conditions")
+print("   Prof. Taniike states each catalyst is run under. Rows sharing an input vector are")
+print("   therefore DIFFERENT REACTION CONDITIONS, not repeats of one measurement.")
+
+# Variance not reachable from the recorded features. Use the pooled within-cell sum of squares:
+# an unweighted mean of per-cell variances would weight a 2-row cell like a 27-row cell.
 g = d.dl_lab.groupby(full.values)[TARGET]
-within = g.var().mean(); total = d.dl_lab[TARGET].var()
-print(f"\\nirreducible share of yield variance    : {100*within/total:.1f}%")
-print(f"best possible row-level RMSE           : {np.sqrt(within):.3f}")""")
+n_i, v_i = g.size(), g.var()
+within_SS = ((n_i - 1) * v_i).fillna(0).sum()
+total_SS = ((d.dl_lab[TARGET] - d.dl_lab[TARGET].mean()) ** 2).sum()
+print(f"\\nyield variance not reachable from these features : {100*within_SS/total_SS:.1f}%")
+print(f"best attainable row-level RMSE with these features: {np.sqrt(within_SS/len(d.y_lab)):.3f}")""")
 
 md("""**Why this matters.** A random split by *row* puts the same catalyst on both sides. The model is
-then asked to predict a catalyst it has already trained on. That measures recall, not discovery.""")
+then asked to predict a catalyst it has already trained on. That measures recall, not discovery.
+
+Note what the last two numbers are and are not. They are not a measurement-noise floor. The
+condition settings that drive the within-cell spread are real and reproducible — they are simply
+absent from this file. So that share of the variance is unreachable *with these features*, not
+irreducible in principle: recovering the condition columns would make most of it learnable. The
+RMSE figure also assumes the model already knows each catalyst's own cell means, which requires
+having seen that catalyst — so it is not a headroom target for the unseen-catalyst task at all.""")
 
 md("""## 2. The validation flaw, demonstrated
 
@@ -211,6 +236,71 @@ md("""**What enrichment means in practice.** An enrichment of about 4x says a sy
 by this model finds top-decile catalysts roughly four times faster than picking at random.
 
 These are point estimates. The honest intervals are wide — we report them in section 8.""")
+
+md("""### 4b. How much of that score is chemistry, and how much is measurement effort?
+
+The lab did not measure every catalyst equally, and cells that were run further contain better yields.
+So part of the score above could be a record of which experiments were carried to completion. Three
+checks, computed live below.""")
+
+code("""n_cat = len(yc)
+n_rows_cat = d.dl_lab.groupby(d.groups).size().values
+max_cell   = d.dl_lab.groupby([d.groups, d.dl_lab.Temperature_C]).size().groupby(level=0).max().values
+EE = max_cell >= 20                      # equal-effort set
+
+def oof_pred(target, seed):
+    f = fold_assignment(seed); yp = np.empty(n_cat)
+    for k in range(5):
+        tr, va = np.where(f != k)[0], np.where(f == k)[0]
+        s_ = StandardScaler().fit(Xc[tr])
+        m = lgb.LGBMRegressor(**lgb_params(seed, **TUNED)).fit(s_.transform(Xc[tr]), target[tr])
+        yp[va] = m.predict(s_.transform(Xc[va]))
+    return yp
+
+P = np.mean([oof_pred(yc, s) for s in SEEDS], axis=0)                        # real model
+E = np.mean([oof_pred(n_rows_cat.astype(float), s) for s in SEEDS], axis=0)  # effort-only control
+
+def sc(mask, pred):
+    m = cat_metrics(np.arange(int(mask.sum())), yc[mask], pred[mask])
+    return m['spearman_max'], m['enrichment_top10pct']
+
+ALL = np.ones(n_cat, bool)
+print(f"equal-effort set (>=20 rows in >=1 cell): {EE.sum()} of {n_cat} catalysts\\n")
+for nm, msk, pr in [("REAL model, all catalysts", ALL, P), ("REAL model, equal-effort", EE, P),
+                    ("EFFORT-ONLY control, all", ALL, E), ("EFFORT-ONLY control, equal-effort", EE, E)]:
+    a, b = sc(msk, pr); print(f"  {nm:36s} spearman {a:.4f}   enrichment {b:.2f}x")
+
+# Is the drop just from scoring fewer catalysts? Random subsets of the SAME predictions.
+rng = np.random.default_rng(3)
+vals = []
+for _ in range(300):
+    idx = rng.choice(n_cat, int(EE.sum()), replace=False)
+    m = np.zeros(n_cat, bool); m[idx] = True
+    vals.append(sc(m, P)[0])
+lo, hi = np.percentile(vals, 2.5), np.percentile(vals, 97.5)
+print(f"\\n  300 RANDOM subsets of size {int(EE.sum())}: spearman {np.mean(vals):.4f}  95% [{lo:.4f}, {hi:.4f}]")
+print(f"  equal-effort value {sc(EE,P)[0]:.4f} -> {'BELOW the interval: the drop is REAL' if sc(EE,P)[0] < lo else 'inside: could be a size artifact'}")
+print(f"\\n  Spearman(measurements, observed max): all {spearmanr(n_rows_cat, yc)[0]:+.4f}"
+      f"  ->  equal-effort {spearmanr(n_rows_cat[EE], yc[EE])[0]:+.4f}")
+
+print("\\n  Inside the model's own top-K (the regime a campaign lives in):")
+for K in [20, 150]:
+    t = np.argsort(-P)[:K]
+    print(f"    top-{K:<4d} internal spearman {spearmanr(yc[t], P[t])[0]:+.3f}   mean observed max {yc[t].mean():.2f}%")""")
+
+md("""**Read those four numbers together.** The equal-effort score is lower, and the random-subset
+control shows that is a real coverage effect rather than an artifact of scoring fewer catalysts.
+
+The effort-only control is the sharpest test here. A model trained *only* to predict how many times a
+catalyst was measured — it never sees a yield — still reaches a rank correlation around 0.40 against
+observed maximum yield. But its enrichment is below 1x, i.e. no better than picking at random. So rank
+correlation is partly purchasable from experimental effort; enrichment is not. That is the concrete
+reason enrichment, not the correlation, is our primary metric.
+
+The last block is a limit worth stating before any synthesis campaign. Inside the model's own
+top-ranked catalysts the internal ordering carries almost no information. The model picks a good
+*set* — its top 20 average far above the library mean — but it cannot rank within that set. A
+shortlist should be treated as a group to test, not as a league table.""")
 
 md("""## 5. Does literature data help?
 
