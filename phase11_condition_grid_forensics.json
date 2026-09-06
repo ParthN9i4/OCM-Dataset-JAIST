@@ -1,0 +1,193 @@
+{
+ "meta": {
+  "purpose": "give the condition-grid claims a single computational source",
+  "n_cells": 4399,
+  "n_catalysts": 917,
+  "n_rows": 89074,
+  "honesty_constraint": "a row-subsampling saving is REACTOR TIME only under the distinct-conditions reading; under the time-on-stream reading the 27 slots come from one continuous run, so the saving is analytical and this budget arithmetic does not transfer"
+ },
+ "within_cell_ordering": {
+  "within_cell_descending_violations": 0,
+  "within_cell_ascending_violations": 84453,
+  "within_cell_adjacent_comparisons": 84675,
+  "cells_perfectly_descending": 4399,
+  "n_cells": 4399,
+  "lab_block_global_descending_violations": 902,
+  "lab_block_adjacent_comparisons": 89073,
+  "conclusion": "every cell is stored sorted descending by yield, so within-cell row order encodes RANK, not acquisition sequence; no ordering-based test can distinguish 27 distinct conditions from 27 successive time-on-stream samples",
+  "implication": "the conditions-vs-time-on-stream question is not resolvable from this CSV by any further analysis; it needs the acquisition metadata from JAIST"
+ },
+ "truncation_counting_disproof": {
+  "cells_with_more_than_27_rows": 104,
+  "cells_with_exactly_27_rows": 895,
+  "cells_with_exactly_54_rows": 1,
+  "max_cell_size": 54,
+  "argument": "a top-27-by-yield export cut-off cannot emit a cell with more than 27 rows; cells above 27 rows therefore refute it directly, without any order statistic",
+  "caveat_on_54": "SESSION_CONTEXT section 5A cites max cell size 54 = 2x27 as structural evidence; it rests on this many cells"
+ },
+ "truncation_order_statistic": {
+  "n_true_27_cells": 895,
+  "n_donor_cells_ge34": 87,
+  "truncation_model": "retain the TOP 27 by yield from a cell with >=34 rows",
+  "by_definition": {
+   "mean_interior": {
+    "true27_mean": 1.8997724192172076,
+    "true27_median": 1.1560675552660247,
+    "truncated_mean": 1.1599652667659694,
+    "truncated_median": 0.4101528692910432,
+    "separates_in_expected_direction": true
+   },
+   "median_interior": {
+    "true27_mean": 3.1082585725909864,
+    "true27_median": 1.9155464474333728,
+    "truncated_mean": 1.9071618133300172,
+    "truncated_median": 0.8163293931627202,
+    "separates_in_expected_direction": true
+   },
+   "mean_all_gaps": {
+    "true27_mean": 1.6868897659239916,
+    "true27_median": 1.1491695520898393,
+    "truncated_mean": 1.0256059526545063,
+    "truncated_median": 0.4196737680572898,
+    "separates_in_expected_direction": true
+   },
+   "mean_middle_50pct": {
+    "true27_mean": 2.9124677590059442,
+    "true27_median": 1.7163321014464212,
+    "truncated_mean": 1.832956712337677,
+    "truncated_median": 0.7683437612020743,
+    "separates_in_expected_direction": true
+   }
+  },
+  "all_definitions_agree": true,
+  "provenance_note": "the previously quoted figures 2.03x and 1.90x/0.90x were not reproduced by any of these four definitions and had no script or JSON behind them; the DIRECTION they assert is confirmed under all four, but quote the numbers below, not those"
+ },
+ "measurement_budget_replay": {
+  "n_draws": 200,
+  "n_catalysts_with_all_5_temperatures": 811,
+  "design": "sample T of a catalyst's 5 temperature cells and R rows from each, take the max of those T*R rows as the label, and rank catalysts by it against the full observed max",
+  "budgets": {
+   "4temps_x_5rows": {
+    "runs_per_catalyst": 20,
+    "n_eligible_catalysts": 773,
+    "spearman_vs_full_mean": 0.9444693676071471,
+    "spearman_vs_full_std": 0.003374775639216533,
+    "spearman_vs_full_p05": 0.9395623227724096,
+    "spearman_vs_full_p95": 0.9494757287475889
+   },
+   "5temps_x_5rows": {
+    "runs_per_catalyst": 25,
+    "n_eligible_catalysts": 683,
+    "spearman_vs_full_mean": 0.9563075400905197,
+    "spearman_vs_full_std": 0.0029936344187786717,
+    "spearman_vs_full_p05": 0.9517530055995753,
+    "spearman_vs_full_p95": 0.9610887157977295
+   },
+   "5temps_x_4rows": {
+    "runs_per_catalyst": 20,
+    "n_eligible_catalysts": 711,
+    "spearman_vs_full_mean": 0.949012590786744,
+    "spearman_vs_full_std": 0.003290377621266839,
+    "spearman_vs_full_p05": 0.9437610868835067,
+    "spearman_vs_full_p95": 0.954077033432759
+   },
+   "3temps_x_5rows": {
+    "runs_per_catalyst": 15,
+    "n_eligible_catalysts": 792,
+    "spearman_vs_full_mean": 0.9243227130666131,
+    "spearman_vs_full_std": 0.004538082837400024,
+    "spearman_vs_full_p05": 0.9172936824286018,
+    "spearman_vs_full_p95": 0.9319136132497513
+   },
+   "4temps_x_10rows": {
+    "runs_per_catalyst": 40,
+    "n_eligible_catalysts": 678,
+    "spearman_vs_full_mean": 0.9629202649800587,
+    "spearman_vs_full_std": 0.003573084424771654,
+    "spearman_vs_full_p05": 0.9570415079618451,
+    "spearman_vs_full_p95": 0.9686591292548874
+   },
+   "5temps_x_10rows": {
+    "runs_per_catalyst": 50,
+    "n_eligible_catalysts": 532,
+    "spearman_vs_full_mean": 0.9738645282395421,
+    "spearman_vs_full_std": 0.0030026198219282895,
+    "spearman_vs_full_p05": 0.9691314893268724,
+    "spearman_vs_full_p95": 0.9785025096528329
+   },
+   "4temps_x_3rows": {
+    "runs_per_catalyst": 12,
+    "n_eligible_catalysts": 795,
+    "spearman_vs_full_mean": 0.9286850472502017,
+    "spearman_vs_full_std": 0.004243890706676868,
+    "spearman_vs_full_p05": 0.9226303156866028,
+    "spearman_vs_full_p95": 0.9356350821643028
+   },
+   "5temps_x_2rows": {
+    "runs_per_catalyst": 10,
+    "n_eligible_catalysts": 781,
+    "spearman_vs_full_mean": 0.9281686914922126,
+    "spearman_vs_full_std": 0.003789967838618884,
+    "spearman_vs_full_p05": 0.9220898866271872,
+    "spearman_vs_full_p95": 0.9339807051850927
+   },
+   "5temps_x_1rows": {
+    "runs_per_catalyst": 5,
+    "n_eligible_catalysts": 811,
+    "spearman_vs_full_mean": 0.9016136778950383,
+    "spearman_vs_full_std": 0.005427648159204933,
+    "spearman_vs_full_p05": 0.8914800675621712,
+    "spearman_vs_full_p95": 0.9097324869164658
+   }
+  },
+  "worknote_exact_design": {
+   "design": "5 rows at each of 750/800/850/900 C (700 C dropped), vs the full observed max",
+   "fixed_temperatures": [
+    750.0,
+    800.0,
+    850.0,
+    900.0
+   ],
+   "n_catalysts_with_all_5_temperatures": 811,
+   "rows": {
+    "5_rows_per_temperature": {
+     "runs_per_catalyst": 20,
+     "n_eligible_catalysts": 759,
+     "spearman_mean": 0.9492680251196975,
+     "spearman_std": 0.0032609918768762096,
+     "spearman_p05": 0.9440024497036809,
+     "spearman_p95": 0.9545872773489409,
+     "mean_yield_bias": -1.3774312538456985
+    },
+    "4_rows_per_temperature": {
+     "runs_per_catalyst": 16,
+     "n_eligible_catalysts": 771,
+     "spearman_mean": 0.9429999520126395,
+     "spearman_std": 0.003523051694160585,
+     "spearman_p05": 0.9366667945268177,
+     "spearman_p95": 0.9485854992973802,
+     "mean_yield_bias": -1.588568724826485
+    },
+    "3_rows_per_temperature": {
+     "runs_per_catalyst": 12,
+     "n_eligible_catalysts": 780,
+     "spearman_mean": 0.9333711935076042,
+     "spearman_std": 0.0036738750847668897,
+     "spearman_p05": 0.9269873199356647,
+     "spearman_p95": 0.9388124885141015,
+     "mean_yield_bias": -1.87200806341741
+    }
+   },
+   "eligibility_note": "the work note scores this on 'your 811 fully-measured catalysts', but the 20-run design needs >=5 rows in each of the 4 chosen cells, which only 759 of the 811 satisfy"
+  },
+  "session_context_claim": {
+   "quoted": "rho 0.955 for 20 runs per catalyst (4 temperatures x 5 conditions), bias -1.31",
+   "recomputed_random_4_of_5_temps": 0.9444693676071471,
+   "recomputed_worknote_fixed_temps": 0.9492680251196975,
+   "recomputed_bias_worknote_design": -1.3774312538456985,
+   "value_for_25_runs_all_5_temps": 0.9563075400905197,
+   "note": "the quoted figure had no script or JSON source. Under the exact design the work note describes it recomputes to the fixed-temps value above, not 0.955; 0.955 is closer to the 25-run (all five temperatures) configuration. Which was intended cannot be determined without the original script, so quote the recomputed value."
+  },
+  "reading_dependence": "a row-subsampling saving is REACTOR TIME only under the distinct-conditions reading; under the time-on-stream reading the 27 slots come from one continuous run, so the saving is analytical and this budget arithmetic does not transfer"
+ }
+}

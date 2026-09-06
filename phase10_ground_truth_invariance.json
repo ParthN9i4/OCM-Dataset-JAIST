@@ -1,0 +1,609 @@
+{
+ "meta": {
+  "protocol": "formulation B, composition-only, tuned LGBM, catalyst-grouped 5-fold CV, identical folds across variants",
+  "seeds": [
+   0,
+   1,
+   2,
+   7,
+   13
+  ],
+  "quantile_grid": [
+   0.05,
+   0.1,
+   0.25,
+   0.5,
+   0.75,
+   0.9,
+   1.0
+  ],
+  "budget": 20,
+  "ceiling_target": "q1.00",
+  "floor_target": "q0.05",
+  "what_this_does_NOT_do": "it does not determine whether the 27 within-cell slots are distinct conditions or time-on-stream samples; the CSV cannot answer that (cells are yield-sorted)",
+  "wording_constraint": "a low within-cell quantile is the catalyst OBSERVED FLOOR; calling it \"sustained performance\" assumes monotone deactivation, which is not established",
+  "preregistered_rule": {
+   "registered_before_running": [
+    "B_train_eval_matrix",
+    "C_regret",
+    "D_shortlist_stability"
+   ],
+   "informed_by": "A_data_level_agreement (model-free, run first)",
+   "claim_under_test": "training on the observed maximum is SAFE under both readings of the 27 within-cell slots",
+   "criteria": [
+    "(i) enrichment@10% of the max-trained model against EVERY eval target q in [0.05,1.00] stays above 2.0x",
+    "(ii) Spearman regret -- score(train=q1.00, eval=q) minus the best score achievable by any training target for that eval target -- is >= -0.05 for every eval target q"
+   ],
+   "verdict_if_failed": "the target choice is reading-dependent; report which eval targets fail and treat the question to Prof. Taniike as blocking for those"
+  }
+ },
+ "A_data_level_agreement": {
+  "note": "model-free: do the candidate ground truths rank the 917 catalysts the same way?",
+  "n_catalysts": 917,
+  "k_top10pct": 92,
+  "vs_ceiling": {
+   "q0.05": {
+    "spearman_vs_ceiling": 0.8585455605232964,
+    "top20_overlap_vs_ceiling": 0.35,
+    "top10pct_overlap_vs_ceiling": 0.5108695652173914,
+    "mean_label": 4.677189732853217
+   },
+   "q0.10": {
+    "spearman_vs_ceiling": 0.8722635136701878,
+    "top20_overlap_vs_ceiling": 0.35,
+    "top10pct_overlap_vs_ceiling": 0.532608695652174,
+    "mean_label": 5.005034114443621
+   },
+   "q0.25": {
+    "spearman_vs_ceiling": 0.9032487668667697,
+    "top20_overlap_vs_ceiling": 0.35,
+    "top10pct_overlap_vs_ceiling": 0.5543478260869565,
+    "mean_label": 5.754616203040894
+   },
+   "q0.50": {
+    "spearman_vs_ceiling": 0.9375349237442678,
+    "top20_overlap_vs_ceiling": 0.35,
+    "top10pct_overlap_vs_ceiling": 0.5978260869565217,
+    "mean_label": 6.8026065086690295
+   },
+   "q0.75": {
+    "spearman_vs_ceiling": 0.9558977207114497,
+    "top20_overlap_vs_ceiling": 0.35,
+    "top10pct_overlap_vs_ceiling": 0.6304347826086957,
+    "mean_label": 7.974269173113686
+   },
+   "q0.90": {
+    "spearman_vs_ceiling": 0.9712839323091038,
+    "top20_overlap_vs_ceiling": 0.5,
+    "top10pct_overlap_vs_ceiling": 0.7282608695652174,
+    "mean_label": 9.03601263248277
+   },
+   "q1.00": {
+    "spearman_vs_ceiling": 1.0,
+    "top20_overlap_vs_ceiling": 1.0,
+    "top10pct_overlap_vs_ceiling": 1.0,
+    "mean_label": 10.475489087862595
+   }
+  },
+  "floor_vs_ceiling_spearman": 0.8585455605232964,
+  "floor_vs_ceiling_top20_overlap": 0.35
+ },
+ "B_train_eval_matrix": {
+  "q0.05": {
+   "q0.05": {
+    "spearman_seedavg": 0.771615188182958,
+    "enrichment_seedavg": 4.565217391304348,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7651537884984199,
+    "spearman_perseed_std": 0.005416610648254498
+   },
+   "q0.10": {
+    "spearman_seedavg": 0.7779707191609158,
+    "enrichment_seedavg": 4.565217391304348,
+    "precision_at20_seedavg": 0.45,
+    "spearman_perseedmean": 0.7714386605022164,
+    "spearman_perseed_std": 0.005342213669030045
+   },
+   "q0.25": {
+    "spearman_seedavg": 0.781483316795278,
+    "enrichment_seedavg": 4.456521739130435,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7749481426005416,
+    "spearman_perseed_std": 0.005391880520778469
+   },
+   "q0.50": {
+    "spearman_seedavg": 0.78481041182543,
+    "enrichment_seedavg": 4.782608695652174,
+    "precision_at20_seedavg": 0.55,
+    "spearman_perseedmean": 0.7782289273755499,
+    "spearman_perseed_std": 0.005778710317161039
+   },
+   "q0.75": {
+    "spearman_seedavg": 0.7872754177395704,
+    "enrichment_seedavg": 4.673913043478261,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7806017142405761,
+    "spearman_perseed_std": 0.005249960304093974
+   },
+   "q0.90": {
+    "spearman_seedavg": 0.7873225715055737,
+    "enrichment_seedavg": 5.326086956521739,
+    "precision_at20_seedavg": 0.55,
+    "spearman_perseedmean": 0.7805826488671308,
+    "spearman_perseed_std": 0.0050287776277066175
+   },
+   "q1.00": {
+    "spearman_seedavg": 0.7617902700709382,
+    "enrichment_seedavg": 4.565217391304348,
+    "precision_at20_seedavg": 0.4,
+    "spearman_perseedmean": 0.7552991743285281,
+    "spearman_perseed_std": 0.0035201764864302002
+   }
+  },
+  "q0.10": {
+   "q0.05": {
+    "spearman_seedavg": 0.7738313840691335,
+    "enrichment_seedavg": 4.673913043478261,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7678117327245155,
+    "spearman_perseed_std": 0.007137887942134889
+   },
+   "q0.10": {
+    "spearman_seedavg": 0.7801948206863665,
+    "enrichment_seedavg": 4.565217391304348,
+    "precision_at20_seedavg": 0.45,
+    "spearman_perseedmean": 0.7740897012816013,
+    "spearman_perseed_std": 0.006771331136119987
+   },
+   "q0.25": {
+    "spearman_seedavg": 0.7837826153495498,
+    "enrichment_seedavg": 4.565217391304348,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7776691763760509,
+    "spearman_perseed_std": 0.00655188448896133
+   },
+   "q0.50": {
+    "spearman_seedavg": 0.7874228549604003,
+    "enrichment_seedavg": 4.456521739130435,
+    "precision_at20_seedavg": 0.55,
+    "spearman_perseedmean": 0.7813000910941394,
+    "spearman_perseed_std": 0.0064562067314458075
+   },
+   "q0.75": {
+    "spearman_seedavg": 0.7897523754993513,
+    "enrichment_seedavg": 4.565217391304348,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7835763979286312,
+    "spearman_perseed_std": 0.0057300888667687734
+   },
+   "q0.90": {
+    "spearman_seedavg": 0.7897239743036564,
+    "enrichment_seedavg": 5.108695652173913,
+    "precision_at20_seedavg": 0.55,
+    "spearman_perseedmean": 0.7835726240698084,
+    "spearman_perseed_std": 0.005293717845984161
+   },
+   "q1.00": {
+    "spearman_seedavg": 0.7641618243795179,
+    "enrichment_seedavg": 4.3478260869565215,
+    "precision_at20_seedavg": 0.4,
+    "spearman_perseedmean": 0.7582995046841381,
+    "spearman_perseed_std": 0.0037124402715884397
+   }
+  },
+  "q0.25": {
+   "q0.05": {
+    "spearman_seedavg": 0.7744775151642834,
+    "enrichment_seedavg": 4.565217391304348,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7690533972223967,
+    "spearman_perseed_std": 0.006237778398651533
+   },
+   "q0.10": {
+    "spearman_seedavg": 0.7812253250022744,
+    "enrichment_seedavg": 4.565217391304348,
+    "precision_at20_seedavg": 0.45,
+    "spearman_perseedmean": 0.7757737941586147,
+    "spearman_perseed_std": 0.00583462189953282
+   },
+   "q0.25": {
+    "spearman_seedavg": 0.785515913088793,
+    "enrichment_seedavg": 4.565217391304348,
+    "precision_at20_seedavg": 0.55,
+    "spearman_perseedmean": 0.7800926496486401,
+    "spearman_perseed_std": 0.005566746704588264
+   },
+   "q0.50": {
+    "spearman_seedavg": 0.7901548632386719,
+    "enrichment_seedavg": 4.456521739130435,
+    "precision_at20_seedavg": 0.55,
+    "spearman_perseedmean": 0.7847007149057115,
+    "spearman_perseed_std": 0.0052487527611122225
+   },
+   "q0.75": {
+    "spearman_seedavg": 0.793030947281187,
+    "enrichment_seedavg": 4.565217391304348,
+    "precision_at20_seedavg": 0.55,
+    "spearman_perseedmean": 0.7874945864619802,
+    "spearman_perseed_std": 0.004950126902257945
+   },
+   "q0.90": {
+    "spearman_seedavg": 0.7930194778668159,
+    "enrichment_seedavg": 5.108695652173913,
+    "precision_at20_seedavg": 0.65,
+    "spearman_perseedmean": 0.7874120424697924,
+    "spearman_perseed_std": 0.0045967743697814065
+   },
+   "q1.00": {
+    "spearman_seedavg": 0.7671857347003381,
+    "enrichment_seedavg": 4.239130434782608,
+    "precision_at20_seedavg": 0.45,
+    "spearman_perseedmean": 0.7617875792809412,
+    "spearman_perseed_std": 0.003088789494148694
+   }
+  },
+  "q0.50": {
+   "q0.05": {
+    "spearman_seedavg": 0.772276438051656,
+    "enrichment_seedavg": 4.782608695652174,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7668363858450353,
+    "spearman_perseed_std": 0.005176656624489732
+   },
+   "q0.10": {
+    "spearman_seedavg": 0.7795756746202153,
+    "enrichment_seedavg": 4.673913043478261,
+    "precision_at20_seedavg": 0.45,
+    "spearman_perseedmean": 0.7741079371776902,
+    "spearman_perseed_std": 0.004812069144963908
+   },
+   "q0.25": {
+    "spearman_seedavg": 0.7851015824399251,
+    "enrichment_seedavg": 4.673913043478261,
+    "precision_at20_seedavg": 0.55,
+    "spearman_perseedmean": 0.7796734230927073,
+    "spearman_perseed_std": 0.004564876402064716
+   },
+   "q0.50": {
+    "spearman_seedavg": 0.7913972482556142,
+    "enrichment_seedavg": 4.565217391304348,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7858261336909356,
+    "spearman_perseed_std": 0.004174991632905893
+   },
+   "q0.75": {
+    "spearman_seedavg": 0.7953744427646499,
+    "enrichment_seedavg": 4.456521739130435,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7897382218046393,
+    "spearman_perseed_std": 0.0040976230857942605
+   },
+   "q0.90": {
+    "spearman_seedavg": 0.7962823628512484,
+    "enrichment_seedavg": 5.108695652173913,
+    "precision_at20_seedavg": 0.7,
+    "spearman_perseedmean": 0.7905689295524494,
+    "spearman_perseed_std": 0.003836604441726842
+   },
+   "q1.00": {
+    "spearman_seedavg": 0.772080217799977,
+    "enrichment_seedavg": 4.130434782608695,
+    "precision_at20_seedavg": 0.45,
+    "spearman_perseedmean": 0.7665313384487995,
+    "spearman_perseed_std": 0.0023825466159211857
+   }
+  },
+  "q0.75": {
+   "q0.05": {
+    "spearman_seedavg": 0.7703408848857866,
+    "enrichment_seedavg": 5.108695652173913,
+    "precision_at20_seedavg": 0.55,
+    "spearman_perseedmean": 0.7650669913264333,
+    "spearman_perseed_std": 0.0036542277139912493
+   },
+   "q0.10": {
+    "spearman_seedavg": 0.7777502013839303,
+    "enrichment_seedavg": 5.0,
+    "precision_at20_seedavg": 0.55,
+    "spearman_perseedmean": 0.7724369135152356,
+    "spearman_perseed_std": 0.0033468818188620757
+   },
+   "q0.25": {
+    "spearman_seedavg": 0.784036903315389,
+    "enrichment_seedavg": 5.0,
+    "precision_at20_seedavg": 0.65,
+    "spearman_perseedmean": 0.778724094829023,
+    "spearman_perseed_std": 0.003094633402743741
+   },
+   "q0.50": {
+    "spearman_seedavg": 0.7912799240833704,
+    "enrichment_seedavg": 4.782608695652174,
+    "precision_at20_seedavg": 0.6,
+    "spearman_perseedmean": 0.7857315055727606,
+    "spearman_perseed_std": 0.0029430632139131096
+   },
+   "q0.75": {
+    "spearman_seedavg": 0.7965807543724847,
+    "enrichment_seedavg": 4.673913043478261,
+    "precision_at20_seedavg": 0.6,
+    "spearman_perseedmean": 0.7909398989696943,
+    "spearman_perseed_std": 0.002512330417732789
+   },
+   "q0.90": {
+    "spearman_seedavg": 0.7977728887259204,
+    "enrichment_seedavg": 5.326086956521739,
+    "precision_at20_seedavg": 0.7,
+    "spearman_perseedmean": 0.7921937207314513,
+    "spearman_perseed_std": 0.001938059820683542
+   },
+   "q1.00": {
+    "spearman_seedavg": 0.7735093348427519,
+    "enrichment_seedavg": 4.3478260869565215,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7683497339674432,
+    "spearman_perseed_std": 0.0011527962560701607
+   }
+  },
+  "q0.90": {
+   "q0.05": {
+    "spearman_seedavg": 0.7660291009312398,
+    "enrichment_seedavg": 5.108695652173913,
+    "precision_at20_seedavg": 0.55,
+    "spearman_perseedmean": 0.7604908894593241,
+    "spearman_perseed_std": 0.005049948832796707
+   },
+   "q0.10": {
+    "spearman_seedavg": 0.7735763461022931,
+    "enrichment_seedavg": 5.0,
+    "precision_at20_seedavg": 0.55,
+    "spearman_perseedmean": 0.7679529856076741,
+    "spearman_perseed_std": 0.004741449758243069
+   },
+   "q0.25": {
+    "spearman_seedavg": 0.7800231374036776,
+    "enrichment_seedavg": 5.0,
+    "precision_at20_seedavg": 0.55,
+    "spearman_perseedmean": 0.7742613160858581,
+    "spearman_perseed_std": 0.004410951783424748
+   },
+   "q0.50": {
+    "spearman_seedavg": 0.7877418198409291,
+    "enrichment_seedavg": 4.782608695652174,
+    "precision_at20_seedavg": 0.55,
+    "spearman_perseedmean": 0.7819457708800186,
+    "spearman_perseed_std": 0.004358811514672321
+   },
+   "q0.75": {
+    "spearman_seedavg": 0.793463906001971,
+    "enrichment_seedavg": 4.673913043478261,
+    "precision_at20_seedavg": 0.6,
+    "spearman_perseedmean": 0.7876600572731794,
+    "spearman_perseed_std": 0.003824736050084609
+   },
+   "q0.90": {
+    "spearman_seedavg": 0.7957251547351609,
+    "enrichment_seedavg": 5.326086956521739,
+    "precision_at20_seedavg": 0.7,
+    "spearman_perseedmean": 0.7900077094690419,
+    "spearman_perseed_std": 0.0033832295931673895
+   },
+   "q1.00": {
+    "spearman_seedavg": 0.7727058533448158,
+    "enrichment_seedavg": 4.3478260869565215,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7674090458961554,
+    "spearman_perseed_std": 0.0025022905292475268
+   }
+  },
+  "q1.00": {
+   "q0.05": {
+    "spearman_seedavg": 0.7575537872642508,
+    "enrichment_seedavg": 4.3478260869565215,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7508961421709037,
+    "spearman_perseed_std": 0.00432775325134703
+   },
+   "q0.10": {
+    "spearman_seedavg": 0.7650097984903262,
+    "enrichment_seedavg": 4.3478260869565215,
+    "precision_at20_seedavg": 0.45,
+    "spearman_perseedmean": 0.7583251513522885,
+    "spearman_perseed_std": 0.004031454111281558
+   },
+   "q0.25": {
+    "spearman_seedavg": 0.7718371191271268,
+    "enrichment_seedavg": 4.3478260869565215,
+    "precision_at20_seedavg": 0.45,
+    "spearman_perseedmean": 0.7649752734948966,
+    "spearman_perseed_std": 0.003628142724564163
+   },
+   "q0.50": {
+    "spearman_seedavg": 0.781075677934985,
+    "enrichment_seedavg": 4.239130434782608,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7739564817676279,
+    "spearman_perseed_std": 0.0037241375191939844
+   },
+   "q0.75": {
+    "spearman_seedavg": 0.7866321967968494,
+    "enrichment_seedavg": 4.021739130434782,
+    "precision_at20_seedavg": 0.5,
+    "spearman_perseedmean": 0.7795242242155016,
+    "spearman_perseed_std": 0.003234791647475475
+   },
+   "q0.90": {
+    "spearman_seedavg": 0.789698047513504,
+    "enrichment_seedavg": 5.0,
+    "precision_at20_seedavg": 0.65,
+    "spearman_perseedmean": 0.782739294067413,
+    "spearman_perseed_std": 0.0026987109433425326
+   },
+   "q1.00": {
+    "spearman_seedavg": 0.7671721643756007,
+    "enrichment_seedavg": 4.3478260869565215,
+    "precision_at20_seedavg": 0.45,
+    "spearman_perseedmean": 0.7606463927657198,
+    "spearman_perseed_std": 0.001989380913574362
+   }
+  }
+ },
+ "C_regret_of_training_on_ceiling": {
+  "definition": "regret(q) = spearman(train=q1.00, eval=q) - max_p spearman(train=p, eval=q); negative means training on the ceiling costs us when the truth is q",
+  "per_eval_target": {
+   "q0.05": {
+    "spearman_trained_on_ceiling": 0.7575537872642508,
+    "spearman_trained_on_matched_target": 0.771615188182958,
+    "best_training_target": "q0.25",
+    "spearman_trained_on_best_available": 0.7744775151642834,
+    "regret_vs_best_available": -0.016923727900032604,
+    "regret_vs_matched_target": -0.014061400918707223,
+    "enrichment_trained_on_ceiling": 4.3478260869565215,
+    "enrichment_trained_on_matched_target": 4.565217391304348
+   },
+   "q0.10": {
+    "spearman_trained_on_ceiling": 0.7650097984903262,
+    "spearman_trained_on_matched_target": 0.7801948206863665,
+    "best_training_target": "q0.25",
+    "spearman_trained_on_best_available": 0.7812253250022744,
+    "regret_vs_best_available": -0.01621552651194813,
+    "regret_vs_matched_target": -0.015185022196040232,
+    "enrichment_trained_on_ceiling": 4.3478260869565215,
+    "enrichment_trained_on_matched_target": 4.565217391304348
+   },
+   "q0.25": {
+    "spearman_trained_on_ceiling": 0.7718371191271268,
+    "spearman_trained_on_matched_target": 0.785515913088793,
+    "best_training_target": "q0.25",
+    "spearman_trained_on_best_available": 0.785515913088793,
+    "regret_vs_best_available": -0.013678793961666158,
+    "regret_vs_matched_target": -0.013678793961666158,
+    "enrichment_trained_on_ceiling": 4.3478260869565215,
+    "enrichment_trained_on_matched_target": 4.565217391304348
+   },
+   "q0.50": {
+    "spearman_trained_on_ceiling": 0.781075677934985,
+    "spearman_trained_on_matched_target": 0.7913972482556142,
+    "best_training_target": "q0.50",
+    "spearman_trained_on_best_available": 0.7913972482556142,
+    "regret_vs_best_available": -0.010321570320629192,
+    "regret_vs_matched_target": -0.010321570320629192,
+    "enrichment_trained_on_ceiling": 4.239130434782608,
+    "enrichment_trained_on_matched_target": 4.565217391304348
+   },
+   "q0.75": {
+    "spearman_trained_on_ceiling": 0.7866321967968494,
+    "spearman_trained_on_matched_target": 0.7965807543724847,
+    "best_training_target": "q0.75",
+    "spearman_trained_on_best_available": 0.7965807543724847,
+    "regret_vs_best_available": -0.009948557575635286,
+    "regret_vs_matched_target": -0.009948557575635286,
+    "enrichment_trained_on_ceiling": 4.021739130434782,
+    "enrichment_trained_on_matched_target": 4.673913043478261
+   },
+   "q0.90": {
+    "spearman_trained_on_ceiling": 0.789698047513504,
+    "spearman_trained_on_matched_target": 0.7957251547351609,
+    "best_training_target": "q0.75",
+    "spearman_trained_on_best_available": 0.7977728887259204,
+    "regret_vs_best_available": -0.008074841212416417,
+    "regret_vs_matched_target": -0.006027107221656891,
+    "enrichment_trained_on_ceiling": 5.0,
+    "enrichment_trained_on_matched_target": 5.326086956521739
+   },
+   "q1.00": {
+    "spearman_trained_on_ceiling": 0.7671721643756007,
+    "spearman_trained_on_matched_target": 0.7671721643756007,
+    "best_training_target": "q0.75",
+    "spearman_trained_on_best_available": 0.7735093348427519,
+    "regret_vs_best_available": -0.00633717046715121,
+    "regret_vs_matched_target": 0.0,
+    "enrichment_trained_on_ceiling": 4.3478260869565215,
+    "enrichment_trained_on_matched_target": 4.3478260869565215
+   }
+  },
+  "worst_regret": -0.016923727900032604,
+  "worst_regret_at": "q0.05",
+  "worst_regret_vs_matched_target": -0.015185022196040232,
+  "min_enrichment_trained_on_ceiling": 4.021739130434782
+ },
+ "D_shortlist_stability": {
+  "note": "do the MODEL shortlists agree across training targets? this is the decision the campaign actually makes",
+  "budget": 20,
+  "pairwise_top20_overlap_of_model_shortlists": {
+   "q0.05": {
+    "q0.05": 1.0,
+    "q0.10": 1.0,
+    "q0.25": 0.85,
+    "q0.50": 0.75,
+    "q0.75": 0.7,
+    "q0.90": 0.6,
+    "q1.00": 0.55
+   },
+   "q0.10": {
+    "q0.05": 1.0,
+    "q0.10": 1.0,
+    "q0.25": 0.85,
+    "q0.50": 0.75,
+    "q0.75": 0.7,
+    "q0.90": 0.6,
+    "q1.00": 0.55
+   },
+   "q0.25": {
+    "q0.05": 0.85,
+    "q0.10": 0.85,
+    "q0.25": 1.0,
+    "q0.50": 0.9,
+    "q0.75": 0.85,
+    "q0.90": 0.75,
+    "q1.00": 0.7
+   },
+   "q0.50": {
+    "q0.05": 0.75,
+    "q0.10": 0.75,
+    "q0.25": 0.9,
+    "q0.50": 1.0,
+    "q0.75": 0.9,
+    "q0.90": 0.8,
+    "q1.00": 0.7
+   },
+   "q0.75": {
+    "q0.05": 0.7,
+    "q0.10": 0.7,
+    "q0.25": 0.85,
+    "q0.50": 0.9,
+    "q0.75": 1.0,
+    "q0.90": 0.9,
+    "q1.00": 0.75
+   },
+   "q0.90": {
+    "q0.05": 0.6,
+    "q0.10": 0.6,
+    "q0.25": 0.75,
+    "q0.50": 0.8,
+    "q0.75": 0.9,
+    "q0.90": 1.0,
+    "q1.00": 0.85
+   },
+   "q1.00": {
+    "q0.05": 0.55,
+    "q0.10": 0.55,
+    "q0.25": 0.7,
+    "q0.50": 0.7,
+    "q0.75": 0.75,
+    "q0.90": 0.85,
+    "q1.00": 1.0
+   }
+  },
+  "ceiling_vs_floor_model_shortlist_overlap": 0.55,
+  "data_level_ceiling_vs_floor_overlap_for_reference": 0.35
+ },
+ "verdict": {
+  "criterion_i_enrichment_above_2x": true,
+  "criterion_i_observed_minimum_enrichment": 4.021739130434782,
+  "criterion_ii_regret_above_minus_0.05": true,
+  "criterion_ii_observed_worst_regret": -0.016923727900032604,
+  "CLAIM_SUPPORTED": true,
+  "failing_eval_targets": [],
+  "reading": "Training on the observed maximum is robust to the gating question: a max-trained model still ranks catalysts well and still enriches, even when the ground truth is the catalyst floor."
+ }
+}

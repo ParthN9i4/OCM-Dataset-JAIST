@@ -12,12 +12,18 @@ PROTOCOL RULES (established after Prof. Taniike's validation round — see SESSI
 - Anything fit on data (scaler, DRST classifier, Stage 1, Stage 2) sees training-fold data only.
 - Catalyst-level metrics (max-yield Spearman, enrichment@10%, precision@20) are primary for the
   screening objective; row RMSE is secondary and must be labeled as such. Each (catalyst,
-  temperature) cell holds up to 27 measurements taken under 27 DIFFERENT reaction-condition
-  settings that this file does not record (5 x 27 = 135 conditions per catalyst). Those rows are
-  not replicates: 19.9% of total yield variance sits within cells and is therefore unreachable
-  from composition and temperature alone, which floors row-level RMSE at 1.757. That floor is a
-  property of the missing feature columns, not measurement noise, and it assumes the model already
-  knows each catalyst's cell means — so it is not attainable for an unseen catalyst.
+  temperature) cell holds up to 27 measurements under settings this file does not record
+  (5 x 27 = 135 per catalyst). Those rows are not replicates: 19.9% of total yield variance sits
+  within cells and is therefore unreachable from composition and temperature alone, which floors
+  row-level RMSE at 1.757. That floor is a property of the missing feature columns, not measurement
+  noise, and it assumes the model already knows each catalyst's cell means — so it is not attainable
+  for an unseen catalyst.
+- OPEN QUESTION, do not write past it (SESSION_CONTEXT.md §7 item 2): whether those 27 slots are 27
+  DISTINCT REACTION CONDITIONS or 27 SUCCESSIVE TIME-ON-STREAM SAMPLES at one condition is NOT
+  established. The file cannot settle it — every cell is stored sorted descending by yield, so row
+  order encodes rank, not acquisition sequence (phase11_condition_grid_forensics.json). Only JAIST
+  can answer it. phase10_ground_truth_invariance.json shows the ranking survives either reading
+  (worst regret −0.017 Spearman), which bounds the risk but does not resolve the question.
 
 Usage:
     from ocm_eval import Data, grouped_folds, row_folds, run_fold, run_cv, lgb_params, xgb_params

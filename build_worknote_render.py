@@ -9,6 +9,22 @@ CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
 text = open(MD).read()
 body = markdown.markdown(text, extensions=['tables', 'fenced_code', 'sane_lists'])
 
+
+# Promote image alt-text to a VISIBLE <figcaption>. The work note carries its figure captions as
+# markdown image alt-text (`![**Figure 1 - ...**](fig.png)`), which python-markdown emits only into
+# the alt="" attribute, where a reader of the PDF never sees it. Without this step all nine captions
+# silently vanish from the rendered output.
+def caption(m):
+    alt, src = m.group(1), m.group(2)
+    if not alt.strip():
+        return m.group(0)
+    inner = markdown.markdown(alt).removeprefix('<p>').removesuffix('</p>')
+    return f'<figure><img alt="{alt}" src="{src}"><figcaption>{inner}</figcaption></figure>'
+
+
+body, n_caps = re.subn(r'<img alt="([^"]*)" src="([^"]+)"\s*/?>', caption, body)
+print(f"promoted {n_caps} figure captions to visible <figcaption>")
+
 # inline <img src="fig.png"> as base64 data URIs
 def embed(m):
     src = m.group(1)
@@ -25,6 +41,8 @@ h1{font-size:22px;border-bottom:3px solid #1f4e79;padding-bottom:8px;color:#1232
 h2{font-size:17px;color:#12325a;border-bottom:1px solid #ccc;padding-bottom:4px;margin-top:28px}
 h3{font-size:15px;color:#1f4e79;margin-top:20px}
 img{max-width:88%;display:block;margin:14px auto;border:1px solid #e2e2e2;border-radius:4px}
+figure{margin:18px 0}
+figcaption{font-size:12.5px;color:#444;text-align:center;max-width:88%;margin:6px auto 0;line-height:1.45}
 table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13px}
 th,td{border:1px solid #ccc;padding:6px 9px;text-align:left}
 th{background:#1f4e79;color:#fff}

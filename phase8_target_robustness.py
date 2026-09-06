@@ -14,10 +14,19 @@ verified against the CSV; the grid evidence is recomputed live by this script an
      exactly 54 = 2 x 27, with nothing above; and 15 catalysts hold exactly 135 rows, all 15 of them
      splitting as exactly (27, 27, 27, 27, 27). 5 x 27 = 135 matches the "135 conditions" Prof.
      Taniike states each catalyst is run under. The competing reading -- that 27 was a top-27-by-yield
-     export cut-off -- was tested and rejected: the spacing between the two lowest values in a 27-row
-     cell is 2.03x the interior spacing, whereas truncating a larger cell to 27 rows gives 0.90x.
+     export cut-off -- is rejected most simply by counting: 104 cells hold MORE than 27 rows, which a
+     top-27 cut-off cannot emit. An order-statistic test agrees in direction under four definitions of
+     interior spacing. Both are computed in phase11_condition_grid_forensics.py and stored in
+     phase11_condition_grid_forensics.json -- quote them from there. (Earlier drafts quoted "2.03x vs
+     0.90x" for the order statistic; those figures had no script or JSON behind them and were not
+     reproduced. The direction they assert holds; the numbers should not be requoted.)
      So the within-cell spread is real condition-response, not measurement noise, and no target here
      may be described as "denoising".
+
+     CAVEAT, not previously stated: every cell is stored sorted descending by yield (0 violations in
+     84,675 within-cell adjacent comparisons). Pre-sorting by yield is what a "take the top N" export
+     would produce, so the truncation reading is mechanically more plausible than the order statistic
+     alone suggests -- the counting argument, not the order statistic, is what settles it.
 
   2. WRONG CONCLUSION. The old script compared targets across 5 SEEDS that all train on the same 917
      catalysts. That measures seed noise, not whether a gain generalises to other catalysts. Under a

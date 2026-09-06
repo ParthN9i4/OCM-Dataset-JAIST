@@ -53,9 +53,11 @@ literally than we first did. Cell sizes have a hard ceiling at exactly **27**, a
 **54 = 2 × 27**, and nothing above; **15 catalysts hold exactly 135 rows, and all 15 decompose as
 exactly (27, 27, 27, 27, 27)**. That is **5 temperatures × 27 condition settings = 135**, matching
 the 135 conditions you describe. We also tested the competing reading that 27 was an export cut-off
-rather than a design size, and rejected it: the spacing between the two lowest values in a 27-row
-cell is 2.03× the interior spacing, whereas artificially truncating a larger cell to 27 rows gives
-0.90× — the signature of a complete sample rather than a truncated one.
+rather than a design size, and rejected it: **104 cells hold more than 27 rows**, which a top-27
+cut-off could not have produced. (An order-statistic comparison of the gap structure agrees, but the
+count is the argument that settles it.) One caveat we should state plainly: the rows within each cell
+arrive already sorted by yield, which is what an export cut-off would also look like — so we lean on
+the count rather than on the shape of the distribution.
 
 The consequence is that these rows are **not replicates**, and the variation across them is not
 measurement noise. Because those 27 condition settings are absent from the feature table, **19.9 %
@@ -279,8 +281,10 @@ any correlation it measures. The list is a reasonable set of catalysts to *try*;
 
 If a test is wanted, our retrospective replay on your own archive suggests a different allocation of
 the same reactor budget. Measuring 5 conditions at each of 750, 800, 850 and 900 °C — 20 runs rather
-than 135 — reproduces the ranking of your 811 fully-measured catalysts at ρ = **0.955** (systematically
-low by 1.31 yield points, a bias that can be pre-declared). That buys roughly 72 catalysts screened
+than 135 — reproduces the full ranking at ρ = **0.949** (200 resamples, spread ±0.003; systematically
+low by 1.38 yield points, a bias that can be pre-declared). This is measured on the **759** catalysts
+that carry at least 5 rows in each of those four cells, out of the 811 measured at all five
+temperatures. That buys roughly 72 catalysts screened
 instead of 17 measured exhaustively, with the best few then confirmed at full coverage, and with part
 of the batch drawn at random from the same candidate grammar as a control arm. The cost is more
 syntheses for the same number of reactor runs, which may or may not suit your constraints.

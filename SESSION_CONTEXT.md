@@ -4,9 +4,10 @@
 was re-read from a stored JSON during the handoff pass — none is quoted from memory. Where a number
 could be confused with a similar one, both are given and labelled.
 
-**Branch:** `claude/add-catalyst-dataset-orerR`. **Commits:** 108. **Tree:** clean.
-**Last two commits:** `f3dedc5` (coverage-corrected headline), `b7a18ec` (noise-floor arithmetic and
-the repeats/conditions framing).
+**Branch:** `claude/ocm-data-verification-qn9829`. **Tree:** clean.
+The phase 8/9 work was stranded on unmerged `claude/add-catalyst-dataset-orerR` (102 commits — an
+earlier version of this file said 108, which was wrong) and has now been merged here. A verification
+pass re-derived every claim below from the data; see `ocm_verification_report.md`.
 
 **Status in one line.** The original claim has been withdrawn and the corrected study is complete and
 internally consistent. Nothing has been sent to Prof. Taniike since the withdrawal — the corrected
@@ -24,7 +25,7 @@ column with nothing unaccounted:
 | subset | filter | rows | preparation | mean Y(C2) |
 |---|---|---|---|---|
 | **lab** | `year == 2025` | 89,074 | 100% Impregnation | 5.245% |
-| **literature** | `year <= 2019` | 3,852 | 8+ methods, 1982–2019 | 8.670% |
+| **literature** | `year <= 2019` | 3,852 | 20 distinct `Preparation` values (19 named + `n.a.`), 1982–2019 | 8.670% |
 
 Columns: `Preparation`, `Temperature_C`, 65 element weight-% columns, `Y(C2), %`, `year`. **No
 reaction-condition columns exist beyond temperature.** This absence is the single most consequential
@@ -154,9 +155,13 @@ never split on it, and deleting the column gives **bit-identical** predictions (
 **Data budget — report both thresholds.** Ba learning curve
 (`phase6_our_experiments.json` → `E2_learning_curve`):
 
-| members seen | 0 | 5 | 10 | 25 | 50 | 100 | 204 (all) |
-|---|---|---|---|---|---|---|---|
-| Spearman | 0.509 | 0.543 | 0.565 | 0.616 | 0.651 | 0.679 | 0.683 |
+| members seen | 0 | 5 | 10 | 25 | 50 | 100 | 200 | 204 (all) |
+|---|---|---|---|---|---|---|---|---|
+| Spearman | 0.509 | 0.543 | 0.565 | 0.616 | 0.651 | 0.679 | **0.687** | 0.683 |
+
+The n=200 point is usually omitted, but it is the curve's maximum — the tail is **non-monotone**, so
+"0.683 at n=204" is the end of the curve, not its peak. "204 (all)" means all Ba members available in
+the training folds; the family holds **291** catalysts in total.
 
 The stored `unlock_threshold_80pct = 10` is **80% of the final level** (0.8 × 0.683 = 0.547, first
 cleared at n=10). **80% of the *gain*** is 0.509 + 0.8 × 0.174 = 0.648, first cleared near **n ≈ 50**.
@@ -194,17 +199,27 @@ what §2's scope statement predicts. And **plain merging beats the two-stage mac
 | (catalyst, temperature) cells | 4,399 |
 | mean rows per cell | 20.25 |
 | **modal cell size** | **27** |
-| **maximum cell size** | **54** (= 2 × 27) |
+| **maximum cell size** | **54** (= 2 × 27) — but on **exactly 1 cell**, so weak evidence |
 | cells larger than 54 | **0** |
 | catalysts with exactly 135 rows | 15 |
 | **…of which split as exactly (27,27,27,27,27)** | **15 of 15** |
 
 5 × 27 = **135**, matching the number of conditions Prof. Taniike states each catalyst is run under.
 
-The rival reading — that 27 was a top-27-by-yield export cut-off — was tested and **rejected**: the
-spacing between the two lowest values in a 27-row cell is **2.03×** the interior spacing, whereas
-artificially truncating a larger cell to 27 rows gives **0.90×**. That is the order-statistic
-signature of a complete sample, not a truncated one.
+The rival reading — that 27 was a top-27-by-yield export cut-off — is **rejected**, but by a simpler
+argument than the one previously given: **104 cells hold more than 27 rows**, which a top-27 cut-off
+cannot emit. An order-statistic test (bottom-of-distribution gap vs interior gap) agrees in direction
+under all four definitions of interior spacing tried. Both now live in
+`phase11_condition_grid_forensics.json` — **quote them from there**.
+
+*Provenance correction.* The figures previously quoted here, **2.03× vs 0.90×**, were computed by no
+script and stored in no JSON, and were not reproduced by any of the four definitions. The direction
+they assert holds; **the numbers must not be requoted.**
+
+*Caveat that was missing.* Every cell is stored **sorted descending by yield** — 0 violations across
+84,675 within-cell adjacent comparisons in all 4,399 cells. Pre-sorting by yield is exactly what a
+"take the top N" export produces, so the truncation reading is mechanically *more* plausible than the
+order statistic alone implies. The counting argument, not the order statistic, is what settles it.
 
 **Corrections this forced, already applied:**
 
@@ -288,6 +303,8 @@ confirm or refute the model.
 | `phase7_prep_ood.py` | `phase7_prep_ood.json` | cross-preparation — the one positive |
 | `phase8_target_robustness.py` | `phase8_target_robustness.json` | condition grid + target robustness |
 | `phase9_equal_effort_eval.py` | `phase9_equal_effort_eval.json` | coverage correction + effort control |
+| `phase10_ground_truth_invariance.py` | `phase10_ground_truth_invariance.json` | **does the conditions-vs-time-on-stream answer change our recommendation?** |
+| `phase11_condition_grid_forensics.py` | `phase11_condition_grid_forensics.json` | order statistic, counting disproof, measurement-budget replay, within-cell ordering |
 | `feedback_experiments.py` | `feedback_results.json` | pre-review presentation feedback |
 | `qn_tradeoff.py` | `qn_tradeoff.json` | **SUPERSEDED — do not quote.** Row-level protocol; retained only as a record |
 
@@ -349,19 +366,37 @@ PDF rendering: no LaTeX in-container. Use pandoc → HTML (`--embed-resources`) 
    of currently unreachable variance into modellable signal, makes row-level RMSE a well-posed target
    again, turns 917 training examples back into 89,074, and would let us predict *which condition* to
    run rather than only a catalyst ceiling. The work note already asks.
-2. **Settle distinct-conditions vs time-on-stream.** Unresolvable from the file; two independent
-   analyses tried. If the 27 slots are successive time-on-stream samples at one condition rather than
-   27 distinct conditions, then a catalyst's observed maximum is a **fresh-catalyst transient, not an
-   achievable optimum** — and formulation B targets the wrong quantity. This is the largest live
-   uncertainty in the project.
+2. **Settle distinct-conditions vs time-on-stream — by asking, because the file cannot.** We now know
+   *why* two prior analyses found nothing: **every one of the 4,399 cells is stored sorted descending
+   by yield** (0 violations in 84,675 within-cell adjacent comparisons;
+   `phase11_condition_grid_forensics.json`). Row order encodes **rank, not acquisition sequence**, and
+   there is no time, run-index or condition column. Every ordering-based test — decay profile,
+   periodicity, autocorrelation — is therefore impossible **in principle**, not merely inconclusive.
+   A third attempt would fail too. Only JAIST can answer it.
+
+   **The risk is now bounded, though the question is still open** (`phase10_ground_truth_invariance.json`).
+   At the data level the two readings genuinely disagree where it hurts: ranking catalysts by their
+   *floor* (q0.05) instead of their *ceiling* (the observed max) shares only **7 of the top 20**
+   (Spearman 0.859 overall). But a model trained on the ceiling still scores **0.7576** against the
+   floor ground truth, versus **0.7745** for the best floor-suited training target — a regret of
+   **−0.0169 Spearman**, smaller than the +0.0065 that seed-averaging alone buys — and its
+   enrichment@10% never falls below **4.02×** against any ground truth in q ∈ [0.05, 1.00].
+   **The answer changes the labels but not the decision.** Still ask; but the shortlist does not
+   hinge on the reply.
 3. **Ask why coverage is incomplete** — 186 catalyst-temperature cells absent, sizes 1–54, only 811 of
    917 catalysts have all five temperatures. Decides whether the bias is correctable or itself
    informative.
 4. **Re-scope the campaign before reactor time is spent** (gated on #2). Retrospective replay on the
-   lab's own archive: 20 runs per catalyst (4 temperatures × 5 conditions) reproduces the full-135
-   ranking at ρ **0.955**, buying ~72 catalysts plus a randomised control arm for the same reactor
-   budget as 17 exhaustive ones. Under the time-on-stream reading the saving is analytical rather than
-   thermal and the arithmetic changes.
+   lab's own archive (`phase11_condition_grid_forensics.json`, 200 draws): 20 runs per catalyst
+   (4 temperatures × 5 rows) reproduces the full-135 ranking at ρ **0.9445** [5–95 pct 0.9396–0.9495],
+   buying ~72 catalysts plus a randomised control arm for the same reactor budget as 17 exhaustive
+   ones. Under the time-on-stream reading the saving is analytical rather than thermal and the
+   arithmetic changes.
+
+   *Provenance correction.* This was previously quoted as ρ **0.955**, with no script or JSON behind
+   it. That value is not what a 20-run budget gives; **0.9563** is what **25** runs (5 temperatures ×
+   5 rows) gives, so the figure appears to have been carried over from a different configuration than
+   the one printed beside it. Quote 0.9445 for 20 runs.
 5. **Send the corrected work note.** It is complete and verified.
 
 ### Do not re-litigate — already piloted, all null
@@ -389,6 +424,13 @@ PDF rendering: no LaTeX in-container. Use pandoc → HTML (`--embed-resources`) 
 - Verify PDF/DOCX content by structured extraction (`pypdf`, `zipfile`+XML), never `strings`.
 - When an internal copy and an externally-sent copy of a document both exist, **find the sent one**.
 - Local absence of a file is not evidence it never existed — check the remote before concluding.
+- **A number with no script behind it is not a result.** Three load-bearing figures were being quoted
+  from prose alone (2.03×/0.90×, ρ 0.955); two of the three did not survive recomputation. Before
+  quoting any number, confirm a committed script writes it to a JSON.
+- **Check that a figure belongs to the configuration printed beside it.** ρ 0.955 sat next to a 20-run
+  budget while matching the 25-run one.
+- Do not compare a file against itself when verifying a reproduction — check the paths resolve to two
+  different files before believing a "byte-identical" result.
 
 ### Honest posture
 
