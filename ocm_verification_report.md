@@ -20,6 +20,18 @@ Separately, the checkout was on the wrong side of an unmerged branch: the entire
 
 ---
 
+**Session addendum — code audit.** A follow-on pass audited the analysis *code* itself (not just its
+outputs) for correctness, reproducibility, and hidden assumptions: `ocm_eval.py`, all `phase3`–`phase11`
+scripts, the six pre-refactor standalone scripts, and the build/render pipeline. Findings 14–15. The
+codebase held up well — no leakage in any published number, no unseeded randomness, no bare `except`
+— but the audit found and fixed a real reproducibility gap (`drst_mask`'s seed wasn't forwarded), a
+narrow identity-overlap leak (3 of 917 catalysts, undercounted as 2 by a naive exact-string check),
+and closed a silent-PDF-failure gap in two build scripts that mirrored one already fixed in a third.
+Fixing the reproducibility gap required re-executing `ocm_results_walkthrough.ipynb` and re-running
+`taniike_validation.py`; both are diffed against their prior outputs in finding 15.
+
+---
+
 ## 1. What reproduced
 
 **From the CSV, independently recomputed.** 92,926 × 69. Lab 89,074 (`year==2025`) / literature 3,852
@@ -65,6 +77,8 @@ pins of ≥2.0/≥1.24/≥1.3/≥4.0). That is a stronger determinism result tha
 | 12 | **The presentation asserted a withdrawn claim in four formats.** `ocm_presentation.{html,pdf,pptx,tex}` all carried "−10.6 %", "RMSE 2.133 → 1.907" and a slide titled "Prior Feature Transfer — The Winning Pipeline"; slide 5 was the row-level protocol that caused the leak. The builders hardcode this content, and none of these files appeared in SESSION_CONTEXT §6's file map. Three narration documents (~1,800 lines) matched. | Certain | **High** — a retracted result presented as current |
 | 13 | **`build_pptx.py` reported PDF export as successful when it had failed.** It checked only that the path existed, so a failed conversion left the *stale* PDF in place and still printed "Saved". `libreoffice-core` was installed without `libreoffice-impress`, so PPTX→PDF could not work at all and exited 0 while printing "source file could not be loaded". This is why the withdrawn claim survived in the PDF. | Certain | **High** |
 | 11 | **`build_worknote_render.py` silently drops every figure caption.** The work note carries its nine captions as markdown image alt-text; python-markdown emits those only into `alt=""`, invisible to any reader of the PDF. Re-rendering the work note with its own committed build script therefore produced a document with nine uncaptioned figures. Caught only by extracting text from the old and new PDFs and comparing. | Certain | Medium — it silently degrades the document sent to a collaborator |
+| 14 | **A code-level audit of `ocm_eval.py`, `phase3`–`phase11`, the six pre-refactor scripts, and the build pipeline** found: `drst_mask`'s `seed` was never forwarded from `run_fold` (every "seed" in a PFT run shared one DRST subsample — verified zero blast radius on any published JSON, but real blast radius on `ocm_results_walkthrough.ipynb`); a narrow lab↔literature identity leak (3 of 917 catalysts, not 2 — the exact-string check used to first estimate this missed a case differing only by float-representation noise, 9.999999999 vs 10.0, caught once catalyst identity was rounded); `phase7_prep_ood.py`'s leakage guards were bare `assert`, stripped under `python -O`; `taniike_validation.json` (the most-cited JSON in the project) stored no `s1_kind` field, so Parts A/B's Stage-1 treatment was recoverable only from source; `build_progress_report_render.py`/`build_worknote_render.py` printed "PDF FAILED"/"chromium not found" and then exited 0 regardless — the identical silent-success-on-failure bug fixed in `build_pptx.py` last session, missed in its two siblings; `tau1_sweep.py` used the same leaky global-scaler/global-DRST pattern as `qn_tradeoff.py` with zero caveat; and `ocm_ch9_ch10_script.md` asserted numbers were "corrected, leak-free" while citing the exact `qn_tradeoff.json` figures forbidden from requoting. All fixed; see commit history on this branch. | Certain, verified against live code and data, not docstrings | Mixed — one **High** (drst_mask seed), rest Medium/Low |
+| 15 | **Re-running `taniike_validation.py` to add the `s1_kind` provenance field (#14) surfaced genuine floating-point run-to-run drift**, unrelated to that edit: one of 78 stored configs (`D_qn_ablation/grouped/qn_joint`, seed=1) differs from the previously-committed JSON by 1e-7–5e-6 in every derived field (RMSE, Spearman, R², MAE) — six-plus significant figures preserved, no conclusion affected. Confirmed the edit itself never touched Part D's code (diff hunks are confined to Parts A and B). Most likely cause: LightGBM/XGBoost's `n_jobs=-1` non-associative multi-threaded reduction order under the concurrent system load this session was running at the time, not a logic defect — but it means the "byte-identical across 268+ fields" reproduction claimed for phase8/9/10 last session is empirically true, not a universal guarantee of this pipeline. | Certain the drift exists and is isolated to this one config; likely (not certain) that thread-scheduling under load is the cause | Low — six orders of magnitude below reported precision, no conclusion depends on it |
 
 All ten are fixed in this branch except where noted as informational.
 

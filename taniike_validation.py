@@ -170,6 +170,15 @@ for proto, mkfolds in [('grouped', grouped_folds), ('row', row_folds)]:
             log(f"  A {proto:7s} {name:13s} seed={s:2d}  RMSE(foldmean)={r['rmse_foldmean']:.3f}  "
                 f"spearman_max={r['spearman_max']:.3f}  enrich@10%={r['enrichment_top10pct']:.2f}x")
         A[f'{proto}/{name}'] = {
+            # Provenance, so this JSON alone answers "which Stage-1 treatment produced this number"
+            # without having to read the source: model is always 'pft' except for the baseline row,
+            # where Stage 1 is never reached at all (s1_kind/use_filter are meaningless and stored as
+            # null). For every PFT row here, s1_kind='qn_joint' -- Stage 1 sees literature TOGETHER
+            # WITH the fold's lab training rows; under row-level folds this is the leakage channel
+            # documented in ocm_eval.stage1_data.
+            'model': kw['model'],
+            's1_kind': kw.get('s1_kind'),
+            'use_filter': kw.get('use_filter') if kw['model'] == 'pft' else None,
             'per_seed': runs,
             'rmse_foldmean_mean': float(np.mean([r['rmse_foldmean'] for r in runs])),
             'rmse_foldmean_std': float(np.std([r['rmse_foldmean'] for r in runs], ddof=1)),
@@ -199,6 +208,9 @@ for el, mask_lab in lab_has.items():
         yp = run_fold(tr, te, 42, **kw)
         r = row_metrics(y_lab[te], yp)
         r.update(cat_metrics(groups[te], y_lab[te], yp))
+        r['model'] = kw['model']
+        r['s1_kind'] = kw.get('s1_kind')
+        r['use_filter'] = kw.get('use_filter') if kw['model'] == 'pft' else None
         entry[name] = r
         log(f"  B holdout={el:2s} {name:12s} RMSE={r['rmse']:.3f} spearman_max={r['spearman_max']:.3f} "
             f"enrich@10%={r['enrichment_top10pct']:.2f}x  (n_cat={r['n_catalysts']})")

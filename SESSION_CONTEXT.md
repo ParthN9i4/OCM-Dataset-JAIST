@@ -327,15 +327,30 @@ output exists.**
 2. "Anything fit on data (scaler, DRST classifier, Stage 1, Stage 2) sees training-fold data only."
 3. "Catalyst-level metrics … are primary for the screening objective; row RMSE is secondary and must
    be labeled as such."
+4. grouped_folds only prevents a **lab** catalyst crossing train/validation — literature is
+   fold-invariant. **3 of 917 catalysts** (pure Ba, pure Ti, 10%Ba/90%La) have a near-exact
+   composition match in the literature set, so Stage-1 can still see a held-out catalyst's yield via
+   its literature twin. Close it with `run_fold(..., exclude_overlap=True)`; default `False`, so no
+   existing caller's behaviour changed when this was added. See `exclude_overlapping_lit`.
 
-**Catalyst identity** = `Preparation` + the full 65-element loading vector, pipe-joined and factorised
-→ 917 groups. **Temperature is deliberately excluded — it is a condition, not identity** (it remains a
-feature in row-level models).
+**Catalyst identity** = `Preparation` + the full 65-element loading vector, **rounded to 6 decimals**
+(guards against float32↔float64 round-trip noise — e.g. a lab row recording a nominal 10% loading as
+`9.999999999` where literature records `10.0` for the same catalyst; this rounding is what surfaced
+the 3rd overlap above, which an exact-string join missed), pipe-joined and factorised → 917 groups.
+**Temperature is deliberately excluded — it is a condition, not identity** (it remains a feature in
+row-level models).
 
 **Caveat worth knowing:** six pre-refactor scripts do **not** import `ocm_eval` and carry their own
 pipeline copies — `taniike_validation.py` (the file it was extracted *from*),
 `feedback_experiments.py`, `qn_tradeoff.py`, `tau1_sweep.py`, `verify_drst_kmm.py`,
-`pft_stage1_all_vs_filtered.py`. Changes to the shared protocol will not propagate to them.
+`pft_stage1_all_vs_filtered.py`. Changes to the shared protocol will not propagate to them. All six
+carry their own copy of the global-scaler/global-DRST-classifier pattern (row-level KFold, both fit
+once outside any fold) rather than `ocm_eval`'s per-fold reference implementation — deliberately
+preserved as a historical record, not a bug to fix. `qn_tradeoff.py` and `tau1_sweep.py` both carry an
+explicit **SUPERSEDED** banner; `feedback_experiments.py`'s numbers are labeled row-level/superseded
+downstream in `ocm_ch9_ch10_script.md`. `taniike_validation.json`'s Part A/B entries now store
+`model`/`s1_kind`/`use_filter` explicitly (added this session — purely additive, verified against the
+prior JSON with every existing numeric field bit-identical except one config, see §8's noise note).
 
 ### Documents
 
@@ -454,6 +469,13 @@ PDF rendering: no LaTeX in-container. Use pandoc → HTML (`--embed-resources`) 
   budget while matching the 25-run one.
 - Do not compare a file against itself when verifying a reproduction — check the paths resolve to two
   different files before believing a "byte-identical" result.
+- **"Byte-identical across N fields" is an empirical result for that run, not a guaranteed property of
+  the pipeline.** phase8/phase9/phase10 reproduced to machine precision across a library-version jump;
+  re-running `taniike_validation.py` afterward found one of 78 stored configs (`D_qn_ablation/
+  grouped/qn_joint`, seed=1) drifted by 1e-7–5e-6 in every derived field from the same source under
+  concurrent system load — six-plus significant figures preserved, no conclusion affected, most likely
+  LightGBM/XGBoost's `n_jobs=-1` non-associative multi-threaded reduction order. Diff every re-run
+  rather than assuming determinism from a prior success.
 
 ### Honest posture
 
