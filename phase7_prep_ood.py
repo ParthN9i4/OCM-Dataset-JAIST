@@ -52,7 +52,8 @@ grp = d.dl_lab.groupby(d.groups)
 lab_df = grp.agg(**{c: (c, 'first') for c in elements}, y_max=(TARGET, 'max'))
 X_lab = lab_df[elements].values.astype(float); y_lab = lab_df['y_max'].values
 lab_n_meas = grp.size().values
-assert d.dl_lab.Preparation.nunique() == 1, "lab is expected to be single-preparation"
+if d.dl_lab.Preparation.nunique() != 1:
+    raise AssertionError("lab is expected to be single-preparation")
 
 # ---- literature compositions, split by preparation ----
 lit_id = d.dl_lit[['Preparation'] + elements].astype(str).agg('|'.join, axis=1)
@@ -72,7 +73,8 @@ T1 = np.where(is_imp & ~dup)[0]          # impregnation literature  -> source sh
 T2 = np.where(~is_imp & ~dup)[0]         # non-impregnation         -> source + preparation shift
 TRAIN_LIT = np.where(is_imp & ~dup)[0]   # impregnation literature usable as extra training for T2
 log(f"T1 impregnation-lit = {len(T1)} | T2 non-impregnation-lit = {len(T2)} | lab = {len(y_lab)}")
-assert len(set(T1) & set(T2)) == 0
+if len(set(T1) & set(T2)) != 0:
+    raise AssertionError("T1 (impregnation lit) and T2 (non-impregnation lit) must be disjoint")
 
 def metrics(yt, yp, ids):
     m = cat_metrics(ids, yt, yp)
@@ -96,11 +98,13 @@ def run(test_idx, config, seed, y_lab_use=None):
     Xtr, ytr = sc.transform(X_lab), yl
     Xte = sc.transform(X_lit[test_idx])
     if config == 'C2_merge':                       # impregnation literature as extra training rows
-        assert len(set(test_idx) & set(TRAIN_LIT)) == 0, "C2 would leak into this test set"
+        if len(set(test_idx) & set(TRAIN_LIT)) != 0:
+            raise AssertionError("C2 would leak into this test set")
         Xtr = np.vstack([Xtr, sc.transform(X_lit[TRAIN_LIT])])
         ytr = np.concatenate([ytr, y_lit[TRAIN_LIT]])
     elif config == 'C3_prior':                     # impregnation-literature rank prior as a feature
-        assert len(set(test_idx) & set(TRAIN_LIT)) == 0, "C3 would leak into this test set"
+        if len(set(test_idx) & set(TRAIN_LIT)) != 0:
+            raise AssertionError("C3 would leak into this test set")
         r = rankdata(y_lit[TRAIN_LIT], method='average') / (len(TRAIN_LIT) + 1)
         pre = xgb.XGBRegressor(**xgb_params(seed)).fit(sc.transform(X_lit[TRAIN_LIT]), r)
         Xtr = np.hstack([Xtr, pre.predict(Xtr).reshape(-1, 1)])

@@ -82,7 +82,11 @@ def add_text(slide, text, x, y, w, h, size=14, bold=False, color=BLACK,
 def add_img(slide, fname, x, y, w, h=None):
     path = ROOT / fname
     if not path.exists():
-        return
+        # A missing figure used to leave a silent gap on the slide with no warning anywhere in the
+        # build output. A slide referencing the wrong/renamed/retired figure should fail the build,
+        # not ship with a blank hole where a chart was supposed to be.
+        raise FileNotFoundError(f"add_img: {fname} not found at {path} -- fix the reference or "
+                                 f"regenerate the figure before rebuilding the deck")
     if h:
         slide.shapes.add_picture(str(path), x, y, w, h)
     else:

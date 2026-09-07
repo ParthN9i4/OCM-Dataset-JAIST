@@ -43,16 +43,19 @@ if n_imgs:
 print(f"wrote {HTML} ({os.path.getsize(HTML) // 1024} KB, {n_imgs} figures)")
 
 # ---- PDF (headless Chromium; no LaTeX toolchain in-container) --------------------------------
-if os.path.exists(CHROME):
-    r = subprocess.run([CHROME, '--headless', '--no-sandbox', '--disable-gpu',
-                        f'--print-to-pdf={PDF}', '--no-pdf-header-footer',
-                        os.path.abspath(HTML)], capture_output=True, text=True, timeout=180)
-    if os.path.exists(PDF):
-        print(f"wrote {PDF} ({os.path.getsize(PDF) // 1024} KB)")
-    else:
-        print("PDF FAILED:", r.stderr[-500:])
-else:
-    print("chromium not found at", CHROME)
+# Delete first and require a NEW file to exist afterward: printing success whenever the output path
+# merely EXISTS is the exact silent-failure bug build_pptx.py's PDF export had (a stale PDF from a
+# previous run would otherwise pass for this run's output with no warning). Fail loudly instead.
+if os.path.exists(PDF):
+    os.remove(PDF)
+if not os.path.exists(CHROME):
+    raise SystemExit(f"chromium not found at {CHROME} -- cannot export PDF")
+r = subprocess.run([CHROME, '--headless', '--no-sandbox', '--disable-gpu',
+                    f'--print-to-pdf={PDF}', '--no-pdf-header-footer',
+                    os.path.abspath(HTML)], capture_output=True, text=True, timeout=180)
+if not os.path.exists(PDF):
+    raise SystemExit(f"PDF export FAILED (no file produced): {r.stderr[-800:]}")
+print(f"wrote {PDF} ({os.path.getsize(PDF) // 1024} KB)")
 
 # ---- DOCX ------------------------------------------------------------------------------------
 pypandoc.convert_file(MD, 'docx', outputfile=DOCX, extra_args=['--resource-path=.'])

@@ -1,3 +1,13 @@
+"""
+*** SUPERSEDED — DO NOT QUOTE THESE NUMBERS WITHOUT THIS CAVEAT ***
+Pre-refactor script, does not import ocm_eval.py. Uses a SINGLE GLOBAL StandardScaler and a SINGLE
+GLOBAL DRST domain classifier fit once on the whole lab set before the row-level KFold loop even
+starts (both refit per-fold in ocm_eval.py's leak-proof reference implementation), plus a row-level
+KFold split (a catalyst can appear in both train and validation). This sweeps the DRST threshold tau
+to justify tau=0.30 as a diagnostic, not to report a headline number. Its own figure,
+fig_pft_tau1_sweep.png, is cited in ocm_ch9_ch10_script.md and ocm_feedback_responses.md and should
+carry this caveat wherever it appears. See ocm_eval.py's PROTOCOL RULES for the leak-proof standard.
+"""
 import json, warnings, time; warnings.filterwarnings('ignore')
 import numpy as np, pandas as pd
 import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt

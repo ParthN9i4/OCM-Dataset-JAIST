@@ -22,7 +22,14 @@ def caption(m):
     return f'<figure><img alt="{alt}" src="{src}"><figcaption>{inner}</figcaption></figure>'
 
 
-body, n_caps = re.subn(r'<img alt="([^"]*)" src="([^"]+)"\s*/?>', caption, body)
+n_imgs_before = len(re.findall(r'<img\b', body))
+body, n_caps = re.subn(r'<img alt="([^"]*)" src="([^"]+)"(?:\s+title="[^"]*")?\s*/?>', caption, body)
+if n_caps != n_imgs_before:
+    raise SystemExit(
+        f"caption promotion matched {n_caps} of {n_imgs_before} <img> tag(s) in the rendered "
+        f"markdown -- {n_imgs_before - n_caps} image(s) would silently keep an invisible alt="" "
+        f"caption. Markdown likely emitted an <img> attribute/ordering this regex doesn't expect; "
+        f"inspect it and extend the regex rather than widening this check.")
 print(f"promoted {n_caps} figure captions to visible <figcaption>")
 
 # inline <img src="fig.png"> as base64 data URIs
@@ -56,22 +63,19 @@ html = f"<!doctype html><html><head><meta charset='utf-8'><style>{CSS}</style></
 open(HTML, 'w').write(html)
 print(f"wrote {HTML} ({os.path.getsize(HTML)//1024} KB)")
 
-if os.path.exists(CHROME):
-    r = subprocess.run([CHROME, '--headless', '--no-sandbox', '--disable-gpu',
-                        f'--print-to-pdf={PDF}', '--no-pdf-header-footer',
-                        os.path.abspath(HTML)], capture_output=True, text=True, timeout=120)
-    if os.path.exists(PDF):
-        print(f"wrote {PDF} ({os.path.getsize(PDF)//1024} KB)")
-    else:
-        print("PDF FAILED:", r.stderr[-500:])
-else:
-    print("chromium not found at", CHROME)
+if os.path.exists(PDF):
+    os.remove(PDF)
+if not os.path.exists(CHROME):
+    raise SystemExit(f"chromium not found at {CHROME} -- cannot export PDF")
+r = subprocess.run([CHROME, '--headless', '--no-sandbox', '--disable-gpu',
+                    f'--print-to-pdf={PDF}', '--no-pdf-header-footer',
+                    os.path.abspath(HTML)], capture_output=True, text=True, timeout=120)
+if not os.path.exists(PDF):
+    raise SystemExit(f"PDF export FAILED (no file produced): {r.stderr[-800:]}")
+print(f"wrote {PDF} ({os.path.getsize(PDF)//1024} KB)")
 
 # ---- editable DOCX via pandoc (pypandoc) ----
-try:
-    import pypandoc
-    pypandoc.convert_file(MD, 'docx', outputfile='ocm_worknote_taniike.docx',
-                          extra_args=['--resource-path=.', '--toc', '--toc-depth=2'])
-    print(f"wrote ocm_worknote_taniike.docx ({os.path.getsize('ocm_worknote_taniike.docx')//1024} KB)")
-except Exception as e:
-    print("docx skipped:", e)
+import pypandoc
+pypandoc.convert_file(MD, 'docx', outputfile='ocm_worknote_taniike.docx',
+                      extra_args=['--resource-path=.', '--toc', '--toc-depth=2'])
+print(f"wrote ocm_worknote_taniike.docx ({os.path.getsize('ocm_worknote_taniike.docx')//1024} KB)")

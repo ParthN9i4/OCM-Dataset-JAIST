@@ -10,6 +10,13 @@ PROTOCOL RULES (established after Prof. Taniike's validation round — see SESSI
 - Catalyst-grouped CV is the DEFAULT protocol. Row-level CV exists only for comparison with
   historical numbers and must always be labeled as such.
 - Anything fit on data (scaler, DRST classifier, Stage 1, Stage 2) sees training-fold data only.
+- grouped_folds prevents a LAB catalyst from crossing train/validation, but literature is
+  fold-invariant: a small number of lab catalysts (3 of 917, verified) have a near-exact composition
+  match in the literature set. Stage-1 can still see a held-out catalyst's yield via that literature
+  twin unless the caller passes run_fold(..., exclude_overlap=True); default is False (no existing
+  caller currently sets it — none has needed to, since the only two ocm_eval-based callers,
+  catalyst_level.py and grouped_tuning.py, only ever run model='baseline', which never reaches
+  literature at all). See exclude_overlapping_lit for the mechanism.
 - Catalyst-level metrics (max-yield Spearman, enrichment@10%, precision@20) are primary for the
   screening objective; row RMSE is secondary and must be labeled as such. Each (catalyst,
   temperature) cell holds up to 27 measurements under settings this file does not record
@@ -29,6 +36,8 @@ Usage:
     from ocm_eval import Data, grouped_folds, row_folds, run_fold, run_cv, lgb_params, xgb_params
     d = Data.load()
     res = run_cv(d, grouped_folds(d, seed=0), seed=0, model='baseline')
+    # to also close the narrow lab<->literature identity overlap noted above:
+    res = run_cv(d, grouped_folds(d, seed=0), seed=0, model='pft', exclude_overlap=True)
 """
 import numpy as np
 import pandas as pd
@@ -53,6 +62,8 @@ class Data:
     groups: np.ndarray            # catalyst id (int code) per lab row; 917 unique
     n_cat: int
     features: list
+    lab_cat_key: np.ndarray = field(default=None)   # str catalyst-identity key per GROUP id, len n_cat
+    lit_cat_key: np.ndarray = field(default=None)   # str catalyst-identity key per LITERATURE ROW
     dl_lab: pd.DataFrame = field(repr=False, default=None)
     dl_lit: pd.DataFrame = field(repr=False, default=None)
 
@@ -61,17 +72,32 @@ class Data:
         df = pd.read_csv(path)
         dl_lab = df[df.year == 2025].reset_index(drop=True)
         dl_lit = df[df.year <= 2019].reset_index(drop=True)
+        # The two filters must partition the file with nothing left over. True today only because no
+        # row's year falls in 2020-2024; a future data refresh that adds one there would otherwise be
+        # silently dropped from both frames with no error and no visible symptom.
+        assert len(dl_lab) + len(dl_lit) == len(df), (
+            f"year filters cover {len(dl_lab) + len(dl_lit)} of {len(df)} rows -- "
+            f"a row with year outside {{2025}} U (-inf, 2019] now exists; update the filters")
         el = [c for c in df.columns if c not in ['Preparation', 'Temperature_C', TARGET, 'year']]
         le = LabelEncoder().fit(df.Preparation)
         dl_lab['prep_enc'] = le.transform(dl_lab.Preparation)
         dl_lit['prep_enc'] = le.transform(dl_lit.Preparation)
         feats = ['Temperature_C', 'prep_enc'] + el
-        # catalyst identity = preparation + full element-loading vector (temperature is a condition)
-        cat_str = dl_lab[['Preparation'] + el].astype(str).agg('|'.join, axis=1)
+        # Catalyst identity = preparation + full element-loading vector (temperature is a condition).
+        # Rounded before the string join: raw floats carry float32<->float64 round-trip noise (verified
+        # on this file -- e.g. a nominal 10% loading stored as 9.999999999 in one row and 10.0 in
+        # another for the SAME chemical catalyst) that would otherwise let a value like -0.0 vs 0.0, or
+        # noise below the 6th decimal, silently fragment one catalyst into two pd.factorize groups.
+        # Verified: rounding to 6 decimals still yields exactly 917 lab groups on the current data.
+        cat_str = dl_lab[['Preparation'] + el].round(6).astype(str).agg('|'.join, axis=1)
         groups, uniques = pd.factorize(cat_str)
+        # Same identity key for literature rows, used only by exclude_overlapping_lit -- literature
+        # itself is never grouped into folds (there is exactly one "everyone's literature" pool).
+        lit_cat_key = dl_lit[['Preparation'] + el].round(6).astype(str).agg('|'.join, axis=1).values
         return cls(X_lab=dl_lab[feats].values.astype(float), y_lab=dl_lab[TARGET].values,
                    X_lit=dl_lit[feats].values.astype(float), y_lit=dl_lit[TARGET].values,
                    groups=groups, n_cat=len(uniques), features=feats,
+                   lab_cat_key=np.asarray(uniques), lit_cat_key=lit_cat_key,
                    dl_lab=dl_lab, dl_lit=dl_lit)
 
 
@@ -111,6 +137,27 @@ def row_folds(d: Data, seed=0, n_folds=5):
     return list(KFold(n_folds, shuffle=True, random_state=seed).split(d.X_lab))
 
 
+def exclude_overlapping_lit(d: Data, va, lit_mask=None):
+    """Boolean keep-mask over d.X_lit/d.y_lit (or, if `lit_mask` is given, over the subset already
+    addressed by it, positionally) that excludes any literature row whose catalyst-identity key
+    exactly matches a lab catalyst held out in `va`.
+
+    Why this exists: grouped_folds keeps a catalyst's lab rows out of both train and validation in the
+    same fold, but literature is fold-invariant — d.X_lit/d.y_lit are identical for every fold. A
+    handful of lab catalysts also appear, essentially verbatim, in the literature set (verified: 3 of
+    917 on the current data — pure Ba, pure Ti, and 10%Ba/90%La; the third is only found because
+    catalyst identity is built from ROUNDED values, see Data.load — the lab row records a nominal 10%
+    Ba loading as 9.999999999, literature records it as 10.0). Without this filter, Stage-1 can still
+    see a held-out catalyst's yield behaviour through its literature twin even though the catalyst
+    itself never appears in the lab training rows for that fold.
+
+    Opt-in via run_fold(..., exclude_overlap=True); default False, so no existing caller's behaviour
+    changes."""
+    va_keys = set(d.lab_cat_key[np.unique(d.groups[va])])
+    keep = ~np.isin(d.lit_cat_key, list(va_keys))
+    return keep if lit_mask is None else keep[lit_mask]
+
+
 # ---------------------------------------------------------------------------- pipeline pieces
 def drst_mask(Xlab_tr_sc, Xlit_sc, tau=0.30, seed=42):
     """Domain classifier trained on TRAIN-fold lab rows only -> lab-like literature mask."""
@@ -138,18 +185,33 @@ def stage1_data(kind, Xlit_f, ylit_f, Xlab_tr, ylab_tr):
 
 
 def run_fold(d: Data, tr, va, seed, model, s1_kind='qn_joint', lit_X=None, lit_y=None,
-             use_filter=True, lgbp=None, xgbp=None):
-    """Train on lab[tr] (+ literature per config), predict lab[va]. Scaler + DRST are train-only."""
+             use_filter=True, lgbp=None, xgbp=None, exclude_overlap=False):
+    """Train on lab[tr] (+ literature per config), predict lab[va]. Scaler + DRST are train-only.
+    exclude_overlap=True additionally drops literature rows that are an exact catalyst-identity match
+    for a catalyst held out in `va` (see exclude_overlapping_lit) — default False, so this changes no
+    existing caller's behaviour. Raises if combined with a custom lit_X/lit_y override, since this
+    function has no way to map an already-transformed override back to catalyst identity; filter such
+    an override yourself with exclude_overlapping_lit(d, va, lit_mask=...) before passing it in."""
     sc = StandardScaler().fit(d.X_lab[tr])
     Xtr, Xva = sc.transform(d.X_lab[tr]), sc.transform(d.X_lab[va])
     lgbp = lgbp or lgb_params(seed); xgbp = xgbp or xgb_params(seed)
     if model == 'baseline':
         m = lgb.LGBMRegressor(**lgbp).fit(Xtr, d.y_lab[tr])
         return m.predict(Xva)
-    Xl = sc.transform(lit_X if lit_X is not None else d.X_lit)
-    yl = lit_y if lit_y is not None else d.y_lit
+    if exclude_overlap:
+        if lit_X is not None or lit_y is not None:
+            raise ValueError("exclude_overlap=True cannot be combined with a custom lit_X/lit_y "
+                              "override; filter it yourself with exclude_overlapping_lit(d, va, "
+                              "lit_mask=...) and pass the result in as lit_X/lit_y instead")
+        keep = exclude_overlapping_lit(d, va)
+        lit_X_raw, lit_y_raw = d.X_lit[keep], d.y_lit[keep]
+    else:
+        lit_X_raw = lit_X if lit_X is not None else d.X_lit
+        lit_y_raw = lit_y if lit_y is not None else d.y_lit
+    Xl = sc.transform(lit_X_raw)
+    yl = lit_y_raw
     if use_filter:
-        m = drst_mask(Xtr, Xl)
+        m = drst_mask(Xtr, Xl, seed=seed)
         Xl, yl = Xl[m], yl[m]
     Xs1, ys1 = stage1_data(s1_kind, Xl, yl, Xtr, d.y_lab[tr])
     pre = xgb.XGBRegressor(**xgbp).fit(Xs1, ys1)

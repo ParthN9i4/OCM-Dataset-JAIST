@@ -10,7 +10,14 @@
 # Verbatim Presenter Script — Chapters 9 & 10
 
 First-person spoken script. Every claim is tied to a specific number or reason — nothing vague.
-Numbers reflect the **corrected, leak-free** analysis (see `qn_tradeoff.json`, `feedback_results.json`).
+
+**Correction (this fixes a self-contradiction from an earlier edit of this file).** The numbers in
+the first block below are the **historical, row-level, superseded** analysis — kept only so this
+script's narration matches what `ocm_walkthrough.ipynb` actually prints. `qn_tradeoff.json` and
+`feedback_results.json` are the exact sources that produced them, and both are explicitly superseded
+(`qn_tradeoff.py`'s own docstring: `*** SUPERSEDED — DO NOT QUOTE THESE NUMBERS ***`;
+`SESSION_CONTEXT.md` §6: "never requote 6.531 / 6.772 / 6.047 / 3.615"). An earlier version of this
+file called them "corrected, leak-free" — that was backwards, and is fixed below.
 
 Key numbers to keep straight. **Everything in this first block is ROW-LEVEL and superseded** — it is
 what the notebook prints, not what we now believe (see 9.2):
@@ -19,15 +26,22 @@ what the notebook prints, not what we now believe (see 9.2):
 - 10-seed repeat: baseline **2.121 ± 0.006** vs PFT **1.909 ± 0.002**, PFT wins **10/10**, paired-t **p = 3.9×10⁻¹⁵**.
   (Ten seeds do not rescue this: every seed used the same leaky split.)
 - True held-out 20% lab (never trained on): baseline **2.097** → PFT **1.892** (R² 0.763).
+- OOD, row-level (`qn_tradeoff.json`, **also superseded, do not requote**): baseline RMSE **6.531**;
+  transfer configs **6.047–6.772**; the earlier "3.60 (−45%)" reproduces only (**3.615**) when the
+  prior is trained on the OOD test rows themselves — that was the leak, not a real result.
 
-**The numbers that supersede them — catalyst-grouped 5-fold CV:**
+**The numbers that supersede them — catalyst-grouped 5-fold CV, formulation B:**
 - Baseline **2.9425**; PFT-filtered **2.9955** (**+1.8% worse**); PFT-all-literature **2.9817**.
-- Screening (composition-only, formulation B): Spearman **0.724**, enrichment **3.77×** on the 771
-  catalysts of comparable measurement effort (95% CI **3.04–4.89×**).
-- **OOD (corrected, leak-free)**: baseline **6.53**; honest transfer configs **6.05–6.77**. The old
-  "3.60 (−45%)" was **leakage** — it reproduces (3.62) *only* when the prior is trained on the OOD
-  test rows themselves.
-- QN trade-off: quantile normalisation **improves in-distribution CV** and **slightly worsens OOD**.
+- Screening (composition-only): Spearman **0.724**, enrichment **3.77×** on the 771 catalysts of
+  comparable measurement effort (95% CI **3.04–4.89×**).
+- **OOD, corrected (`phase7_prep_ood.json` — a different, catalyst-level metric, not a row RMSE):**
+  lab-only baseline on non-impregnation literature scores Spearman **0.2385** (enrichment **0.42×**,
+  worse than random); a plain merge lifts that to **0.3883** (enrichment **1.34×**); the two-stage
+  prior-feature construction underperforms the plain merge at **0.3181** (enrichment **0.42×**). The
+  value here is the *data*, not the two-stage machinery.
+- QN trade-off: moves RMSE by 0.001–0.023 across label treatments, inside run-to-run noise at 3
+  seeds (`taniike_validation.json` → `D_qn_ablation`) — droppable with no measurable penalty, as
+  Prof. Taniike's own question anticipated.
 
 ---
 
