@@ -2,7 +2,7 @@
 
 **From:** Parth Nagar
 **To:** Dr. M S Srinath
-**Date:** 31 August 2026
+**Date:** 7 September 2026
 **Covers:** all work from the start of the project to today, including everything done after Prof. Taniike's review
 
 ---
@@ -205,7 +205,26 @@ We caught all of these before sending anything. Every number in the corrected no
 
 ---
 
-## 9. What comes next
+## 9. A second check, done afterwards
+
+We then checked every number in our own handover document against the data itself. We did not trust the document. We recomputed each figure from the raw file, or re-read it from the stored result files.
+
+Most numbers held. Every headline figure came out exactly right. We also re-ran two whole experiments from scratch. Both reproduced the stored results digit for digit, even though the software libraries had moved on several versions in between.
+
+Three numbers had no source at all. No script computed them. Two of the three were wrong.
+
+1. **A measurement-budget figure.** We had told Prof. Taniike that measuring 20 runs per catalyst instead of 135 reproduces the full ranking at 0.955. Recomputing it gives **0.949**. The 0.955 figure belongs to a 25-run plan, not a 20-run one. We also found the plan only applies to 759 catalysts, not the 811 we quoted. All three numbers are corrected in the note.
+2. **A test about the 27 settings.** We had claimed a statistical signature proved the 27 rows in each cell are a complete set rather than a truncated one. No script ever computed that signature. The conclusion is right, but we had missed a much simpler proof: **104 cells hold more than 27 rows**, which a "keep only the top 27" export could not produce. We now use the count.
+
+**A discovery about the file itself.** We wanted to know whether the 27 rows in each cell are 27 different reaction conditions, or 27 samples taken over time from a single run. This matters. If it is time, then a catalyst's best number is what it does when fresh, not what it sustains. Two earlier attempts to settle it failed. We now know why. **The file stores every cell sorted from highest yield to lowest.** Row order records rank, not the order in which the measurements were taken. So no further analysis of this file can answer the question. Only the lab can. The work note already asks.
+
+**We bounded the risk instead.** We tested what would change if the question were answered the way we did not expect. We ranked catalysts by their worst measurement rather than their best. The two rankings do disagree at the top: only 7 of the top 20 catalysts are the same. But a model trained on the best measurement still ranks catalysts nearly as well when judged against the worst. It loses 0.017 in rank correlation, which is less than we gain by simply averaging over random seeds. It still finds good catalysts about 4 times faster than random choice, whichever way we judge it.
+
+**The answer changes the labels. It does not change which catalysts we would tell the lab to make.** So this question is worth asking, but the campaign does not have to wait for the reply.
+
+---
+
+## 10. What comes next
 
 1. **Send the corrected work note and reply to Prof. Taniike.** Both are ready.
 2. **Run the prospective validation.** He offered to synthesise our candidates. This is the strongest path to publication.
@@ -213,12 +232,13 @@ We caught all of these before sending anything. Every number in the corrected no
 
 ---
 
-## 10. What we can claim honestly
+## 11. What we can claim honestly
 
 We can claim three things.
 
 1. **A validation finding.** We documented a case where a literature-transfer method looked strong under standard cross-validation and failed under catalyst-grouped validation. We identified the mechanism. Random splits are common in this field, so this is worth reporting.
 2. **A working screening tool.** The model ranks unseen catalysts well enough to guide synthesis.
 3. **A scoping result.** Literature data does not help where our own coverage is good. It does help where our coverage is absent.
+4. **A robustness result.** Our recommendation does not depend on an open question about how the data was collected. We tested it both ways and the shortlist barely moves.
 
 We cannot claim that PFT improves prediction. We tested it properly, and it does not.

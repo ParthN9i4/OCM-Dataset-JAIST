@@ -289,7 +289,7 @@ add_text(s,
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "How We Measure Success — Asymmetric 5-Fold CV", chapter="Chapter 3")
+slide_title_bar(s, "How We Measure Success — Catalyst-Grouped 5-Fold CV", chapter="Chapter 3")
 nav_bar(s, 5, TOTAL)
 
 # Left: rule + reasoning
@@ -297,39 +297,39 @@ add_rect(s, Inches(0.4), Inches(1.2), Inches(7.0), Inches(0.42), fill=NAVY)
 add_text(s, "The validation rule", Inches(0.55), Inches(1.23),
          Inches(6.7), Inches(0.36), size=13, bold=True, color=WHITE)
 bullets(s, [
-    "Our 89,074 samples split into 5 folds",
-    "Training fold = 4/5 of lab data + any literature",
-    "Validation fold = 1/5 of lab data only",
+    "The 89,074 rows are only 917 DISTINCT CATALYSTS",
+    "Folds split by catalyst — all rows of a catalyst in one fold",
+    "Validation fold = catalysts the model has never seen",
     "Literature never appears in validation",
 ], Inches(0.45), Inches(1.7), Inches(6.9), Inches(0.4), size=12, spacing=0.4)
 
 add_rect(s, Inches(0.4), Inches(3.65), Inches(7.0), Inches(0.42), fill=ACCENT)
-add_text(s, "Why asymmetric?", Inches(0.55), Inches(3.68),
+add_text(s, "Why grouped, and not by row", Inches(0.55), Inches(3.68),
          Inches(6.7), Inches(0.36), size=13, bold=True, color=WHITE)
 bullets(s, [
-    "The question: how well does the model predict OUR experiments?",
-    "Mixing literature into validation would dilute the answer",
-    "Same CV harness used for every method — only training data changes",
+    "A row split puts the SAME catalyst in train and test",
+    "The model then recalls catalysts instead of predicting new ones",
+    "Prof. Taniike raised exactly this — grouped CV is now the default",
 ], Inches(0.45), Inches(4.15), Inches(6.9), Inches(0.4), size=12, spacing=0.4)
 
 # Right: metric box + fold diagram
 add_rect(s, Inches(7.7), Inches(1.2), Inches(5.3), Inches(1.4),
          fill=RGBColor(0xE8, 0xF5, 0xE9), line=GREEN)
-add_text(s, "Metric: RMSE",
+add_text(s, "Primary metric: catalyst-level",
          Inches(7.85), Inches(1.3), Inches(5.0), Inches(0.4),
          size=14, bold=True, color=GDARK)
-add_text(s, "in units of percentage points of C₂ yield.\nAn RMSE of 2.1 means typical error ≈ 2 pp.",
+add_text(s, "Spearman on each catalyst's best yield, and enrichment@10%.\nRow RMSE is secondary — 19.9% of its variance is unreachable.",
          Inches(7.85), Inches(1.75), Inches(5.0), Inches(0.75),
          size=11, color=DGRAY)
 
 # Fold visualization
-add_text(s, "5-fold split (lab data, n=89,074)",
+add_text(s, "5-fold split by CATALYST (917 groups)",
          Inches(7.7), Inches(2.85), Inches(5.3), Inches(0.4),
          size=12, bold=True, color=NAVY)
 
 fold_colors = [ACCENT, ACCENT, RED, ACCENT, ACCENT]
-fold_labels = ["fold 1\ntrain", "fold 2\ntrain", "fold 3\nVAL",
-               "fold 4\ntrain", "fold 5\ntrain"]
+fold_labels = ["~183\ncatalysts", "~183\ncatalysts", "~183\nUNSEEN",
+               "~183\ncatalysts", "~183\ncatalysts"]
 for i, (col, lab) in enumerate(zip(fold_colors, fold_labels)):
     x = Inches(7.7) + Inches(i * 1.05)
     add_rect(s, x, Inches(3.35), Inches(1.0), Inches(0.85), fill=col)
@@ -341,9 +341,10 @@ add_text(s, "+ literature (training only, never validation)",
          size=11, italic=True, color=DGRAY, align=PP_ALIGN.CENTER)
 
 callout(s,
-        "Repeat 5 times, rotating which fold is the validation set. Report mean RMSE ± std.",
+        "Rotate the held-out fold 5 times. Every number on the following slides uses this protocol; "
+        "row-level figures appear only where they are labelled as historical.",
         Inches(7.7), Inches(5.0), Inches(5.3), Inches(0.8),
-        fill=LIGHT, border=NAVY, text_color=DGRAY, size=11, italic=True)
+        fill=LIGHT, border=NAVY, text_color=DGRAY, size=10, italic=True)
 
 # ════════════════════════════════════════════════════════════════════════════
 # SLIDE 6 — Baseline + Naive Merge (Chapter 4)
@@ -354,9 +355,9 @@ slide_title_bar(s, "Baseline + Why Naive Merging Fails", chapter="Chapter 4")
 nav_bar(s, 6, TOTAL)
 
 # Left: Step 1 + Step 2 tables
-add_text(s, "Step 1 — establish baseline",
+add_text(s, "Step 1 — establish baseline  (ROW-LEVEL CV, historical)",
          Inches(0.4), Inches(1.3), Inches(6.2), Inches(0.4),
-         size=14, bold=True, color=NAVY)
+         size=13, bold=True, color=NAVY)
 add_rect(s, Inches(0.4), Inches(1.8), Inches(6.2), Inches(0.42), fill=NAVY)
 add_text(s, "Method", Inches(0.55), Inches(1.83), Inches(4.0), Inches(0.36),
          size=12, bold=True, color=WHITE)
@@ -369,8 +370,9 @@ add_text(s, "Baseline (lab data only)",
          size=12, color=BLACK)
 add_text(s, "2.133", Inches(4.7), Inches(2.27), Inches(1.8), Inches(0.42),
          size=12, bold=True, color=BLACK, align=PP_ALIGN.CENTER)
-add_text(s, "Number every method must beat.",
-         Inches(0.4), Inches(2.85), Inches(6.2), Inches(0.4),
+add_text(s, "Row-level protocol — kept only for comparison with the published numbers. "
+            "Under catalyst-grouped CV the baseline is 2.9425.",
+         Inches(0.4), Inches(2.85), Inches(6.2), Inches(0.5),
          size=10, italic=True, color=DGRAY)
 
 add_text(s, "Step 2 — try the obvious",
@@ -394,9 +396,10 @@ add_text(s, "Naive merge (3,852 lit rows)",
          size=12, bold=True, color=BLACK)
 add_text(s, "2.241", Inches(4.7), Inches(5.02), Inches(1.8), Inches(0.42),
          size=12, bold=True, color=RDARK, align=PP_ALIGN.CENTER)
-add_text(s, "+5.4% worse than baseline.",
-         Inches(0.4), Inches(5.6), Inches(6.2), Inches(0.4),
-         size=12, bold=True, italic=True, color=RDARK)
+add_text(s, "+5.1% worse than baseline (row-level). Re-tested at catalyst level, a direct "
+            "merge again sits below the composition-only control (0.7577 vs 0.7606).",
+         Inches(0.4), Inches(5.6), Inches(6.2), Inches(0.6),
+         size=11, bold=True, italic=True, color=RDARK)
 
 # Right: explanation
 add_rect(s, Inches(7.0), Inches(1.3), Inches(6.0), Inches(0.42), fill=ACCENT)
@@ -542,7 +545,7 @@ callout(s,
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "Prior Feature Transfer — The Winning Pipeline", chapter="Chapter 7")
+slide_title_bar(s, "Prior Feature Transfer — The Method That Exposed the Leak", chapter="Chapter 7")
 nav_bar(s, 9, TOTAL)
 
 # Stage labels
@@ -610,14 +613,14 @@ line.line.color.rgb = AMBER; line.line.width = Pt(2.5)
 # Key property callout
 add_rect(s, Inches(0.4), Inches(5.65), Inches(12.5), Inches(1.45),
          fill=LIGHT, line=NAVY)
-add_text(s, "Key property — literature enters as a feature, not a label",
+add_text(s, "The design was sound. The evaluation was not.",
          Inches(0.55), Inches(5.72), Inches(12.2), Inches(0.4),
          size=13, bold=True, color=NAVY)
 add_text(s,
-         "Stage 2 NEVER sees literature labels. The 3.42 pp offset affects the VALUE of the 68th feature — which Stage 2 can calibrate: "
-         "\"when the expert says 8, my lab gets ~4.5\". It does NOT corrupt the training loss, which it could not fix. "
-         "A corrupted label can't be un-corrupted; a feature value is just another thing to learn around. "
-         "Stage 1 uses XGBoost (conservative on 782 rows); Stage 2 uses LightGBM (fast on 89,074 rows).",
+         "Literature enters as a FEATURE, never as a label, so the 3.42 pp offset cannot corrupt the training loss. That reasoning still holds. "
+         "But Stage 1 was trained on literature TOGETHER WITH the lab training rows, and under a row-level split those rows included the test "
+         "catalysts — so the prior feature partly carried each test catalyst's own measured yields. The gain was recall, not prediction. "
+         "Ruling this out is what produced the protocol on slide 5; the mechanism is named in ocm_eval.stage1_data().",
          Inches(0.55), Inches(6.12), Inches(12.2), Inches(0.9),
          size=10, color=DGRAY)
 
@@ -626,21 +629,19 @@ add_text(s,
 # ════════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 add_rect(s, 0, 0, W, H, fill=WHITE)
-slide_title_bar(s, "Results — All Five Methods at a Glance", chapter="Chapter 8")
+slide_title_bar(s, "Results — The Same Models Under Two Protocols", chapter="Chapter 8")
 nav_bar(s, 10, TOTAL)
 
-add_img(s, "fig_walkthrough_results.png", Inches(0.3), Inches(1.25), Inches(8.3))
+add_img(s, "fig_protocol_comparison.png", Inches(0.3), Inches(1.25), Inches(8.3))
 
 # Right: CV table + OOD table
-add_text(s, "Cross-validation (lab data)",
+add_text(s, "Row-level CV — HISTORICAL, leaked",
          Inches(8.8), Inches(1.3), Inches(4.2), Inches(0.4),
-         size=14, bold=True, color=NAVY)
+         size=14, bold=True, color=RDARK)
 cv_rows = [
-    ("Naive merge",        "2.241", "+5.1%",  False, True),
-    ("Baseline",           "2.133", "—",      False, False),
-    ("KMM weighted",       "2.261", "+6.0%",  False, True),
-    ("DRST (best)",        "2.127", "~0%",    False, False),
-    ("Prior FT  ★",        "1.907", "−10.6%", True,  False),
+    ("Baseline",        "2.1184", "—",      False, False),
+    ("PFT (filtered)",  "1.9120", "−9.7%",  True,  False),
+    ("PFT (all lit.)",  "1.9194", "−9.4%",  False, False),
 ]
 add_rect(s, Inches(8.8), Inches(1.75), Inches(4.2), Inches(0.4), fill=NAVY)
 for j, (h, x, w) in enumerate(zip(["Method", "RMSE", "Δ"],
@@ -661,32 +662,36 @@ for i, (m, r, d, best, worst) in enumerate(cv_rows):
     add_text(s, d, Inches(11.9), y0 + Inches(0.04), Inches(1.1), Inches(0.34),
              size=11, bold=best, color=fc, align=PP_ALIGN.CENTER)
 
-# OOD (leak-free, corrected)
-add_text(s, "OOD — leak-free (unseen lit)",
-         Inches(8.8), Inches(4.5), Inches(4.2), Inches(0.4),
-         size=14, bold=True, color=NAVY)
-add_rect(s, Inches(8.8), Inches(4.95), Inches(4.2), Inches(0.4), fill=NAVY)
-add_text(s, "Method", Inches(8.9), Inches(4.98), Inches(2.4), Inches(0.34),
-         size=11, bold=True, color=WHITE)
-add_text(s, "OOD RMSE", Inches(11.3), Inches(4.98), Inches(1.65), Inches(0.34),
-         size=11, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
-add_rect(s, Inches(8.8), Inches(5.35), Inches(4.2), Inches(0.42),
-         fill=LIGHT, line=LGRAY)
-add_text(s, "Baseline", Inches(8.9), Inches(5.4), Inches(2.4), Inches(0.34),
-         size=11, color=BLACK)
-add_text(s, "6.53", Inches(11.3), Inches(5.4), Inches(1.65), Inches(0.34),
-         size=11, color=BLACK, align=PP_ALIGN.CENTER)
-add_rect(s, Inches(8.8), Inches(5.77), Inches(4.2), Inches(0.42),
-         fill=LIGHT, line=LGRAY)
-add_text(s, "Prior FT", Inches(8.9), Inches(5.82), Inches(2.4), Inches(0.34),
-         size=11, color=BLACK)
-add_text(s, "6.77", Inches(11.3), Inches(5.82), Inches(1.65), Inches(0.34),
-         size=11, color=BLACK, align=PP_ALIGN.CENTER)
+# Catalyst-grouped — the default protocol, and the inversion
+add_text(s, "Catalyst-grouped CV — DEFAULT",
+         Inches(8.8), Inches(3.95), Inches(4.2), Inches(0.4),
+         size=14, bold=True, color=GDARK)
+add_rect(s, Inches(8.8), Inches(4.4), Inches(4.2), Inches(0.4), fill=NAVY)
+for h, x, w in zip(["Method", "RMSE", "Δ"],
+                   [Inches(8.9), Inches(10.8), Inches(11.9)],
+                   [Inches(1.85), Inches(1.0), Inches(1.1)]):
+    add_text(s, h, x, Inches(4.43), w, Inches(0.34), size=11, bold=True, color=WHITE)
+grouped_rows = [("Baseline", "2.9425", "—", False),
+                ("PFT (filtered)", "2.9955", "+1.8%", True),
+                ("PFT (all lit.)", "2.9817", "+1.3%", True)]
+for i, (m, r, dlt, worse) in enumerate(grouped_rows):
+    y0 = Inches(4.8) + Inches(i * 0.4)
+    bg = RGBColor(0xFF, 0xEB, 0xEB) if worse else LIGHT
+    add_rect(s, Inches(8.8), y0, Inches(4.2), Inches(0.4), fill=bg, line=LGRAY)
+    fc = RDARK if worse else BLACK
+    add_text(s, m, Inches(8.9), y0 + Inches(0.04), Inches(1.85), Inches(0.34),
+             size=11, color=fc)
+    add_text(s, r, Inches(10.8), y0 + Inches(0.04), Inches(1.0), Inches(0.34),
+             size=11, color=fc, align=PP_ALIGN.CENTER)
+    add_text(s, dlt, Inches(11.9), y0 + Inches(0.04), Inches(1.1), Inches(0.34),
+             size=11, color=fc, align=PP_ALIGN.CENTER)
 
-add_text(s, "OOD gain is modest & honest.  Earlier “3.60 (−45%)” was leakage "
-            "(prior saw test rows).  QN trades OOD for in-dist accuracy — see Rigour slide.",
-         Inches(8.8), Inches(6.25), Inches(4.2), Inches(0.75),
-         size=9, italic=True, color=DGRAY)
+callout(s,
+        "Same models, same data, two protocols. The published −9.7% becomes +1.8% WORSE once a "
+        "catalyst cannot appear in both train and test. The difference is leakage, not modelling.",
+        Inches(8.8), Inches(6.1), Inches(4.2), Inches(0.95),
+        fill=RGBColor(0xFF, 0xF4, 0xE5), border=RGBColor(0xE6, 0x7E, 0x22),
+        text_color=DGRAY, size=10)
 
 # ════════════════════════════════════════════════════════════════════════════
 # SLIDE 11 — SHAP Beeswarm standalone (Chapter 8)
@@ -796,29 +801,41 @@ add_rect(s, 0, 0, W, H, fill=WHITE)
 slide_title_bar(s, "Statistical Rigour & Honesty", chapter="Chapter 8")
 nav_bar(s, 13, TOTAL)
 
-# Left: 10-seed repeated runs
-add_text(s, "Repeatable across 10 random seeds",
+# Left: the headline is coverage-inflated
+add_text(s, "The headline was coverage-inflated",
          Inches(0.3), Inches(1.2), Inches(6.4), Inches(0.4),
          size=13, bold=True, color=NAVY)
-add_img(s, "fig_repeated_runs.png", Inches(0.3), Inches(1.65), Inches(6.4))
 bullets(s, [
-    "Baseline 2.121 ± 0.006  vs  PFT 1.909 ± 0.002",
-    "PFT wins 10 / 10 runs — curves never cross",
-    "Paired t  p = 3.9×10⁻¹⁵;  held-out 20%: 2.097 → 1.892",
-], Inches(0.3), Inches(4.55), Inches(6.4), Inches(0.4), size=11, spacing=0.42, color=BLACK)
+    "Cells run further contain better yields, so a score over all",
+    "917 catalysts is partly a record of which runs were finished.",
+    "All 917:        Spearman 0.767   enrichment 4.35×",
+    "Equal effort (771):  Spearman 0.724   enrichment 3.77×",
+    "Coupling removed BY MEASUREMENT: ρ(n_rows, max) +0.293 → +0.003",
+    "300 random 771-subsets give 0.767 [0.756, 0.780] — 0.724 sits",
+    "below that interval, so the drop is real, not a smaller-sample effect.",
+], Inches(0.35), Inches(1.7), Inches(6.3), Inches(0.4), size=11, spacing=0.42, color=BLACK)
 
-# Right: QN trade-off + honesty note
-add_text(s, "Quantile normalisation is a trade-off",
+# Right: the negative control that justifies enrichment as primary
+add_text(s, "The sharpest test we could devise",
          Inches(6.9), Inches(1.2), Inches(6.1), Inches(0.4),
          size=13, bold=True, color=NAVY)
-add_img(s, "fig_qn_tradeoff.png", Inches(6.9), Inches(1.65), Inches(6.1))
+bullets(s, [
+    "We retrained the model to predict HOW MANY measurements a",
+    "catalyst received. It never sees a yield.",
+    "That model reaches Spearman 0.400 against observed max yield…",
+    "…but its enrichment is 0.87× — no better than random.",
+    "Rank correlation is partly purchasable from experimental effort.",
+    "Enrichment is not. That is why enrichment is the primary metric.",
+], Inches(6.95), Inches(1.7), Inches(6.0), Inches(0.4), size=11, spacing=0.42, color=BLACK)
+
 callout(s,
-        "Honest correction: the earlier “OOD 6.53→3.60 (−45%)” was data leakage — the prior was "
-        "trained on the OOD test rows. Leak-free OOD is ≈6.0–6.8 (near baseline). QN improves "
-        "in-distribution accuracy but slightly worsens OOD.",
-        Inches(6.9), Inches(4.35), Inches(6.1), Inches(1.4),
-        fill=RGBColor(0xFF, 0xF4, 0xE5), border=RGBColor(0xE6, 0x7E, 0x22),
-        text_color=DGRAY, size=10)
+        "And the open question is bounded: ranking catalysts by their observed FLOOR instead of their "
+        "ceiling shares only 7 of the top 20, but a ceiling-trained model loses just 0.017 Spearman "
+        "against floor ground truth — less than seed-averaging alone buys — and never drops below "
+        "4.02× enrichment. The answer changes the labels, not the decision.",
+        Inches(0.35), Inches(5.15), Inches(12.6), Inches(1.5),
+        fill=RGBColor(0xE8, 0xF5, 0xE9), border=GREEN,
+        text_color=GDARK, size=11)
 
 # ════════════════════════════════════════════════════════════════════════════
 # SLIDE 14 — Critical Analysis — Per-Method Review (Chapter 9a)
@@ -881,18 +898,23 @@ slide_title_bar(s, "What's Next — Priority-Ordered", chapter="Chapter 9")
 nav_bar(s, 15, TOTAL)
 
 next_steps = [
-    ("1", "Add GHSV, CH₄:O₂, pressure to the feature set",
-     "Fixes the Y>15% ceiling and likely resolves much of the label shift too.", True),
-    ("2", "Bag the Stage-1 expert",
-     "Ensemble of XGBoost models reduces high variance from only 782 training samples.", False),
-    ("3", "Add uncertainty quantification",
-     "Conformal prediction or quantile regression — flag low-confidence picks for the experiment loop.", False),
-    ("4", "Stack DRST + KMM inside Prior FT",
-     "Run them as one integrated pipeline rather than three separate methods.", False),
-    ("5", "Neural domain adaptation (DANN, CORAL)",
-     "More powerful once the feature set is richer — currently under-powered.", False),
-    ("6", "Close the active-learning loop",
-     "Model proposes → lab measures → model retrains. Reduces label shift over time.", False),
+    ("1", "Ask JAIST for the reaction-condition columns",
+     "One email. Converts 19.9% of currently unreachable variance into modellable signal and turns "
+     "917 training examples back into 89,074.", True),
+    ("2", "Ask whether the 27 slots are conditions or time-on-stream",
+     "Provably unanswerable from the file: every cell is stored sorted by yield, so row order records "
+     "rank, not acquisition sequence. Only the lab can settle it.", True),
+    ("3", "Ask why grid coverage is incomplete",
+     "186 catalyst-temperature cells absent; only 811 of 917 catalysts have all five temperatures. "
+     "Decides whether the bias is correctable or itself informative.", False),
+    ("4", "Re-scope the campaign before reactor time is spent",
+     "20 runs per catalyst instead of 135 reproduces the full ranking at ρ = 0.949, buying ~72 "
+     "catalysts plus a control arm for the budget of 17 exhaustive ones.", False),
+    ("5", "Send the corrected work note",
+     "Complete and verified. Every number now traces to a JSON written by a committed script.", False),
+    ("6", "Run the prospective validation",
+     "Prof. Taniike offered to synthesise candidates. A shortlist is a set to test, not a league "
+     "table — the model cannot order within its own top 20.", False),
 ]
 
 col1 = next_steps[:3]
@@ -936,7 +958,7 @@ add_text(s,
          Inches(1.25), Inches(1.55), Inches(10.9), Inches(0.4),
          size=14, bold=True, color=NAVY)
 add_text(s,
-         "Can published OCM literature improve a lab-data model without harming it?",
+         "Can published OCM literature improve a lab-data model — and can we rank UNSEEN catalysts well enough to guide synthesis?",
          Inches(1.25), Inches(1.95), Inches(10.9), Inches(0.45),
          size=12, color=DGRAY)
 
@@ -945,10 +967,10 @@ add_text(s,
          Inches(1.25), Inches(2.6), Inches(10.9), Inches(0.4),
          size=14, bold=True, color=NAVY)
 findings = [
-    "Naive merging HARMS accuracy (+5.4% RMSE) — the systematic offset corrupts training.",
-    "Selective filtering (DRST / KMM) recovers about 5% improvement — independent methods agree (r=0.79).",
-    "Using literature as a PRIOR FEATURE (not a label) gives the biggest gain: −10.6% CV, confirmed 10/10 seeds (p<10⁻¹⁴) and on a held-out test.",
-    "SHAP confirms the model uses real OCM chemistry: temperature, Ba, Mn, La, Ce, and the literature prior drive predictions.",
+    "The original −9.7% gain was catalyst-identity leakage. Under catalyst-grouped CV the same models are 1.8% WORSE than baseline.",
+    "No literature-integration design beats composition alone in-domain — four pre-registered designs and a 28-family follow-up, all null.",
+    "Literature helps only where the lab has NO coverage: on non-impregnation chemistry a plain merge lifts Spearman 0.24 → 0.39 and enrichment 0.42× → 1.34×. Plain merging beats the two-stage machinery — the value is the data, not the method.",
+    "The composition-only model still screens unseen catalysts usefully: enrichment 3.77× on the equal-effort set (95% CI 3.04–4.89×), and that conclusion survives either reading of the open data question.",
 ]
 for i, txt in enumerate(findings):
     add_text(s, "•  " + txt,
@@ -963,7 +985,7 @@ add_text(s, "Next step that matters most",
          Inches(1.25), Inches(6.23), Inches(11.0), Inches(0.4),
          size=13, bold=True, color=GDARK)
 add_text(s,
-         "Add GHSV and CH₄:O₂ to the feature set — the high-yield ceiling is data-bound, not model-bound.",
+         "Ask for the reaction-condition columns. One email unlocks more than any modelling change we have tried.",
          Inches(1.25), Inches(6.6), Inches(11.0), Inches(0.4),
          size=12, color=GDARK)
 
@@ -975,18 +997,27 @@ print(f"Saved: {pptx_path}  ({pptx_path.stat().st_size // 1024} KB)")
 # ── Export to PDF via LibreOffice ─────────────────────────────────────────────
 import subprocess, shutil
 lo = shutil.which("libreoffice") or shutil.which("soffice")
+pdf = ROOT / "ocm_presentation.pdf"
 if lo:
     print("Converting to PDF via LibreOffice...")
+    # Delete first, then require a NEW file. The previous version reported success whenever the
+    # path merely existed, so a failed conversion silently left the STALE pdf in place and still
+    # printed "Saved" -- which is exactly how a retracted claim survived in ocm_presentation.pdf
+    # after the deck was corrected. libreoffice-impress must be installed; libreoffice-core alone
+    # cannot load .pptx and exits 0 while printing "source file could not be loaded".
+    if pdf.exists():
+        pdf.unlink()
     result = subprocess.run(
         [lo, "--headless", "--convert-to", "pdf",
          "--outdir", str(ROOT), str(pptx_path)],
-        capture_output=True, text=True, timeout=120
+        capture_output=True, text=True, timeout=300
     )
-    if result.returncode == 0:
-        pdf = ROOT / "ocm_presentation.pdf"
-        print(f"Saved: {pdf}  ({pdf.stat().st_size // 1024} KB)")
-    else:
-        print("LibreOffice PDF export failed:")
-        print(result.stderr[:500])
+    combined = (result.stdout or "") + (result.stderr or "")
+    if not pdf.exists() or "could not be loaded" in combined:
+        raise SystemExit(
+            "LibreOffice PDF export FAILED (no file produced).\n"
+            "Install libreoffice-impress: libreoffice-core alone cannot read .pptx.\n"
+            + combined[:800])
+    print(f"Saved: {pdf}  ({pdf.stat().st_size // 1024} KB)")
 else:
-    print("LibreOffice not found — skipping PDF export.")
+    raise SystemExit("libreoffice/soffice not found - cannot export PDF")

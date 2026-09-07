@@ -341,11 +341,34 @@ pipeline copies — `taniike_validation.py` (the file it was extracted *from*),
 
 - `ocm_worknote_taniike.md` (+ docx/pdf/html) — **the document for Prof. Taniike. Drafted, not sent.**
 - `ocm_progress_report.md` (+ docx/pdf/html) — for Dr. M S Srinath. Simple sentences, active voice.
+  Rendered by `build_progress_report_render.py` (pandoc → HTML → Chromium PDF, + pandoc DOCX). Until
+  September 2026 **nothing in the repo built it**, which is how a rendered document drifts unnoticed.
 - `ocm_results_walkthrough.ipynb` — **the presentable notebook.** 16 code cells, all executed, zero
   errors, every number computed live. Built by `build_presentation_nb.py`. Bundle with companions:
   `ocm_eval.py`, `grouped_tuning.json`, `phase5_target_audit.json`, and the CSV.
 - `ocm_analysis.ipynb`, `ocm_methodology.ipynb`, `ocm_walkthrough.ipynb` — historical, row-level.
 - `feedback.md` — working-style corrections, loaded via `CLAUDE.md`. **Read it.**
+- `ocm_verification_report.md` — findings of the data-verification pass, with confidence and severity.
+
+### Presentation set — registered here so it cannot drift again
+
+These files were absent from this map, and that is precisely how they came to assert a **withdrawn**
+claim in four formats long after it was retracted. All have now been rewritten to the corrected
+results.
+
+| file | built by | narrated by |
+|---|---|---|
+| `ocm_presentation.pptx` + `.pdf` | `build_pptx.py` (PDF via LibreOffice — **requires `libreoffice-impress`**; `libreoffice-core` alone silently fails) | `ocm_speaking_notes.md` Part 1 (16 slides) |
+| `ocm_presentation.html` | `build_presentation.py` (8 slides) | `presentation_script.md` |
+| `ocm_walkthrough.ipynb` ch. 9–10 | historical notebook | `ocm_ch9_ch10_script.md` |
+
+- **`ocm_presentation.tex` — SUPERSEDED, do not edit or quote.** Produced by neither builder, no LaTeX
+  toolchain in-container, and it still carries the withdrawn `1.907` / `−10.6%` claim. The PDF now
+  comes from `build_pptx.py` via LibreOffice.
+- `ocm_speaking_notes.md` **Part 2** and `ocm_ch9_ch10_script.md` narrate the *historical* notebook and
+  keep its row-level numbers on purpose; both carry a status banner saying so.
+- **Caveat:** `build_corrected_figures.py` still regenerates `fig_repeated_runs.png`, which
+  `fig_protocol_comparison.png` retired. No builder references it any more.
 
 ### Running things
 

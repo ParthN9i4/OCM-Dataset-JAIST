@@ -118,13 +118,15 @@ S4 = """
           <td>2.261</td><td class="td-bad">+6.0 % ↑</td>
         </tr>
         <tr class="tr-good">
-          <td><b>Two-stage fine-tuning ★</b></td><td>Literature as a feature, not a label</td>
-          <td><b>1.907</b></td><td class="td-good">−10.6 % ↓</td>
+          <td><b>Two-stage (PFT)</b></td><td>Literature as a feature, not a label</td>
+          <td><b>1.912</b></td><td class="td-good">−9.7 % ↓</td>
         </tr>
       </tbody>
     </table>
     <p class="fig-cap mt-3">
-      5-fold CV on internal data only. Validation folds never contain literature. Lower RMSE = better.
+      <b>Row-level 5-fold CV — historical only.</b> This split lets the same catalyst appear in both
+      training and validation. Under catalyst-grouped CV the baseline is 2.9425 and PFT is 2.9955,
+      i.e. <b>1.8 % worse</b>. See the next-but-one slide.
     </p>
   </div>
 </section>"""
@@ -132,7 +134,7 @@ S4 = """
 S5 = """
 <section class="slide">
   <div class="inner">
-    <h2>The insight — use literature as a feature, not a label</h2>
+    <h2>The method that exposed the leak — literature as a feature, not a label</h2>
     <div class="pipeline mt-4">
       <div class="pnode blue-node">
         <div class="pnode-title">Literature Data</div>
@@ -181,24 +183,30 @@ S6 = f"""
       <div>
         <div class="kpi-grid">
           <div class="kpi">
-            <div class="kpi-n green">−10.6 %</div>
-            <div class="kpi-label">accuracy gain</div>
-            <div class="kpi-sub">RMSE 2.133 → 1.907</div>
+            <div class="kpi-n">+1.8 %</div>
+            <div class="kpi-label">PFT vs baseline, catalyst-grouped</div>
+            <div class="kpi-sub">RMSE 2.9425 → 2.9955 — <b>worse</b></div>
           </div>
           <div class="kpi">
-            <div class="kpi-n green">10 / 10</div>
-            <div class="kpi-label">seeds PFT beats baseline</div>
-            <div class="kpi-sub">p &lt; 10⁻¹⁴; held-out 2.097 → 1.892</div>
+            <div class="kpi-n green">3.77×</div>
+            <div class="kpi-label">enrichment, equal-effort set</div>
+            <div class="kpi-sub">Spearman 0.724 on 771 catalysts</div>
           </div>
         </div>
+        <div class="callout mt-4">
+          The published <b>−9.7 %</b> was catalyst-identity leakage: under a row split the Stage-1
+          prior had already seen the test catalysts' own yields. The same models, same data, under
+          catalyst-grouped CV are <b>1.8 % worse</b> than baseline. The difference is the protocol,
+          not the modelling.
+        </div>
         <div class="callout green mt-4">
-          The two-stage approach gives the largest <b>in-distribution</b> gain,
-          confirmed across 10 seeds (p &lt; 10⁻¹⁴) and on a held-out test set.
-          (Leak-free OOD is modest — an earlier −45% claim was withdrawn as leakage.)
+          What survives: the composition-only model still ranks <b>unseen</b> catalysts usefully —
+          enrichment 3.77× (95 % CI 3.04–4.89×) — and that holds under either reading of the open
+          question about how the data was collected.
         </div>
       </div>
       <div class="fig-wrap">
-        {img("fig_results_comparison.png")}
+        {img("fig_protocol_comparison.png")}
       </div>
     </div>
   </div>
@@ -245,27 +253,27 @@ S8 = """
     <h2>What should we prioritise next?</h2>
     <div class="cols-3 mt-4">
       <div class="opt-card">
-        <span class="opt-badge blue-badge">Option A</span>
-        <h3>Interpretability</h3>
-        <p>Deeper SHAP analysis by catalyst family. Validate model chemistry against expert knowledge before trusting recommendations.</p>
-        <div class="opt-time">1–2 weeks</div>
+        <span class="opt-badge green-badge">Priority 1</span>
+        <h3>Ask for the condition columns</h3>
+        <p>One email to JAIST. Each catalyst is run at 5 temperatures under ~27 unrecorded condition settings. Recovering them turns 917 training examples back into 89,074 and unlocks 19.9 % of currently unreachable variance.</p>
+        <div class="opt-time">one email</div>
       </div>
       <div class="opt-card">
-        <span class="opt-badge amber-badge">Option B</span>
-        <h3>Recommendations</h3>
-        <p>Active learning wrapper. Model ranks candidate formulations and suggests the next catalyst experiment to run in the lab.</p>
-        <div class="opt-time">2–3 weeks</div>
+        <span class="opt-badge amber-badge">Priority 2</span>
+        <h3>Settle conditions vs time-on-stream</h3>
+        <p>Provably unanswerable from the file: every cell is stored sorted by yield, so row order records rank, not acquisition order. Only the lab can answer. The risk is already bounded — the shortlist barely moves either way.</p>
+        <div class="opt-time">same email</div>
       </div>
       <div class="opt-card">
-        <span class="opt-badge green-badge">Option C</span>
-        <h3>Better Features</h3>
-        <p>Add ionic radius, electronegativity, acid-base descriptors. Directly addresses the ceiling effect at high Y(C₂).</p>
-        <div class="opt-time">1 week + re-run</div>
+        <span class="opt-badge blue-badge">Priority 3</span>
+        <h3>Re-scope the campaign</h3>
+        <p>20 runs per catalyst instead of 135 reproduces the full ranking at ρ = 0.949 — roughly 72 catalysts screened plus a randomised control arm, for the reactor budget of 17 exhaustive ones.</p>
+        <div class="opt-time">before reactor time</div>
       </div>
     </div>
     <div class="callout mt-4">
-      <b>Today's question:</b> interpretability first (A), lab-actionable recommendations (B),
-      or better data quality (C)?
+      <b>Today's question:</b> all three are questions for the lab rather than modelling work.
+      The modelling has gone as far as this feature set allows.
     </div>
   </div>
 </section>"""

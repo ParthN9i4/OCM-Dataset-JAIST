@@ -1,8 +1,13 @@
-> **⚠️ Superseded numbers.** The `1.907` / `−10.6%` prior-feature results quoted throughout this
-> document come from a **row-level** cross-validation split. Under catalyst-grouped validation the
-> improvement does not survive (baseline 2.943 vs. 2.995) — it was catalyst-identity leakage.
-> This document is retained as a record of the original analysis. For corrected numbers see
-> `ocm_worknote_taniike.md` (v2), `SESSION_CONTEXT.md` §7–14, and `taniike_validation.py` onward.
+> **Status.** **Part 1 (the 16 deck slides) has been rewritten to the corrected results** and
+> matches `ocm_presentation.pptx` slide for slide. **Part 2 still narrates the historical
+> notebook**, which uses a row-level split; its numbers are kept so the narration matches what
+> the notebook actually prints, and they carry their own warning where they appear.
+>
+> The correction in one line: the `1.907` / `−9.7%` prior-feature result came from a row-level
+> split that let the same catalyst appear in training and test. Under catalyst-grouped validation
+> the same models are **worse** than baseline (2.9425 vs 2.9955) — the gain was catalyst-identity
+> leakage. Authoritative sources: `ocm_worknote_taniike.md` (v2), `SESSION_CONTEXT.md` §3 and §5,
+> and `ocm_verification_report.md`.
 
 # OCM Walkthrough — Personal Speaking Notes
 
@@ -10,7 +15,7 @@ Personal reference only. Not included in `ocm_walkthrough.ipynb`.
 
 ---
 
-# Part 1 — PPT Speaking Notes (15 slides)
+# Part 1 — PPT Speaking Notes (16 slides)
 
 One block per slide. Verbatim first-person speech — not a script, more like thinking out
 loud while pointing at the screen. Read alongside the corresponding slide.
@@ -107,36 +112,46 @@ our experimental programme."
 
 ## Slide 5 — How We Measure Success (Chapter 3)
 
-"Before results, I want to explain how we measure success, because the design choice here
-determines whether the numbers are meaningful.
+"Before results, I want to explain how we measure success, because this design choice is
+the single thing that determines whether any of the numbers mean anything. We got it wrong
+the first time, and I want to be upfront about that.
 
-We use 5-fold cross-validation, but in an asymmetric way. Split our 89,074 samples into 5
-groups. In each round, 4 groups train the model and 1 group tests it. We rotate which
-group is the test 5 times and average the RMSE.
+The 89,074 rows are not 89,074 independent facts. They are **917 distinct catalysts**, each
+measured at five temperatures under about 27 unrecorded condition settings. That is the
+whole point. If you split those rows at random, the same catalyst lands in both the
+training and the test set, and the model is being asked to recall a catalyst it has already
+seen rather than to predict a new one.
 
-The asymmetry: literature, when we use it, only ever goes into the *training* side — never
-the test fold. The diagram shows fold 3 in red as the held-out test, folds 1, 2, 4, 5 in
-blue as training, and the literature always in the training row below.
+So we now split **by catalyst**. All rows belonging to one catalyst go into exactly one
+fold. The held-out fold contains roughly 183 catalysts the model has never encountered in
+any form. Literature, when used, still only ever enters the training side.
 
-Why this design? The question is 'how well does the model predict *our* experiments?' If
-literature appeared in the test fold we'd be measuring a diluted answer to a different
-question — and we'd be unable to compare the 5 methods fairly. Every method goes through
-exactly the same CV function, so the comparison is apples-to-apples.
+This is precisely the point Prof. Taniike raised, and he was right. Catalyst-grouped CV is
+now the default in our shared evaluation module and cannot be bypassed by accident.
 
-RMSE is in units of percentage points of yield. An RMSE of 2.1 means we're typically off
-by about 2 percentage points. Smaller is better. The baseline number — training on our
-data only — is 2.133. That is the target every subsequent method must beat."
+One more change. RMSE is no longer our primary metric. About 19.9% of the row-level
+variance comes from those 27 unrecorded condition settings, so no model reading only
+composition and temperature can reach it. We report catalyst-level metrics instead:
+Spearman correlation on each catalyst's best yield, and enrichment — how much better than
+random the top-ranked shortlist is. Row RMSE appears only where it is labelled as
+secondary."
 
 ---
 
 ## Slide 6 — Baseline + Why Naive Merging Fails (Chapter 4)
 
-"Step one: establish the baseline. Train on lab data alone — no literature — and get RMSE
-2.133. That's the number to beat. If a method returns anything higher, it has actively
-harmed the model.
+"One caveat before the numbers on this slide: these are **row-level** figures, kept only so
+they line up with what we published. Under the catalyst-grouped protocol from slide 5 the
+baseline is 2.9425, not 2.13. I will flag the row-level ones as we go.
+
+Step one: establish the baseline. Train on lab data alone — no literature — and get RMSE
+2.133 row-level. That's the number to beat. If a method returns anything higher, it has
+actively harmed the model.
 
 Step two: try the obvious thing. Append all 3,852 literature rows and retrain. 'More data
-is always better' is the intuition. RMSE goes to 2.248 — 5.4% worse. It harmed the model.
+is always better' is the intuition. RMSE goes to 2.241 — 5.1% worse. It harmed the model.
+And this conclusion does survive the protocol change: re-tested at catalyst level, a direct
+merge again sits below the composition-only control, 0.7577 against 0.7606.
 
 The explanation box on the right shows why. The model now sees two catalyst compositions
 that are nearly identical in element space. One is labelled 5.2% yield — from our lab. The
@@ -205,10 +220,11 @@ ceiling the next method breaks."
 
 ---
 
-## Slide 9 — Prior Feature Transfer — The Winning Pipeline (Chapter 7)
+## Slide 9 — Prior Feature Transfer — The Method That Exposed the Leak (Chapter 7)
 
-"This is the method that worked well, and its logic is a fundamental reframing of the
-problem.
+"This is the method we thought had worked. Its logic is a genuine reframing of the problem,
+and I still think the reasoning is sound — but the evaluation that made it look good was
+not, and that is the more useful story.
 
 DRST and KMM both had literature labels in the training loss. The offset corrupts that
 loss no matter how carefully you filter. The reframe: what if literature never enters as a
@@ -231,38 +247,43 @@ to learn around.
 
 Why XGBoost for Stage 1? It's more conservative on small data — 782 samples — and less
 prone to overfitting. Why LightGBM for Stage 2? It's much faster on large datasets like
-our 89,000 samples, using histogram-based tree building."
+our 89,000 samples, using histogram-based tree building.
+
+Now the part that matters. Stage 1 was trained on literature **together with the lab
+training rows**. Under a row-level split, those lab training rows included the very
+catalysts sitting in the test fold. So the 68th feature was not purely a literature
+opinion — it partly carried each test catalyst's own measured yields, laundered through a
+model. The gain we measured was recall, not prediction.
+
+I want to be clear that ruling this out is what produced the protocol on slide 5. We did
+not stumble into the right answer; we built a method, tested it properly, and the test
+told us something we did not want to hear. The leakage channel is now named in a warning
+inside `ocm_eval.stage1_data()` so nobody re-enables it by accident."
 
 ---
 
-## Slide 10 — Results — All Five Methods at a Glance (Chapter 8)
+## Slide 10 — Results — The Same Models Under Two Protocols (Chapter 8)
 
-"Here's the full picture. The bar chart shows all five methods with the baseline as a
-dashed reference line. Naive merge is the one bar to the right of that line — worse.
-DRST and KMM dip modestly below — about 5% improvement each. Prior Feature Transfer makes
-a distinctly larger step: 1.907, a 10.6% improvement.
+"This is the central slide of the talk, and it is a reversal.
 
-The OOD table on the right measures generalisation to chemistry we've never trained on:
-2,139 non-Impregnation literature samples. Baseline RMSE is 6.53. I need to be honest and
-correct an earlier version of this slide here: it claimed Prior Feature Transfer dropped
-that to 3.60, a 45% reduction. That number was leakage. In the original experiment the
-Stage-1 prior was trained on *all* literature, which includes those very OOD test samples
-and their true yields — so the prior effectively handed the final model the answers. When
-I retrain the prior with the OOD rows removed — a genuinely blind test — the leak-free OOD
-RMSE is about 6.0 to 6.8 depending on configuration, i.e. roughly level with baseline, not
-a dramatic win.
+Two tables, same models, same data, same code. The top table is the row-level protocol —
+the one we published. Baseline 2.1184, Prior Feature Transfer 1.9120. That is a 9.7%
+improvement, and it is the number we sent to Prof. Taniike.
 
-This doesn't touch the headline: on our own chemistry the 10.6% gain is real, repeatable
-across ten random seeds at p below ten-to-the-minus-fourteen, and confirmed on a held-out
-test set. What it changes is the extrapolation claim: this is a model that is very good in
-our operating regime, not one that dramatically re-derives the literature.
+The bottom table is catalyst-grouped CV. Baseline 2.9425, Prior Feature Transfer 2.9955.
+The improvement has become a **1.8% degradation**. Training on all the literature instead
+of the filtered subset gives 2.9817 — also worse than baseline.
 
-It also ties to quantile normalisation, which the committee asked about. QN rescales the
-literature labels onto our yield scale. Turning it on and off cleanly shows a consistent
-trade-off: with QN, in-distribution accuracy is better because the prior speaks in our
-units, but OOD is slightly worse because the prior can no longer reach the higher yields of
-unfamiliar literature. QN is a deliberate dial — we chose local accuracy because our goal
-is predicting our next experiment. I'll show this on the Rigour slide."
+Nothing about the models changed. Only the question changed. Row-level asks 'can you
+recall a catalyst you have seen?' Catalyst-grouped asks 'can you predict one you have
+not?' The first number was answering the easier question without our realising it.
+
+Notice also that the baseline itself rises from 2.12 to 2.94. That is the honest difficulty
+of the real problem. Predicting genuinely unseen catalysts is simply harder, and any paper
+in this area reporting a row-level split on a dataset with repeated catalysts is quoting
+the easier number.
+
+We withdrew the claim. I would rather say that here than have a referee say it later."
 
 ---
 
@@ -323,88 +344,138 @@ the data by adding the missing operating conditions; the ceiling lifts automatic
 
 ---
 
-## Slide 13 — Critical Analysis — Per-Method Review (Chapter 9)
+## Slide 13 — Statistical Rigour & Honesty (Chapter 8)
 
-"Let me be honest about what each method can and cannot do.
+"Two things on this slide, and both of them lower our own numbers.
 
-The table: naive merge is a negative control. It proves the shift is real and harmful, but
-it provides no solution. DRST is simple, fast, and interpretable, but it uses a hard
-cliff, discards about 80% of the literature, and the threshold was tuned on the same
-cross-validation we then reported — so that 5.3% improvement is slightly optimistic. KMM
-is more principled — no cliff, continuous weights — but the n-by-n kernel matrix is slow
-to compute, it's sensitive to the bandwidth choice, it still feeds literature labels into
-the loss, and the fact that it just *ties* DRST tells us filtering has hit an inherent
-ceiling. Prior Feature Transfer is the winner, but it requires two models to maintain, and
-Stage 1 trained on only 782 samples has relatively high variance.
+First: the headline was coverage-inflated. Grid coverage in this dataset is coupled to
+performance — cells that were run further contain better yields — so a score computed over
+all 917 catalysts is partly a record of which experiments somebody finished, not of what
+the model knows. When we restrict to the 771 catalysts with comparable measurement effort,
+Spearman falls from 0.767 to 0.724 and enrichment from 4.35× to 3.77×. On that set the
+confound is gone by measurement, not by assumption: the correlation between measurement
+count and observed maximum drops from +0.293 to +0.003.
 
-On the right: three limits that cut across all methods. First, all methods were scored on
-our own data cross-validation. Out-of-distribution performance was only checked for Prior
-FT — we don't know how the filtering methods generalise. Second, point predictions only —
-no uncertainty estimates — which limits our ability to identify the most informative
-experiments to run next. Third, and most critically: the Y>15% ceiling is a data limit,
-not a model limit. The missing condition features — GHSV, methane-to-oxygen ratio,
-pressure — explain the ceiling. The key insight at the bottom sums it up: the ceiling
-effect and much of the label shift share the same root cause. Fix the data; the models
-follow."
+Someone will ask whether that drop is just an artifact of scoring fewer catalysts. It is
+not. We drew 300 random 771-catalyst subsets from the same predictions; they give 0.767
+with a 95% range of 0.756 to 0.780. Our equal-effort value of 0.724 sits below that range.
 
----
+Second, and this is the sharpest test we could devise. We retrained the identical model to
+predict *how many measurements a catalyst received*. It never sees a yield. That model
+reaches Spearman 0.400 against observed maximum yield — which sounds respectable — but its
+enrichment is 0.87×, no better than picking at random. So rank correlation is partly
+purchasable from experimental effort. Enrichment is not. That is the concrete reason we
+report enrichment as the primary metric rather than ρ.
 
-## Slide 14 — What's Next — Priority-Ordered (Chapter 9)
-
-"Six next steps in priority order.
-
-Item 1 — the highest impact by far: add GHSV, methane-to-oxygen ratio, and pressure to
-the feature set. These are the operating conditions that explain the bulk of the label
-shift and all of the ceiling effect. This is a data collection problem, not a modelling
-problem, and data improvements always dominate. If those features existed, a much simpler
-model would likely already beat what we've built.
-
-Item 2: bag the Stage-1 expert. Right now we train one XGBoost on 782 samples.
-Bootstrapping several instances and averaging their predictions reduces the variance of the
-prior feature. Low cost, likely meaningful gain.
-
-Item 3: add uncertainty. Conformal prediction or quantile regression would let us produce
-prediction intervals. In an active-learning setting, we want to prefer candidates that are
-both likely to be high-yield *and* uncertain — those are the most informative experiments.
-
-Item 4: stack DRST and KMM inside the Prior FT pipeline. Instead of three separate
-methods, integrate filtering and weighting into a single pipeline. Item 5: neural domain
-adaptation — DANN or CORAL — once the feature set is richer. With 67 features and limited
-diversity, these deep methods don't have enough signal to outperform gradient boosting.
-Item 6: close the active-learning loop. Model proposes candidates, lab measures them,
-model retrains. Over time the label shift itself shrinks as we accumulate data from
-chemistry we previously hadn't explored."
+Last thing. There is an open question about whether the 27 measurements in each cell are
+27 different reaction conditions or 27 samples taken over time. We cannot answer it from
+the file — every cell is stored sorted by yield, so row order tells us rank, not sequence.
+But we bounded it: if we rank catalysts by their worst measurement rather than their best,
+only 7 of the top 20 stay the same, yet a model trained on the best still loses only 0.017
+Spearman against that alternative ground truth and never drops below 4.02× enrichment. The
+answer changes the labels. It does not change which catalysts we would recommend making."
 
 ---
 
-## Slide 15 — Summary
+## Slide 14 — Critical Analysis — Per-Method Review (Chapter 9)
 
-"Let me bring this together in four points.
+"Let me be honest about what each method can and cannot do, now that we know the protocol
+that judges them.
 
-We asked: can published OCM literature improve a lab-data model without harming it? The
-answer is yes, but the right method matters a lot.
+Naive merge is a negative control. It proves the shift is real and harmful, but it offers
+no solution. DRST is simple, fast and interpretable, but it uses a hard cliff, discards
+about 80% of the literature, and its threshold was tuned on the same cross-validation we
+then reported — so any gain it shows is slightly optimistic. KMM is more principled — no
+cliff, continuous weights — but it is slow, sensitive to bandwidth, and it still feeds
+literature *labels* into the loss. That it merely ties DRST tells us filtering has hit a
+ceiling. Prior Feature Transfer avoids the label problem entirely, which is the right
+idea — but under catalyst-grouped CV it does not beat the baseline, and the earlier
+evidence that it did was leakage.
 
-Naive merging *harms* accuracy — a 5.4% RMSE penalty — because the systematic offset
-corrupts training when there are no features to explain it. Selective filtering with DRST
-and KMM recovers about 5% improvement, and two independent methods agreeing at r=0.79
-confirms the signal is real, not an artifact. Using literature as a *prior feature* — never
-as a label — gives the biggest gain: 10.6% better CV accuracy, and this is repeatable
-across ten random seeds at p below ten-to-the-minus-fourteen and holds on a held-out test
-set. On out-of-distribution literature the honest, leak-free gain is modest — roughly
-baseline — and I corrected an earlier slide that overstated it. SHAP confirms the model
-uses real OCM chemistry — temperature, barium,
-manganese, lanthanum, cerium, and the literature prior are the primary drivers.
+We then went further and tested four honest literature designs at catalyst level, with
+success criteria fixed before running: a literature rank prior, similarity features, a
+gated prior, and a catalyst-level direct merge. **None beat composition alone.** We also
+tested a hypothesis of our own — that the prior helps specifically where our own coverage
+is thin. Across 28 element families the strongest correlation with any coverage measure was
+0.276 against a pre-registered threshold of 0.5. Not supported. We discarded it.
 
-The next step that matters most is a data step: add GHSV and the methane-to-oxygen ratio
-to the feature set. The modelling work here is solid. The bottleneck is now the data.
-
-Thank you — happy to take questions."
+Three limits cut across everything. First, a novel promoter family is structurally
+unpriceable: with no family members in training the column is constant, no tree splits on
+it, and deleting the column gives bit-identical predictions. That is arithmetic, not a
+modelling deficiency. Second, we give point predictions with no uncertainty. Third — and
+this is the root cause — the missing condition columns bound what any model can do here.
+Fix the data and the models follow."
 
 ---
+
+## Slide 15 — What's Next — Priority-Ordered (Chapter 9)
+
+"Six next steps, and I want to flag something about them: the top three are questions for
+the lab, not modelling work. We think the modelling has gone about as far as this feature
+set allows.
+
+Item 1, by far the highest value for the effort: **ask JAIST for the reaction-condition
+columns.** One email. Each catalyst is run at five temperatures under roughly 27 condition
+settings that the file does not record. Recovering them converts 19.9% of currently
+unreachable variance into modellable signal, makes row-level RMSE a well-posed target
+again, and turns 917 training examples back into 89,074.
+
+Item 2: **ask whether those 27 slots are distinct conditions or successive time-on-stream
+samples.** This matters because if it is time, a catalyst's observed maximum is a
+fresh-catalyst transient rather than an achievable operating point. We can prove we cannot
+answer it from the file — every cell is stored sorted by yield, so row order carries rank,
+not acquisition order. Two earlier analyses failed for exactly that reason.
+
+Item 3: **ask why grid coverage is incomplete.** 186 catalyst-temperature cells are absent
+and only 811 of 917 catalysts have all five temperatures. That decides whether the coverage
+bias is correctable or is itself telling us something.
+
+Item 4: **re-scope the campaign before reactor time is spent.** Replaying the lab's own
+archive, 20 runs per catalyst instead of 135 reproduces the full ranking at ρ = 0.949. That
+buys roughly 72 catalysts screened plus a randomised control arm for the same reactor budget
+as 17 exhaustive ones. Item 5: send the corrected work note — it is complete and verified.
+Item 6: run the prospective validation Prof. Taniike offered, remembering that a shortlist
+is a set to test, not a league table: inside its own top 20 the model's internal ordering is
+essentially uninformative."
+
+---
+
+## Slide 16 — Summary
+
+"Let me bring this together in four points, and I will start with the one that costs us
+something.
+
+**The original claim is withdrawn.** We reported that a two-stage prior-feature method
+improved C₂-yield prediction by about 10% over a lab-only baseline. Under catalyst-grouped
+validation the same models are 1.8% *worse* than baseline. The gain was catalyst-identity
+leakage. We found it ourselves, before a referee did.
+
+**Literature integration is null in-domain.** Four pre-registered designs and a 28-family
+follow-up, all at or below the composition-only control.
+
+**But literature does help where we have no coverage at all.** On non-impregnation
+chemistry — preparation routes our lab has never used — a lab-only model is worse than
+random at enrichment, 0.42×. A plain merge with literature lifts that to 1.34×, and
+Spearman from 0.24 to 0.39. Note the shape of that result: **plain merging beats the
+two-stage machinery.** The value was the data, not the method.
+
+**And the screening tool stands.** The composition-only model ranks unseen catalysts well
+enough to guide synthesis — enrichment 3.77× on the equal-effort set, 95% confidence
+interval 3.04 to 4.89×. That conclusion survives either answer to the open question about
+how the data was collected.
+
+The single next step that matters most is not a model. It is one email asking for the
+reaction-condition columns."
 
 ---
 
 # Part 2 — Notebook Walkthrough Speaking Notes
+
+> **Read this first.** Part 2 narrates the *historical* notebook, which uses the row-level
+> protocol throughout. Those numbers are kept so the narration matches what the notebook
+> actually prints. Every one of them is superseded by the catalyst-grouped results in Part 1:
+> the baseline is 2.9425, and the two-stage method is 1.8% **worse** than baseline, not
+> better. Say so out loud if you walk anyone through this notebook.
 
 This section follows the notebook **cell by cell, in order**. For every code cell it walks
 through the code **line by line** and explains what each line does and *why*, so you can
@@ -632,7 +703,7 @@ So to test any method, you just hand this function a different `X_train_extra`."
 
 *(Two markdown cells.)*
 
-"First, the baseline: train on lab data only, no literature. That gives RMSE 2.133 — the
+"First, the baseline: train on lab data only, no literature. That gives row-level RMSE 2.133 — the
 number every method has to beat. Anything above it has *harmed* the model.
 
 Then the obvious experiment: just append all 3,852 literature rows and retrain. More data
@@ -652,7 +723,7 @@ everything. This is the result that motivates the rest of the notebook."
   filtering, full weight. That's the naive merge.
 - The print at the end shows the two numbers and the delta.
 
-**[Point at the output.]** Baseline 2.133, naive merge 2.248, delta +0.115 — worse. That's
+**[Point at the output.]** Baseline 2.133, naive merge 2.241, delta +0.108 — worse. That's
 the evidence."
 
 ---
@@ -809,7 +880,7 @@ not in the labels. Stage 2 can learn 'when the expert says 8, my lab actually ge
 4.5' — a calibration it discovers from our own data. You can't un-corrupt a label, but you
 can learn around a feature.
 
-The result is 1.907 — a 10.6% improvement, double the filtering methods, and repeatable
+The result is 1.912 — a 9.7% improvement under this (row-level) protocol, and repeatable
 across ten seeds and on a held-out test set. On out-of-distribution literature the honest
 leak-free gain is modest (near baseline); an earlier version of this slide overstated it
 due to leakage, which I've corrected."
@@ -855,7 +926,7 @@ due to leakage, which I've corrected."
     with its prior column attached, and we score it.
 - After the loop we average and print.
 
-**[Point at the output.]** 1.907, down 10.6%. And the summary block lists all five methods
+**[Point at the output.]** 1.912, down 9.7% row-level. And the summary block lists all five methods
 in order — baseline, the failed naive merge above it, DRST and KMM below, and Prior Feature
 Transfer at the bottom, clearly the best."
 

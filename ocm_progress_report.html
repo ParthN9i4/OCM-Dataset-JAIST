@@ -169,9 +169,12 @@ vertical-align: middle;
 </style>
 </head>
 <body>
+<header id="title-block-header">
+<h1 class="title">ocm_progress_report</h1>
+</header>
 <h1 id="ocm-project-progress-report">OCM Project — Progress Report</h1>
 <p><strong>From:</strong> Parth Nagar <strong>To:</strong> Dr. M S
-Srinath <strong>Date:</strong> 31 August 2026 <strong>Covers:</strong>
+Srinath <strong>Date:</strong> 7 September 2026 <strong>Covers:</strong>
 all work from the start of the project to today, including everything
 done after Prof. Taniike’s review</p>
 <hr />
@@ -535,7 +538,54 @@ points.</li>
 <p>We caught all of these before sending anything. Every number in the
 corrected note now traces to a stored file.</p>
 <hr />
-<h2 id="what-comes-next">9. What comes next</h2>
+<h2 id="a-second-check-done-afterwards">9. A second check, done
+afterwards</h2>
+<p>We then checked every number in our own handover document against the
+data itself. We did not trust the document. We recomputed each figure
+from the raw file, or re-read it from the stored result files.</p>
+<p>Most numbers held. Every headline figure came out exactly right. We
+also re-ran two whole experiments from scratch. Both reproduced the
+stored results digit for digit, even though the software libraries had
+moved on several versions in between.</p>
+<p>Three numbers had no source at all. No script computed them. Two of
+the three were wrong.</p>
+<ol type="1">
+<li><strong>A measurement-budget figure.</strong> We had told
+Prof. Taniike that measuring 20 runs per catalyst instead of 135
+reproduces the full ranking at 0.955. Recomputing it gives
+<strong>0.949</strong>. The 0.955 figure belongs to a 25-run plan, not a
+20-run one. We also found the plan only applies to 759 catalysts, not
+the 811 we quoted. All three numbers are corrected in the note.</li>
+<li><strong>A test about the 27 settings.</strong> We had claimed a
+statistical signature proved the 27 rows in each cell are a complete set
+rather than a truncated one. No script ever computed that signature. The
+conclusion is right, but we had missed a much simpler proof: <strong>104
+cells hold more than 27 rows</strong>, which a “keep only the top 27”
+export could not produce. We now use the count.</li>
+</ol>
+<p><strong>A discovery about the file itself.</strong> We wanted to know
+whether the 27 rows in each cell are 27 different reaction conditions,
+or 27 samples taken over time from a single run. This matters. If it is
+time, then a catalyst’s best number is what it does when fresh, not what
+it sustains. Two earlier attempts to settle it failed. We now know why.
+<strong>The file stores every cell sorted from highest yield to
+lowest.</strong> Row order records rank, not the order in which the
+measurements were taken. So no further analysis of this file can answer
+the question. Only the lab can. The work note already asks.</p>
+<p><strong>We bounded the risk instead.</strong> We tested what would
+change if the question were answered the way we did not expect. We
+ranked catalysts by their worst measurement rather than their best. The
+two rankings do disagree at the top: only 7 of the top 20 catalysts are
+the same. But a model trained on the best measurement still ranks
+catalysts nearly as well when judged against the worst. It loses 0.017
+in rank correlation, which is less than we gain by simply averaging over
+random seeds. It still finds good catalysts about 4 times faster than
+random choice, whichever way we judge it.</p>
+<p><strong>The answer changes the labels. It does not change which
+catalysts we would tell the lab to make.</strong> So this question is
+worth asking, but the campaign does not have to wait for the reply.</p>
+<hr />
+<h2 id="what-comes-next">10. What comes next</h2>
 <ol type="1">
 <li><strong>Send the corrected work note and reply to
 Prof. Taniike.</strong> Both are ready.</li>
@@ -554,7 +604,7 @@ is not noise. It is real chemistry we simply cannot see. Getting those
 columns would help more than any modelling change.</li>
 </ol>
 <hr />
-<h2 id="what-we-can-claim-honestly">10. What we can claim honestly</h2>
+<h2 id="what-we-can-claim-honestly">11. What we can claim honestly</h2>
 <p>We can claim three things.</p>
 <ol type="1">
 <li><strong>A validation finding.</strong> We documented a case where a
@@ -567,6 +617,9 @@ catalysts well enough to guide synthesis.</li>
 <li><strong>A scoping result.</strong> Literature data does not help
 where our own coverage is good. It does help where our coverage is
 absent.</li>
+<li><strong>A robustness result.</strong> Our recommendation does not
+depend on an open question about how the data was collected. We tested
+it both ways and the shortlist barely moves.</li>
 </ol>
 <p>We cannot claim that PFT improves prediction. We tested it properly,
 and it does not.</p>

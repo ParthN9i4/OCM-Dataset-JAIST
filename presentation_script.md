@@ -1,8 +1,11 @@
-> **⚠️ Superseded numbers.** The `1.907` / `−10.6%` prior-feature results quoted throughout this
-> document come from a **row-level** cross-validation split. Under catalyst-grouped validation the
-> improvement does not survive (baseline 2.943 vs. 2.995) — it was catalyst-identity leakage.
-> This document is retained as a record of the original analysis. For corrected numbers see
-> `ocm_worknote_taniike.md` (v2), `SESSION_CONTEXT.md` §7–15, and `taniike_validation.py` onward.
+> **Status.** This script has been rewritten to match the corrected 8-slide HTML deck
+> (`ocm_presentation.html`). Row-level figures still appear where the deck shows them, but they are
+> now explicitly labelled as historical every time.
+>
+> The correction in one line: the `1.907` / `−9.7%` prior-feature result came from a row-level split
+> that let the same catalyst appear in training and test. Under catalyst-grouped validation the same
+> models are **worse** than baseline (2.9425 vs 2.9955) — catalyst-identity leakage. Authoritative
+> sources: `ocm_worknote_taniike.md` (v2), `SESSION_CONTEXT.md` §3 and §5, `ocm_verification_report.md`.
 
 # Presentation Script — OCM Dataset Integration
 ## Full Verbatim Speaker Notes with Mathematical Background
@@ -23,7 +26,7 @@ That is the exact question this presentation answers. Every slide, every number,
 
 **Your mental model before walking in:**
 
-- We tried five ways to add literature data. Four gave modest improvements. One gave −10.6% error.
+- We tried five ways to add literature data. Under a row-level split one looked like a −9.7% win; under catalyst-grouped validation none of them beat a composition-only baseline.
 - The core problem is that the two datasets are not the same kind of data, even though they measure the same thing.
 - The solution is a two-step process: first teach a sub-model everything it can learn from literature, then let the main model use that sub-model's opinion as one piece of evidence.
 - We proved it works both on our own held-out experiments and on literature experiments the model had never seen.
@@ -108,7 +111,7 @@ The key fact in the top bullet: 78.5 percent of literature samples fall in regio
 
 "This table is the heart of the presentation. Let me walk through each row.
 
-Our evaluation protocol first. We used five-fold cross-validation, but in an asymmetric way. We split only our 89,000 internal samples into five folds. In each iteration, four folds go into training and one fold goes into validation. Literature data, when used, always goes into the training pool — never into validation. We measure RMSE, root mean squared error, which is in units of percentage points of C2 yield. Lower is better."
+Our evaluation protocol first, and I have to flag something important. The numbers in this table come from a **row-level** five-fold split: we split the 89,000 rows at random. That was a mistake, and the caption under the table says so. Those 89,000 rows are only **917 distinct catalysts**, so a random row split puts the same catalyst on both sides — the model recalls rather than predicts. Under the catalyst-grouped protocol we now use, the baseline is 2.9425, not 2.133. I am keeping this table because it is what we published, and the next slides show what happened when we re-ran it properly. RMSE is in percentage points of C2 yield; lower is better."
 
 **[Row 1]**
 
@@ -132,9 +135,9 @@ Why? Because of exactly what I just showed you. The model now sees two samples w
 
 **[Final row — build up to it]**
 
-"Now the best method. **Two-stage fine-tuning with DRST-filtered pre-training.** This achieved RMSE 1.907 — a 10.6 percent improvement over baseline. More than double the gain of any individual method.
+"Now the method that looked best. **Two-stage fine-tuning with DRST-filtered pre-training.** Under this row-level protocol it achieved RMSE 1.912 — a 9.7 percent improvement over baseline, more than double the gain of any single filtering method.
 
-At the bottom: the out-of-distribution test. We held out 2,139 literature samples from non-Impregnation preparation methods — catalysts the model had never seen in training. The baseline scores 6.53. I want to correct an earlier version here: it claimed our method scored 3.60, a 45 percent reduction, but that was data leakage — the Stage-1 prior had been trained on those very test samples and their labels. With a genuinely blind prior the leak-free OOD RMSE is about 6.0 to 6.8, roughly level with baseline. The real, defensible win is in-distribution, which I'll show is repeatable and significant on the next slide."
+Hold that number lightly. It is the one we sent to Prof. Taniike, and it is the one that did not survive a stricter test. I will show you the reversal on slide 6. The short version: Stage 1 was trained on literature *together with the lab training rows*, and under a row split those rows included the test catalysts — so the prior feature was partly carrying each test catalyst's own measured yields back to the model."
 
 ---
 
@@ -180,19 +183,23 @@ This is why two-stage beats bias correction alone. Bias correction fixes the lab
 
 **[Advance to slide 6]**
 
-"On the left is the bar chart from the results summary. The blue bar on top is our baseline. Every orange bar below it is a transfer method. The green bar at the bottom is Direction A — the two-stage method.
+"This is the slide that reverses the story, so let me take it slowly.
 
-The two tables on the right summarise the key numbers.
+The two tiles on the left. The first says **plus 1.8 percent** — RMSE moving from 2.9425 to 2.9955 under catalyst-grouped cross-validation. That is the two-stage method performing *worse* than the plain baseline. The second tile says **3.77 times** — the enrichment of our composition-only screening model on the equal-effort set of 771 catalysts, where its Spearman correlation is 0.724.
 
-For in-distribution performance — predicting our own experiments — RMSE dropped from 2.133 to 1.907. That is a reduction of 0.226 percentage points. To put this in context: our model predicts C2 yield for catalysts we have never tested. Getting 0.226 percentage points closer to the true answer means that if we were screening 1,000 new catalysts and picking the top 50 by predicted yield, we would now rank more of the genuinely high-performing catalysts into that top 50.
+So: the published 9.7 percent improvement was catalyst-identity leakage. Same models, same data, same code — only the split changed. When a catalyst can no longer appear in both training and test, the gain inverts into a small loss.
 
-For out-of-distribution performance, I need to correct an earlier claim. That version said RMSE dropped from 6.53 to 3.60, a 45 percent reduction, and called it the more important result. On re-examination that number came from data leakage: the Stage-1 prior was trained on the OOD test samples themselves, so it had effectively seen the answers. With a leak-free prior — trained only on chemistry that excludes the test set — the honest OOD RMSE is about 6.0 to 6.8, roughly level with baseline.
+I want to be direct about how this happened, because it is the useful part. Our Stage-1 literature expert was trained on literature *plus the lab training rows*. Under a random row split those training rows contained measurements of the very catalysts being tested. The 68th feature we handed the final model was therefore not a pure literature opinion — it partly encoded each test catalyst's own yields. We were measuring recall and calling it prediction.
 
-So the honest scientific statement is the reverse of what that slide said: the strong, defensible result is *in-distribution*, and it is repeatable — ten random seeds, PFT wins every time, p below ten-to-the-minus-fourteen, and it holds on a fully held-out test set. The model is very good in our operating regime; I would not oversell it as a literature-extrapolation engine."
+Notice the baseline itself moves too, from 2.12 to 2.94. That is the honest difficulty of the real task. Predicting a catalyst nobody has made is simply harder than interpolating between measurements of a catalyst you already have.
 
-**[Note at the bottom of the table]**
+**[Second callout]**
 
-"The small print: the OOD set is 2,139 non-Impregnation samples. The key fix versus the earlier version is that the Stage-1 prior must not be trained on those rows; once it isn't, the OOD gain is modest and honest."
+"What survives is on the green callout. The composition-only model still ranks genuinely unseen catalysts usefully: enrichment 3.77 times better than random, with a 95 percent confidence interval of 3.04 to 4.89. That is the result we stand behind, and it is enough to guide a synthesis campaign. It also survives an open question about how the data was collected, which I will come back to on the last slide."
+
+**[If asked why you are presenting a negative result]**
+
+"Because we found it ourselves, before a referee did, and because the mechanism generalises. Random splits are standard practice in this field, and this dataset has roughly a hundred rows per catalyst. Any paper doing what we did would report the same inflated number."
 
 ---
 
@@ -236,43 +243,35 @@ Adding GHSV and CH4/O2 ratio as features is the highest-impact next step, and I 
 
 **[Advance to slide 8]**
 
-"Three options for continuing this work, ordered by effort.
+"Three priorities, and I want to be upfront that all three are questions for the lab rather than modelling work. We think the modelling has gone about as far as this feature set allows.
 
-**Option A — Add reaction conditions. Easy, high impact.**
+**Priority 1 — Ask JAIST for the reaction-condition columns. One email.**
 
-If we collect GHSV, methane to oxygen ratio, and pressure for our internal experiments and add them as features, the residual analysis strongly suggests we would close most of the ceiling effect. The −4.16 percent mean bias on high-yield samples would likely shrink to near zero. Expected RMSE reduction from 4.70 to approximately 2.5 for the high-yield range.
+Each catalyst is run at five temperatures under roughly 27 condition settings that this file does not record. We can see the structure in the row counts: 15 catalysts hold exactly 135 rows, and every one of them splits as exactly 27 rows at each of five temperatures. Five times 27 is 135, which matches the number Prof. Taniike quotes. But the settings themselves are absent.
 
-This is a data collection problem, not a modelling problem. The solution is adding columns to the CSV.
+Because they are missing, 19.9 percent of the row-level yield variance cannot be reached from composition and temperature at all. That is not noise — it is real chemistry we cannot see. Recovering those columns turns 917 training examples back into 89,074 and makes row-level RMSE a well-posed target again. No modelling change we have tried comes close to that.
 
-**Option B — Tune the DRST threshold. Medium effort, moderate impact.**
+**Priority 2 — Ask whether those 27 slots are conditions or time-on-stream samples.**
 
-Our current threshold of τ=0.30 was selected by sweeping five values. A proper nested cross-validation search across a finer grid might recover another 0.3 to 0.5 percentage points of RMSE. Worth doing after Option A.
+This one matters more than it sounds. If the 27 rows are successive samples from a single continuous run rather than 27 distinct conditions, then a catalyst's observed maximum is a fresh-catalyst transient, not an achievable operating point — and we would be ranking catalysts by how good they look when new rather than by what they sustain.
 
-**Option C — Neural domain adaptation. Hard, uncertain return.**
+We can prove we cannot answer this from the file. Every cell is stored sorted from highest yield to lowest, so row order records rank, not the order the measurements were taken. Two earlier analyses failed for exactly this reason, and a third would too.
 
-Methods like DANN — Domain Adversarial Neural Networks — use a neural network that is simultaneously trained to predict yield and to be unable to distinguish which dataset a sample came from. This can theoretically find a representation where both datasets look the same. However, these methods are harder to tune and less interpretable. I would recommend attempting this only after the reaction condition features are in the dataset and the easier gains are exhausted."
+What we did instead was bound the risk. We ranked catalysts by their *worst* measurement instead of their best. The two rankings do disagree at the top — only 7 of the top 20 are the same. But a model trained on the best measurement still loses only 0.017 Spearman when judged against the worst, which is less than we gain from simply averaging over random seeds, and its enrichment never falls below 4.02 times. The answer changes the labels. It does not change which catalysts we would recommend making.
+
+**Priority 3 — Re-scope the campaign before reactor time is spent.**
+
+Replaying the lab's own archive: measuring 5 conditions at each of four temperatures — 20 runs instead of 135 — reproduces the full ranking at rho 0.949, systematically low by 1.38 yield points, a bias that can be declared in advance. That buys roughly 72 catalysts screened plus a randomised control arm for the reactor budget of 17 exhaustive ones. Under the time-on-stream reading the saving is analytical rather than thermal, and the arithmetic changes.
 
 **[On limitations — be honest]**
 
-"Before questions, I want to be explicit about the limitations of this work.
+"Three limitations I want to state explicitly.
 
-First: the missing reaction conditions are not a minor issue. They are the primary accuracy ceiling. Every method we tried, including the best one, under-predicts high-yield catalysts systematically. The −10.6% RMSE improvement is real and correct, but it is measured primarily on the 0–10% yield range where most of lab data lives. In the 15–22% range where the interesting catalysts are, we are still off by 4 percent on average.
+First, and largest: we withdrew our own headline. The 9.7 percent improvement was catalyst-identity leakage, and under the correct protocol the method is 1.8 percent worse than baseline. I would rather say that here than have a referee say it later.
 
-Second: the publication bias correction partially addresses why literature labels are higher on average. But it does not address the conditional bias — a literature Na/Si catalyst that reports 12% yield might have used conditions specifically optimised to achieve 12%. Our model will see the same composition at our standard conditions and reasonably predict 7%. That gap is real and not a model error.
+Second: a novel promoter family is structurally unpriceable. With no family members in training the column is constant, no tree ever splits on it, and deleting the column entirely gives bit-identical predictions. That is arithmetic, not a modelling deficiency. Our learning curves say roughly 50 measured members of a new family are needed before the model can price it — not the 10 an earlier version of this claimed.
 
-Third: there is a methodological subtlety I want to be transparent about. In the current implementation, Stage 1 is trained partly on the same training data that Stage 2 then trains on. This means Stage 2 receives a slightly overconfident prior during training. The validation scores are unbiased — the hold-out folds were never seen by Stage 1 — but the improvement estimate of 10.6% might be slightly optimistic by perhaps 1 to 2 percentage points for truly novel catalyst families. The fix is straightforward and is our immediate next task."
-
-**[Closing]**
-
-"To summarise in three sentences.
-
-Adding literature data naively makes performance worse because the datasets have a 3.4 percentage point systematic label difference and 78 percent of literature samples describe catalyst chemistries our model has not encountered before.
-
-Two-stage fine-tuning resolves this by routing literature knowledge through a pre-trained sub-model rather than through competing training labels, achieving a 10.6 percent in-distribution improvement that is repeatable across ten seeds (p below ten-to-the-minus-fourteen) and holds on a held-out test set. On out-of-distribution catalysts the honest, leak-free gain is modest — roughly baseline — after correcting an earlier leakage-inflated figure.
-
-The next step that would give the largest return is adding GHSV and methane-to-oxygen ratio as features, which would address the systematic under-prediction of high-yield catalysts that no algorithmic change can fix.
-
-I am happy to take questions."
+Third: inside the model's own top-ranked region — the only regime a synthesis campaign ever occupies — the internal ordering is close to uninformative. Spearman within the top 150 is 0.179, and within the top 20 it is minus 0.066. The model selects a good set but cannot order within it. A shortlist is a set to test, not a league table, and a 17-catalyst campaign drawn entirely from that region cannot by itself confirm or refute the model."
 
 ---
 
@@ -354,7 +353,7 @@ When Stage 1 trains on (literature + our_training_fold), it has seen our trainin
 
 At deployment time, Stage 1 generates predictions for new samples it has not seen — these predictions have normal out-of-sample error. But Stage 2's weights were calibrated to near-perfect priors. So Stage 2 may be slightly over-reliant on the prior feature.
 
-The validation score (RMSE=1.907) is unbiased because the validation folds were never seen by Stage 1. The issue is that the Stage 2 model in memory may behave slightly differently on truly novel unseen data than the CV estimate suggests.
+We originally argued the validation score (RMSE=1.912) was unbiased because the validation folds were never seen by Stage 1. **That argument was wrong, and this is the central correction of the project.** Stage 1 was trained on literature together with the lab training rows; under a random row split those rows contained other measurements of the very catalysts in the validation fold. The prior feature therefore carried each validation catalyst's own yields. Under catalyst-grouped CV, where a catalyst appears in only one fold, the effect disappears and the method is 1.8% worse than baseline (2.9425 → 2.9955).
 
 The fix: train Stage 1 only on literature. All its predictions on internal data are then naturally out-of-sample. This is a one-line change. It will be implemented before any results are published.
 
@@ -396,7 +395,11 @@ A: "Because 3,852 is not negligibly small compared to 89,000. It is 4.1% of the 
 
 **Q: "The OOD improvement was reported as 45%. Is that reliable?"**
 
-A: "No — and I corrected it, which I think is the honest thing to do. That 45% (6.53 → 3.60) came from data leakage: the Stage-1 prior was trained on the very out-of-distribution samples we then tested on, together with their true yields, so the prior effectively handed the final model the answers through the feature. When I retrain the prior with those OOD rows removed — a genuinely blind test — the leak-free OOD RMSE is about 6.0 to 6.8, roughly level with baseline. So I no longer claim a large OOD win. The reliable, defensible result is in-distribution: a 10.6% improvement that holds across ten random seeds at p below ten-to-the-minus-fourteen and on a fully held-out test set. And there is a clean lesson underneath it — quantile normalisation is a dial that trades OOD extrapolation for in-distribution accuracy, and we chose in-distribution because our goal is predicting our own next experiment."
+A: "No — and there were in fact two leaks, which I corrected in sequence. The first was the out-of-distribution claim: 45% (6.53 → 3.60) came from the Stage-1 prior being trained on the very OOD samples we then tested on. The second, which we found later and which matters more, is that the *in-distribution* result had the same disease. Stage 1 also saw the lab training rows, and under a random row split those included the test catalysts. Once we split by catalyst instead of by row, the 9.7% improvement becomes a 1.8% degradation: baseline 2.9425, two-stage 2.9955.
+
+So I no longer claim either win. What we do claim is a composition-only screening model that ranks genuinely unseen catalysts with enrichment 3.77× (95% CI 3.04–4.89×), and a clean methodological finding: on a dataset with roughly a hundred rows per catalyst, a random row split measures recall rather than prediction. Random splits are standard practice in this field, which is why we think the finding is worth reporting.
+
+One more thing, since it usually comes next: quantile normalisation turned out not to matter either. It moves RMSE by 0.001 to 0.023, inside run-to-run noise at three seeds. Prof. Taniike predicted that — trees read feature order, not scale."
 
 ---
 

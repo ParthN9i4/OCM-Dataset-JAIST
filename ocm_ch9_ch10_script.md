@@ -1,19 +1,29 @@
-> **⚠️ Superseded numbers.** The `1.907` / `−10.6%` prior-feature results quoted throughout this
-> document come from a **row-level** cross-validation split. Under catalyst-grouped validation the
-> improvement does not survive (baseline 2.943 vs. 2.995) — it was catalyst-identity leakage.
-> This document is retained as a record of the original analysis. For corrected numbers see
-> `ocm_worknote_taniike.md` (v2), `SESSION_CONTEXT.md` §7–14, and `taniike_validation.py` onward.
+> **Status.** This script narrates the **historical notebook**, whose chapters use a row-level split.
+> Its numbers are kept so the narration matches what the notebook actually prints. Section 9.2 has
+> been extended to carry the full correction; read that before presenting any of this.
+>
+> The correction in one line: the `1.907` / `−9.7%` prior-feature result came from a row-level split
+> that let the same catalyst appear in training and test. Under catalyst-grouped validation the same
+> models are **worse** than baseline (2.9425 vs 2.9955) — catalyst-identity leakage. Authoritative
+> sources: `ocm_worknote_taniike.md` (v2), `SESSION_CONTEXT.md` §3 and §5, `ocm_verification_report.md`.
 
 # Verbatim Presenter Script — Chapters 9 & 10
 
 First-person spoken script. Every claim is tied to a specific number or reason — nothing vague.
 Numbers reflect the **corrected, leak-free** analysis (see `qn_tradeoff.json`, `feedback_results.json`).
 
-Key numbers to keep straight:
-- Baseline (no transfer), asymmetric 5-fold CV: **RMSE 2.133**.
-- Prior Feature Transfer (PFT = DRST-filtered + quantile-normalised prior): **RMSE 1.907** (−10.6%).
+Key numbers to keep straight. **Everything in this first block is ROW-LEVEL and superseded** — it is
+what the notebook prints, not what we now believe (see 9.2):
+- Baseline (no transfer), row-level 5-fold CV: **RMSE 2.133**.
+- Prior Feature Transfer (PFT = DRST-filtered + quantile-normalised prior): **RMSE 1.912** (−9.7%).
 - 10-seed repeat: baseline **2.121 ± 0.006** vs PFT **1.909 ± 0.002**, PFT wins **10/10**, paired-t **p = 3.9×10⁻¹⁵**.
+  (Ten seeds do not rescue this: every seed used the same leaky split.)
 - True held-out 20% lab (never trained on): baseline **2.097** → PFT **1.892** (R² 0.763).
+
+**The numbers that supersede them — catalyst-grouped 5-fold CV:**
+- Baseline **2.9425**; PFT-filtered **2.9955** (**+1.8% worse**); PFT-all-literature **2.9817**.
+- Screening (composition-only, formulation B): Spearman **0.724**, enrichment **3.77×** on the 771
+  catalysts of comparable measurement effort (95% CI **3.04–4.89×**).
 - **OOD (corrected, leak-free)**: baseline **6.53**; honest transfer configs **6.05–6.77**. The old
   "3.60 (−45%)" was **leakage** — it reproduces (3.62) *only* when the prior is trained on the OOD
   test rows themselves.
@@ -63,8 +73,9 @@ lands — the two agree at correlation 0.79, with 81% of the kept samples overla
 different methods tie, that tells you filtering has hit its ceiling; the remaining error isn't a
 filtering problem."
 
-**Prior Feature Transfer — the method that worked.**
-"PFT is the one that actually breaks through, from 2.133 to 1.907 — a 10.6% reduction. The reason
+**Prior Feature Transfer — the method that appeared to work.**
+"Under this row-level protocol PFT is the one that appears to break through, from 2.133 to 1.912 — a
+9.7% reduction. Say 'appears' out loud: section 9.2 shows this inverts under a proper split. The reason
 it works is structural: the literature never enters the final model as a *label*, only as a
 *predicted feature*. A Stage-1 model learns the literature's view of chemistry; then Stage-2 — our
 model — trains only on our labels, with the Stage-1 prediction added as one extra feature. That
@@ -74,7 +85,7 @@ Stage-1 expert is trained on only 782 samples, so it's a bit high-variance; it a
 map preserves the *ranking* of good and bad chemistry across domains; and it's two models to
 maintain instead of one."
 
-### 9.2 — The correction I owe you: the OOD number
+### 9.2 — The correction I owe you: two leaks, not one
 
 "Now the correction. The earlier version of this deck claimed a 45% improvement out-of-distribution
 — RMSE 6.53 down to 3.60 — on literature made by preparation methods our lab never uses. That
@@ -87,11 +98,26 @@ configuration: a small improvement over baseline at best, and for our best in-di
 essentially level with baseline. I reproduced the old 3.60 exactly (3.62) *only* by putting the
 leak back, which confirms that leakage — not skill — produced it."
 
-"I want to be clear about what this does and doesn't change. It does **not** touch the headline: on
-our own chemistry, transfer learning gives a solid, repeatable 10% gain, confirmed across ten random
-seeds at p below ten-to-the-minus-fourteen and on a fully held-out test set. What it changes is the
-*extrapolation* claim: we should not sell this as a model that generalises dramatically to
-unfamiliar catalyst families. It's a model that's very good in our operating regime."
+"When I first gave this correction, I said it did **not** touch the headline — that on our own
+chemistry the in-distribution gain was solid and repeatable across ten seeds. **That was wrong, and
+this is the second and larger correction.**
+
+The in-distribution result had the same disease. Stage 1 was trained on literature *together with
+the lab training rows*, and under a random row split those rows contained other measurements of the
+very catalysts sitting in the validation fold. The 89,074 rows are only **917 distinct catalysts**,
+roughly a hundred rows each — so a random row split almost guarantees a catalyst appears on both
+sides. The prior feature was carrying each validation catalyst's own measured yields back to the
+model. Ten seeds do not help: every seed made the same mistake.
+
+Re-run with folds split **by catalyst**, so that all rows of a catalyst live in exactly one fold, the
+result inverts. Baseline 2.9425, two-stage 2.9955 — **1.8% worse**, not 9.7% better. The baseline
+itself rises from 2.12 to 2.94, which is the honest difficulty of predicting a catalyst nobody has
+made.
+
+So the correct summary of this chapter is: the OOD claim was withdrawn first, the in-distribution
+claim was withdrawn second, and what remains is a composition-only screening model with enrichment
+3.77× on catalysts of comparable measurement effort. I would rather present it that way than have a
+referee find it."
 
 ### 9.3 — The quantile-normalisation trade-off (the deeper lesson)
 
