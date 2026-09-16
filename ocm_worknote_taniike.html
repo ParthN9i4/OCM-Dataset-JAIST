@@ -489,7 +489,71 @@ ranked the literature prior first; that model was the leaked pipeline,
 so the figure illustrated the leak rather than the
 chemistry.)</em></figcaption>
 </figure>
-<h2 id="why-the-ba-family-fails-and-how-much-data-a-new-family-needs">7.
+<h2 id="how-much-of-the-condition-grid-does-a-catalyst-actually-need">7.
+How much of the condition grid does a catalyst actually need?</h2>
+<p>We tested this retrospectively: keep only k of the ~27 measurements
+per catalyst-temperature cell (drawn at random, 5 independent draws per
+k, always scored against the true max from the full data), and see how
+the ranking degrades.</p>
+<table>
+<thead>
+<tr>
+<th>Measurements kept</th>
+<th>Share of full grid</th>
+<th>Spearman</th>
+<th>Enrichment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 per cell (~5 runs/catalyst)</td>
+<td>5 %</td>
+<td>0.759 ± 0.002</td>
+<td>3.99×</td>
+</tr>
+<tr>
+<td>2 per cell (~10 runs/catalyst)</td>
+<td>10 %</td>
+<td>0.760 ± 0.002</td>
+<td>4.11×</td>
+</tr>
+<tr>
+<td>3 per cell (~15 runs/catalyst)</td>
+<td>15 %</td>
+<td>0.765 ± 0.002</td>
+<td>4.24×</td>
+</tr>
+<tr>
+<td>all ~27 per cell (full grid)</td>
+<td>100 %</td>
+<td>0.761</td>
+<td>4.28×</td>
+</tr>
+</tbody>
+</table>
+<p>One measurement per cell ranks almost as well as all 27 — stable
+across five independent random draws, not a lucky sample. The labels
+this produces are biased low (−2.8 yield points at k = 1, shrinking
+below 0.4 points by k = 13), but the bias is roughly uniform across
+catalysts, so ranking survives even though absolute yield estimates
+would not be trustworthy.</p>
+<p>Temperature is a different story. 700 °C alone gives ρ = 0.346,
+enrichment 1.07× — no better than chance — because 70 % of catalysts
+reach their true maximum at 800 °C or above. <strong>Redundancy is in
+the repeats within a temperature, not in the temperatures
+themselves.</strong></p>
+<p>Mechanism: between-catalyst spread in true maximum yield (SD 5.32) is
+3.8× the typical spread within one (catalyst, temperature) cell (SD
+1.41). What distinguishes catalysts is far larger than what varies
+between repeats of one, so ranking needs many catalysts more than many
+repeats per catalyst.</p>
+<p><strong>This depends on the 27 slots being individually
+selectable</strong> — the same open question as above. If they are
+successive samples from one continuous run rather than distinct
+conditions, “keep 1 of 27” means stopping a run early, not choosing a
+condition, and this result would not transfer to a prospective design.
+Full detail in <code>phase10_condition_subsampling.py</code>.</p>
+<h2 id="why-the-ba-family-fails-and-how-much-data-a-new-family-needs">8.
 Why the Ba family fails, and how much data a new family needs</h2>
 <p>Family holdouts behave reasonably for La, Ti, Zr and Ce (ρ 0.62–0.68)
 but poorly for Ba (0.526). The cause is quantifiable: Ba catalysts
@@ -585,7 +649,7 @@ about the families.</p>
 would treat all of this as order-of-magnitude guidance only: for Ti and
 Zr the per-point seed spread (0.03–0.12) is comparable to the whole
 learning-curve gain, so those two curves are not resolved.</p>
-<h2 id="a-candidate-list-for-prospective-validation">8. A candidate list
+<h2 id="a-candidate-list-for-prospective-validation">9. A candidate list
 for prospective validation</h2>
 <p>We enumerated <strong>26,414 unseen candidates</strong> in the
 laboratory’s own design grammar — impregnation, one support at ~90 %
@@ -685,9 +749,10 @@ suggests a different allocation of the same reactor budget. Measuring 5
 conditions at each of 750, 800, 850 and 900 °C — 20 runs rather than 135
 — reproduces the ranking of your 811 fully-measured catalysts at ρ =
 <strong>0.955</strong> (systematically low by 1.31 yield points, a bias
-that can be pre-declared). That buys roughly 72 catalysts screened
-instead of 17 measured exhaustively, with the best few then confirmed at
-full coverage, and with part of the batch drawn at random from the same
+that can be pre-declared; §7 has the fuller, stability-checked version
+of this result). That buys roughly 72 catalysts screened instead of 17
+measured exhaustively, with the best few then confirmed at full
+coverage, and with part of the batch drawn at random from the same
 candidate grammar as a control arm. The cost is more syntheses for the
 same number of reactor runs, which may or may not suit your
 constraints.</p>
@@ -699,7 +764,7 @@ latter, then selecting 5 of 27 saves analysis rather than reactor hours,
 the arithmetic above changes, and — more importantly — a catalyst’s
 observed maximum is a fresh-catalyst transient rather than an achievable
 optimum, which would change what our target quantity means.</p>
-<h2 id="relation-to-prior-work">9. Relation to prior work</h2>
+<h2 id="relation-to-prior-work">10. Relation to prior work</h2>
 <p>The mechanism of PFT — using a model’s prediction as an input feature
 — is <strong>stacked generalisation</strong> (Wolpert, <em>Neural
 Networks</em> 5, 1992, 241–259) applied across distributions. “Prior
@@ -726,13 +791,13 @@ al., NIPS 2006; Sugiyama et al., <em>JMLR</em> 8, 2007) corrects which
 records are used but keeps source labels in the objective — our DRST and
 KMM baselines are instances; label-shift correction (Lipton et al., ICML
 2018) reweights to correct the label distribution.</p>
-<h2 id="limitations-and-next-steps">10. Limitations and next steps</h2>
+<h2 id="limitations-and-next-steps">11. Limitations and next steps</h2>
 <ul>
 <li><strong>The literature contribution is not demonstrated.</strong>
 Four designs plus a 28-family follow-up all returned null. We report
 this rather than continue searching for a variant that scores well.</li>
 <li><strong>Novel promoter families cannot be priced.</strong> This is
-structural, not a modelling deficiency — but §7 quantifies the data
+structural, not a modelling deficiency — but §8 quantifies the data
 required to remove the limitation.</li>
 <li><strong>The target carries a measurement-effort confound, and grid
 coverage is not random.</strong> 47 catalysts have fewer than 20
@@ -772,16 +837,21 @@ the genuine top decile averages 21.92 % (enrichment 0.42×, i.e. worse
 than picking at random). <strong>But adding impregnation literature to
 training raises ρ from 0.238 to 0.388 (+0.150, 5/5 seeds)</strong> — the
 first setting in this study where literature data measurably helps, and
-consistent with the scope statement in §9: the lab has <em>no</em>
+consistent with the scope statement in §10: the lab has <em>no</em>
 coverage of non-impregnation chemistry, so the literature supplies
 genuinely new information there. Two caveats: absolute performance
 remains poor, and plain merging outperforms the prior-feature
 construction (0.388 vs 0.318). Details in
 <code>phase7_prep_ood.py</code>; this supersedes the earlier row-level
 OOD numbers.</li>
-<li><strong>Prospective validation</strong> is the natural next step,
-and we would pre-register the expected hit rate (precision@20, CI
-0.15–0.65) before any results arrive.</li>
+<li><strong>Prospective validation is the natural next step.</strong> We
+are turning §7’s subsampling result into a pre-registered screening
+protocol, and preparing the wider screen-then-confirm campaign design
+from §9, both pending your answer on distinct conditions
+vs. time-on-stream. We consider further in-domain literature-integration
+variants closed and are not pursuing more of them. We would pre-register
+the expected hit rate (precision@20, CI 0.15–0.65) before any results
+arrive.</li>
 </ul>
 <p><em>All numbers in this note are stored outputs of the scripts named
 at the head of the document; each figure is generated from the

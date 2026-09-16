@@ -1,0 +1,191 @@
+{
+ "meta": {
+  "protocol": "formulation B, composition-only, tuned LGBM, catalyst-grouped 5-fold, 5 seeds",
+  "seeds": [
+   0,
+   1,
+   2,
+   7,
+   13
+  ],
+  "n_draws_per_k": 5,
+  "scored_against": "TRUE observed max from the FULL 89,074-row dataset, always",
+  "caveat": "assumes the sampled conditions are individually selectable; depends on whether the 27 slots per cell are distinct conditions or time-on-stream samples (open question, see SESSION_CONTEXT.md)"
+ },
+ "A_condition_subsampling": {
+  "1": {
+   "n_measurements_mean": 4399.0,
+   "spearman_mean_across_draws": 0.7586193329575657,
+   "spearman_std_across_draws": 0.002254949353303737,
+   "enrichment_mean_across_draws": 3.9869565217391303,
+   "label_bias_mean_across_draws": -2.8041847078043616,
+   "n_draws": 5
+  },
+  "2": {
+   "n_measurements_mean": 8715.0,
+   "spearman_mean_across_draws": 0.7596574584531097,
+   "spearman_std_across_draws": 0.0017706307214377518,
+   "enrichment_mean_across_draws": 4.113043478260869,
+   "label_bias_mean_across_draws": -2.018375998748091,
+   "n_draws": 5
+  },
+  "3": {
+   "n_measurements_mean": 12954.0,
+   "spearman_mean_across_draws": 0.7650751778460861,
+   "spearman_std_across_draws": 0.0020047115782526456,
+   "enrichment_mean_across_draws": 4.239130434782608,
+   "label_bias_mean_across_draws": -1.616785136875027,
+   "n_draws": 5
+  },
+  "5": {
+   "n_measurements_mean": 21251.0,
+   "spearman_mean_across_draws": 0.7628145148575094,
+   "spearman_std_across_draws": 0.001303595694056443,
+   "enrichment_mean_across_draws": 4.260869565217391,
+   "label_bias_mean_across_draws": -1.1631926065158122,
+   "n_draws": 5
+  },
+  "8": {
+   "n_measurements_mean": 33148.0,
+   "spearman_mean_across_draws": 0.7624796982138269,
+   "spearman_std_across_draws": 0.0015059960794664455,
+   "enrichment_mean_across_draws": 4.178260869565218,
+   "label_bias_mean_across_draws": -0.7695688974375137,
+   "n_draws": 5
+  },
+  "13": {
+   "n_measurements_mean": 51269.0,
+   "spearman_mean_across_draws": 0.7626952410376926,
+   "spearman_std_across_draws": 0.0008534613463174659,
+   "enrichment_mean_across_draws": 4.21304347826087,
+   "label_bias_mean_across_draws": -0.3856149637051254,
+   "n_draws": 5
+  },
+  "20": {
+   "n_measurements_mean": 73458.0,
+   "spearman_mean_across_draws": 0.7613144187737999,
+   "spearman_std_across_draws": 0.0005003463590569253,
+   "enrichment_mean_across_draws": 4.208695652173913,
+   "label_bias_mean_across_draws": -0.13307565956161396,
+   "n_draws": 5
+  },
+  "27": {
+   "n_measurements_mean": 87345.0,
+   "spearman_mean_across_draws": 0.7603443017702574,
+   "spearman_std_across_draws": 0.0007044444382092402,
+   "enrichment_mean_across_draws": 4.165217391304347,
+   "label_bias_mean_across_draws": -0.008742807761177751,
+   "n_draws": 5
+  }
+ },
+ "B_temperature_ablation": {
+  "700_only": {
+   "n_measurements": 13678,
+   "n_catalysts_covered": 835,
+   "spearman_mean": 0.3463498771916754,
+   "spearman_std_across_seeds": 0.010382860953740077,
+   "enrichment_mean": 1.0652173913043477,
+   "precision_at20_mean": 0.12,
+   "label_bias_vs_true_max": -5.172547303924551
+  },
+  "750_only": {
+   "n_measurements": 17172,
+   "n_catalysts_covered": 882,
+   "spearman_mean": 0.6576274457780565,
+   "spearman_std_across_seeds": 0.003448701181916844,
+   "enrichment_mean": 1.6086956521739129,
+   "precision_at20_mean": 0.23000000000000004,
+   "label_bias_vs_true_max": -3.0401460436473924
+  },
+  "800_only": {
+   "n_measurements": 19388,
+   "n_catalysts_covered": 888,
+   "spearman_mean": 0.7409970198845397,
+   "spearman_std_across_seeds": 0.003578061888166598,
+   "enrichment_mean": 4.304347826086956,
+   "precision_at20_mean": 0.41,
+   "label_bias_vs_true_max": -1.5486779613333332
+  },
+  "850_only": {
+   "n_measurements": 19692,
+   "n_catalysts_covered": 893,
+   "spearman_mean": 0.6787072336213551,
+   "spearman_std_across_seeds": 0.00352704211313389,
+   "enrichment_mean": 4.0434782608695645,
+   "precision_at20_mean": 0.45999999999999996,
+   "label_bias_vs_true_max": -1.743507483826428
+  },
+  "900_only": {
+   "n_measurements": 19144,
+   "n_catalysts_covered": 901,
+   "spearman_mean": 0.6422735040058835,
+   "spearman_std_across_seeds": 0.003163870716907498,
+   "enrichment_mean": 4.043478260869565,
+   "precision_at20_mean": 0.51,
+   "label_bias_vs_true_max": -4.10362363872253
+  },
+  "700_750": {
+   "n_measurements": 30850,
+   "n_catalysts_covered": 891,
+   "spearman_mean": 0.6460151289216022,
+   "spearman_std_across_seeds": 0.005068603872745791,
+   "enrichment_mean": 1.4782608695652175,
+   "precision_at20_mean": 0.22000000000000003,
+   "label_bias_vs_true_max": -2.8689245849393936
+  },
+  "800_850": {
+   "n_measurements": 39080,
+   "n_catalysts_covered": 901,
+   "spearman_mean": 0.7250216008124918,
+   "spearman_std_across_seeds": 0.004630132782139102,
+   "enrichment_mean": 4.369565217391305,
+   "precision_at20_mean": 0.49000000000000005,
+   "label_bias_vs_true_max": -0.7185613930299667
+  },
+  "750_800_850": {
+   "n_measurements": 56252,
+   "n_catalysts_covered": 903,
+   "spearman_mean": 0.7531262976371891,
+   "spearman_std_across_seeds": 0.0014194395404872441,
+   "enrichment_mean": 4.282608695652174,
+   "precision_at20_mean": 0.4,
+   "label_bias_vs_true_max": -0.2610201752181617
+  },
+  "all_five": {
+   "n_measurements": 89074,
+   "n_catalysts_covered": 917,
+   "spearman_mean": 0.7606463927657198,
+   "spearman_std_across_seeds": 0.001989380913574362,
+   "enrichment_mean": 4.282608695652174,
+   "precision_at20_mean": 0.44000000000000006,
+   "label_bias_vs_true_max": 0.0
+  }
+ },
+ "C_temperature_of_optimum": {
+  "700.0": {
+   "n_catalysts": 102,
+   "fraction": 0.11123227917121047
+  },
+  "750.0": {
+   "n_catalysts": 170,
+   "fraction": 0.18538713195201745
+  },
+  "800.0": {
+   "n_catalysts": 238,
+   "fraction": 0.2595419847328244
+  },
+  "850.0": {
+   "n_catalysts": 311,
+   "fraction": 0.3391494002181025
+  },
+  "900.0": {
+   "n_catalysts": 96,
+   "fraction": 0.10468920392584515
+  }
+ },
+ "D_variance_ratio": {
+  "between_catalyst_sd_of_true_max": 5.3235915100445865,
+  "median_within_cell_sd": 1.4080560931001478,
+  "ratio": 3.780809256201945
+ }
+}
