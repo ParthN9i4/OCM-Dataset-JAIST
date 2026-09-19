@@ -99,11 +99,24 @@ def score(mask, pred):
 per_seed_real = [oof(y_max, s) for s in SEEDS]
 P = np.mean(per_seed_real, axis=0)                                  # real model, seed-averaged
 E = np.mean([oof(n_rows.astype(float), s) for s in SEEDS], axis=0)  # EFFORT-ONLY control
-log("fitted real model and effort-only control")
+
+# MEDIAN-TRAINED ARM. The adopted label is the median WITHIN each (catalyst, temperature) cell --
+# i.e. across the group of near-identical readings -- then the maximum of those per-cell medians
+# across the catalyst's temperatures. This is phase8's q=0.50 variant, NOT the plain median of all
+# of a catalyst's rows, which is a different and weaker label (phase8 scored that separately).
+# phase8 evaluated this on all 917 catalysts only, so its equal-effort score was missing; without
+# it the work note would pair a median-trained decision with max-trained headline numbers.
+# Scored, as everything here is, against the TRUE observed max. Only the TRAINING label differs.
+y_median = (lab.groupby(['cat_id', 'Temperature_C'])[TARGET].median()
+              .reset_index().groupby('cat_id')[TARGET].max()
+              .reindex(range(n_cat)).values)
+M = np.mean([oof(y_median, s) for s in SEEDS], axis=0)
+log("fitted max-trained model, median-trained model, and effort-only control")
 
 ALL = np.ones(n_cat, bool)
 RES = {
     'real_model': {'all_917': score(ALL, P), 'equal_effort': score(EE, P)},
+    'median_trained_model': {'all_917': score(ALL, M), 'equal_effort': score(EE, M)},
     'effort_only_control': {'all_917': score(ALL, E), 'equal_effort': score(EE, E)},
     'headline_conventions': {
         'per_seed_mean_spearman_all': float(np.mean([spearmanr(y_max, p)[0] for p in per_seed_real])),
@@ -197,6 +210,9 @@ print("\n================= COVERAGE-CORRECTED REPORTING =================")
 print(f"{'':34s} {'n':>5s} {'Spearman':>10s} {'enrich':>9s} {'prec@20':>8s}")
 for lbl, key in [('REAL model, all catalysts', 'all_917'), ('REAL model, equal-effort set', 'equal_effort')]:
     r = RES['real_model'][key]
+    print(f"{lbl:34s} {r['n']:5d} {r['spearman']:10.4f} {r['enrichment']:8.2f}x {r['precision_at20']:8.2f}")
+for lbl, key in [('MEDIAN-trained, all catalysts', 'all_917'), ('MEDIAN-trained, equal-effort set', 'equal_effort')]:
+    r = RES['median_trained_model'][key]
     print(f"{lbl:34s} {r['n']:5d} {r['spearman']:10.4f} {r['enrichment']:8.2f}x {r['precision_at20']:8.2f}")
 for lbl, key in [('EFFORT-ONLY control, all', 'all_917'), ('EFFORT-ONLY control, equal-effort', 'equal_effort')]:
     r = RES['effort_only_control'][key]

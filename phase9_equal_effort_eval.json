@@ -36,6 +36,20 @@
     ]
    }
   },
+  "median_trained_model": {
+   "all_917": {
+    "n": 917,
+    "spearman": 0.772080217799977,
+    "enrichment": 4.130434782608695,
+    "precision_at20": 0.45
+   },
+   "equal_effort": {
+    "n": 771,
+    "spearman": 0.7325758775810187,
+    "enrichment": 3.896103896103896,
+    "precision_at20": 0.35
+   }
+  },
   "effort_only_control": {
    "all_917": {
     "n": 917,

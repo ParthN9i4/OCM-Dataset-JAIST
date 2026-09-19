@@ -382,6 +382,59 @@ costs 0.037 Spearman and 0.51× enrichment.</p>
 <strong>random</strong> 771-catalyst subsets of the <em>same</em>
 predictions give 0.767 with a 95 % range of 0.756 – 0.780, and 0.724
 lies below it.</p>
+<p><strong>Maximum versus median as the training label.</strong> Each
+catalyst’s label must be built from its ~135 readings, and the choice is
+not obvious. We compared two. The first is the single highest reading
+anywhere. The second takes the median <em>within</em> each temperature
+group — across the cluster of near-identical readings — and then the
+best of those per-group medians. Both were scored against the same
+quantity, the catalyst’s true observed maximum, so only the training
+label differs.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Training label</th>
+<th>ρ, all 917</th>
+<th>ρ, equal-effort</th>
+<th>Enrichment, all 917</th>
+<th>Enrichment, equal-effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Single highest reading</td>
+<td>0.767</td>
+<td>0.724</td>
+<td>4.35×</td>
+<td>3.77×</td>
+</tr>
+<tr>
+<td>Per-group median</td>
+<td><strong>0.772</strong></td>
+<td><strong>0.733</strong></td>
+<td>4.13×</td>
+<td><strong>3.90×</strong></td>
+</tr>
+</tbody>
+</table>
+<p><em>(Seed-averaged predictions throughout this comparison, which is
+why the highest-reading label shows 0.767 here against the 0.761 in the
+table above — that figure is a mean over per-seed scores. Two different
+quantities, not a discrepancy.)</em></p>
+<p>The median leads on rank correlation in both populations and on
+enrichment in the equal-effort set, and trails on enrichment across all
+917. The differences are small, and a catalyst-level bootstrap on the
+all-917 comparison does not separate the two. <strong>We are proceeding
+with the per-group median</strong>, because it cannot be set by a single
+high reading. We state that as a choice rather than a result: the
+evidence permits it but does not compel it.</p>
 <p><strong>A negative control worth more than either number.</strong> We
 refitted the identical model with the <em>number of measurements</em> as
 its target — it never sees a yield. That ranking reaches
@@ -463,10 +516,11 @@ See question 2 in §8.</p>
 <h2 id="why-ba-fails-and-how-much-data-a-new-family-needs">5. Why Ba
 fails, and how much data a new family needs</h2>
 <p>Family holdouts behave reasonably for La, Ti, Zr and Ce (ρ 0.62–0.68)
-but poorly for Ba (0.526). Ba catalysts average <strong>13.76 %</strong>
-maximum yield against <strong>8.95 %</strong> for the rest, and
-<strong>78 % of the lab’s top decile contains Ba</strong> — removing
-them removes the high-yield regime.</p>
+but poorly for Ba (ρ = 0.526 in the direct family-holdout run,
+<code>phase4_family_diagnosis.py</code>). Ba catalysts average
+<strong>13.76 %</strong> maximum yield against <strong>8.95 %</strong>
+for the rest, and <strong>78 % of the lab’s top decile contains
+Ba</strong> — removing them removes the high-yield regime.</p>
 <p>The mechanism is provable. With no Ba in training the Ba column is
 constant, so no tree splits on it, and retraining with that column
 <strong>deleted entirely</strong> gives <strong>bit-identical
@@ -474,6 +528,13 @@ predictions</strong>. The model prices Ba catalysts as though Ba were
 absent, underpredicting the best by <strong>9.8 yield points</strong>.
 Ten random pseudo-families of equal size score 0.752, so this is label
 coverage, not sample size.</p>
+<p>The table below comes from a <em>separate</em> experiment — the
+learning curve in <code>phase6_our_experiments.py</code>, which varies
+how many family members are in training. Its zero-members point measures
+the same idea as the holdout above through a different protocol, which
+is why Ba reads 0.509 here against 0.526 there. Both are 5-seed means;
+the learning-curve point is the noisier of the two (SD 0.032 against
+0.004).</p>
 <table>
 <thead>
 <tr>
@@ -681,9 +742,12 @@ catalyst performed: Spearman(cell size, cell maximum yield) =
 1–5 rows to 6.05 % in cells of 27. Only 811 of 917 catalysts have all
 five temperatures, and 186 cells are absent entirely. Excluding
 low-count catalysts changes our headline by 0.002, so nothing here
-hinges on it.</li>
+hinges on it. We do not know the cause: if incomplete runs were stopped
+deliberately when results looked poor, the bias is correctable; if not,
+it may itself be informative. Our correction holds either way, so we
+raise it as an observation rather than a question.</li>
 </ul>
-<p><strong>Three questions, in order of value to us:</strong></p>
+<p><strong>Two questions, in order of value to us:</strong></p>
 <ol type="1">
 <li><strong>Do the ~27 condition settings per catalyst–temperature exist
 in retrievable form?</strong> This is the largest single opportunity:
@@ -695,19 +759,15 @@ successive time-on-stream samples at a single condition?</strong> We
 could not settle this from the file. If the latter, a catalyst’s maximum
 is a fresh-catalyst transient rather than an achievable optimum — which
 changes both what our target means and whether §4’s result transfers to
-a prospective design.</li>
-<li><strong>Were incomplete runs stopped deliberately when results
-looked poor?</strong> Coverage correlates with performance, and the
-answer decides whether that bias is correctable or is itself
-informative.</li>
+a prospective design. <strong>What we are doing meanwhile.</strong> Our
+focus is accuracy rather than scope. Two directions: refining the
+composition-based model, since §4 suggests the data may support a
+simpler and more stable formulation than the one we use now; and
+revisiting the two-stage construction for the cross-preparation case
+specifically, where literature data does measurably help (ρ 0.238 →
+0.388) but our two-stage version still loses to a plain merge (0.318
+versus 0.388). That gap looks closable.</li>
 </ol>
-<p><strong>What we are doing meanwhile.</strong> Turning §4’s
-subsampling result into a pre-registered screening protocol, and
-preparing the wider screen-then-confirm design in §6 — both pending your
-answer to question 2. We consider further in-domain
-literature-integration variants closed and are not pursuing more. Any
-prospective campaign would have its expected hit rate (precision@20, CI
-0.15–0.65) pre-registered before results arrive.</p>
 <p><em>All numbers here are stored outputs of the scripts named at the
 head of this note; each figure is generated from the corresponding
 experiment’s JSON, so figures cannot drift from the experiments that

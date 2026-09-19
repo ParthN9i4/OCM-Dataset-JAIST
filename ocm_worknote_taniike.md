@@ -112,6 +112,27 @@ Spearman(measurement count, observed maximum) falling from **+0.293** to **+0.00
 That drop is not an artifact of scoring fewer catalysts: 300 **random** 771-catalyst subsets of the
 *same* predictions give 0.767 with a 95 % range of 0.756 – 0.780, and 0.724 lies below it.
 
+**Maximum versus median as the training label.** Each catalyst's label must be built from its ~135
+readings, and the choice is not obvious. We compared two. The first is the single highest reading
+anywhere. The second takes the median *within* each temperature group — across the cluster of
+near-identical readings — and then the best of those per-group medians. Both were scored against the
+same quantity, the catalyst's true observed maximum, so only the training label differs.
+
+| Training label | ρ, all 917 | ρ, equal-effort | Enrichment, all 917 | Enrichment, equal-effort |
+|---|---|---|---|---|
+| Single highest reading | 0.767 | 0.724 | 4.35× | 3.77× |
+| Per-group median | **0.772** | **0.733** | 4.13× | **3.90×** |
+
+*(Seed-averaged predictions throughout this comparison, which is why the highest-reading label shows
+0.767 here against the 0.761 in the table above — that figure is a mean over per-seed scores. Two
+different quantities, not a discrepancy.)*
+
+The median leads on rank correlation in both populations and on enrichment in the equal-effort set,
+and trails on enrichment across all 917. The differences are small, and a catalyst-level bootstrap on
+the all-917 comparison does not separate the two. **We are proceeding with the per-group median**,
+because it cannot be set by a single high reading. We state that as a choice rather than a result:
+the evidence permits it but does not compel it.
+
 **A negative control worth more than either number.** We refitted the identical model with the *number
 of measurements* as its target — it never sees a yield. That ranking reaches **Spearman 0.400** against
 observed maximum yield, but enrichment **0.87×**, no better than chance. Rank correlation is partly
@@ -152,7 +173,8 @@ would not transfer to a prospective design. See question 2 in §8.
 
 ## 5. Why Ba fails, and how much data a new family needs
 
-Family holdouts behave reasonably for La, Ti, Zr and Ce (ρ 0.62–0.68) but poorly for Ba (0.526). Ba
+Family holdouts behave reasonably for La, Ti, Zr and Ce (ρ 0.62–0.68) but poorly for Ba (ρ = 0.526 in
+the direct family-holdout run, `phase4_family_diagnosis.py`). Ba
 catalysts average **13.76 %** maximum yield against **8.95 %** for the rest, and **78 % of the lab's
 top decile contains Ba** — removing them removes the high-yield regime.
 
@@ -160,6 +182,12 @@ The mechanism is provable. With no Ba in training the Ba column is constant, so 
 and retraining with that column **deleted entirely** gives **bit-identical predictions**. The model
 prices Ba catalysts as though Ba were absent, underpredicting the best by **9.8 yield points**. Ten
 random pseudo-families of equal size score 0.752, so this is label coverage, not sample size.
+
+The table below comes from a *separate* experiment — the learning curve in
+`phase6_our_experiments.py`, which varies how many family members are in training. Its zero-members
+point measures the same idea as the holdout above through a different protocol, which is why Ba reads
+0.509 here against 0.526 there. Both are 5-seed means; the learning-curve point is the noisier of the
+two (SD 0.032 against 0.004).
 
 | Family | ρ, none seen | ρ, fully seen | % of ceiling at zero |
 |---|---|---|---|
@@ -263,9 +291,12 @@ instances; label-shift correction (Lipton et al., ICML 2018) reweights the label
   catalyst performed: Spearman(cell size, cell maximum yield) = **+0.441**, mean cell yield rising from
   2.22 % in cells of 1–5 rows to 6.05 % in cells of 27. Only 811 of 917 catalysts have all five
   temperatures, and 186 cells are absent entirely. Excluding low-count catalysts changes our headline
-  by 0.002, so nothing here hinges on it.
+  by 0.002, so nothing here hinges on it. We do not know the cause: if incomplete runs were stopped
+  deliberately when results looked poor, the bias is correctable; if not, it may itself be
+  informative. Our correction holds either way, so we raise it as an observation rather than a
+  question.
 
-**Three questions, in order of value to us:**
+**Two questions, in order of value to us:**
 
 1. **Do the ~27 condition settings per catalyst–temperature exist in retrievable form?** This is the
    largest single opportunity: the 19.9 % of variance now unreachable becomes largely learnable,
@@ -274,14 +305,11 @@ instances; label-shift correction (Lipton et al., ICML 2018) reweights the label
    a single condition?** We could not settle this from the file. If the latter, a catalyst's maximum
    is a fresh-catalyst transient rather than an achievable optimum — which changes both what our
    target means and whether §4's result transfers to a prospective design.
-3. **Were incomplete runs stopped deliberately when results looked poor?** Coverage correlates with
-   performance, and the answer decides whether that bias is correctable or is itself informative.
-
-**What we are doing meanwhile.** Turning §4's subsampling result into a pre-registered screening
-protocol, and preparing the wider screen-then-confirm design in §6 — both pending your answer to
-question 2. We consider further in-domain literature-integration variants closed and are not pursuing
-more. Any prospective campaign would have its expected hit rate (precision@20, CI 0.15–0.65)
-pre-registered before results arrive.
+**What we are doing meanwhile.** Our focus is accuracy rather than scope. Two directions: refining
+the composition-based model, since §4 suggests the data may support a simpler and more stable
+formulation than the one we use now; and revisiting the two-stage construction for the
+cross-preparation case specifically, where literature data does measurably help (ρ 0.238 → 0.388) but
+our two-stage version still loses to a plain merge (0.318 versus 0.388). That gap looks closable.
 
 *All numbers here are stored outputs of the scripts named at the head of this note; each figure is
 generated from the corresponding experiment's JSON, so figures cannot drift from the experiments that
