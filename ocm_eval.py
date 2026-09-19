@@ -69,6 +69,59 @@ class Data:
                    dl_lab=dl_lab, dl_lit=dl_lit)
 
 
+# ------------------------------------------------------------------ conditions dataset
+CONDITIONS_PATH = 'OCM_data_with_conditions.csv'
+NAME_MAP_PATH = 'catalyst_name_to_composition.json'
+COND_COLS = ['Ar_flow', 'CH4_flow', 'O2_flow']
+
+
+def load_with_conditions(cond_path=CONDITIONS_PATH, map_path=NAME_MAP_PATH, path=DATA_PATH):
+    """Lab data with the gas-flow conditions restored (supplied by Prof. Taniike, Sept 2026).
+
+    The original export dropped the reaction conditions to make the lab data compatible with the
+    literature set. This rejoins them. Each catalyst was run at 5 temperatures x 27 gas-flow
+    settings = 135 conditions; rows with poor mass balance were excluded, so cells hold <= 27.
+
+    Why this matters: grouping by (composition, temperature) leaves 19.9% of yield variance
+    within-group, flooring row-level RMSE at 1.757. Adding these three columns drops that to 2.3%
+    and 0.595 -- they recover 89% of what was previously unreachable. Row-level modelling is a
+    well-posed target again. See phase11_condition_baseline.py.
+
+    The join is by catalyst, not by row: the two files hold the same 89,074 yields in a different
+    order, with 607 (temperature, yield) collisions that make row matching ambiguous. Each
+    catalyst's sorted yield multiset is instead used as a fingerprint; this gives an exact 1:1
+    match over all 917 catalysts (verified in catalyst_name_to_composition.json).
+
+    Returns (df, feat_cols, groups, n_cat) where feat_cols is composition + temperature + the three
+    flow columns, and groups matches the catalyst coding used by Data.load() elsewhere.
+    """
+    import json as _json
+    cond = pd.read_csv(cond_path)
+    name_map = _json.load(open(map_path))
+    df_all = pd.read_csv(path)
+    lab = df_all[df_all.year == 2025].reset_index(drop=True)
+    el = [c for c in df_all.columns if c not in ['Preparation', 'Temperature_C', TARGET, 'year']]
+
+    comp_key = lab[['Preparation'] + el].astype(str).agg('|'.join, axis=1)
+    comp_lookup = lab.assign(_k=comp_key).drop_duplicates('_k').set_index('_k')
+
+    cond = cond.assign(_k=cond.Name.map(name_map))
+    if cond._k.isna().any():
+        raise ValueError('unmapped catalyst names in the conditions file')
+
+    comp = comp_lookup.loc[cond._k.values, el].reset_index(drop=True)
+    out = pd.concat([comp, cond[['Temperature'] + COND_COLS + ['C2y', 'Name', '_k']]
+                     .reset_index(drop=True)], axis=1)
+    out = out.rename(columns={'Temperature': 'Temperature_C', 'C2y': TARGET})
+
+    # catalyst codes aligned to the same ordering Data.load() produces
+    _, uniques = pd.factorize(comp_key)
+    code_of = {k: i for i, k in enumerate(uniques)}
+    groups = out._k.map(code_of).values
+    feat_cols = el + ['Temperature_C'] + COND_COLS
+    return out, feat_cols, groups, len(uniques)
+
+
 # ---------------------------------------------------------------------------- params
 def lgb_params(seed=42, **over):
     p = dict(n_estimators=500, learning_rate=0.05, num_leaves=63, max_depth=7, min_child_samples=20,

@@ -1,0 +1,58 @@
+{
+ "meta": {
+  "protocol": "catalyst-grouped 5-fold CV, tuned LGBM, 5 seeds",
+  "seeds": [
+   0,
+   1,
+   2,
+   7,
+   13
+  ],
+  "n_rows": 89074,
+  "n_catalysts": 917,
+  "screening_ground_truth": "catalyst true observed maximum"
+ },
+ "variance_decomposition": {
+  "within_pct_composition_temperature": 19.900903459460643,
+  "rmse_floor_composition_temperature": 1.7571156136641113,
+  "within_pct_with_conditions": 2.2781906911507592,
+  "rmse_floor_with_conditions": 0.5945097451294639,
+  "variance_attributable_to_conditions_pct_points": 17.622712768309885,
+  "share_of_within_cell_variance_attributable": 0.8855232529622802,
+  "n_groups_composition_temperature": 4399,
+  "mean_rows_per_group_composition_temperature": 20.248692884746532,
+  "n_groups_with_conditions": 87168,
+  "singleton_groups_with_conditions": 85262,
+  "singleton_share_with_conditions": 0.9781341776798825,
+  "n_replicate_rows": 3812,
+  "CAVEAT": "the two floors are not comparable. 1.757 = predict each cell mean (4,399 groups, mean 20.2 rows) and is a learnable target. 0.595 = predict each condition exactly, but 97.8% of those groups are singletons whose within-variance is zero by construction, so it is an interpolation bound and unreachable in practice. Report the measured arm-vs-arm improvement, not the distance to 0.595."
+ },
+ "arms": {
+  "composition_temperature": {
+   "n_features": 66,
+   "row_rmse_mean": 2.897492144458091,
+   "row_rmse_std": 0.02657496681736898,
+   "screening_spearman_mean": 0.7654056080845075,
+   "screening_spearman_std": 0.0054181193378674535,
+   "screening_enrichment_mean": 4.108695652173913,
+   "screening_precision_at20_mean": 0.45
+  },
+  "plus_conditions": {
+   "n_features": 69,
+   "row_rmse_mean": 2.6614792375424474,
+   "row_rmse_std": 0.02849934769372831,
+   "screening_spearman_mean": 0.7868653741746677,
+   "screening_spearman_std": 0.005439620465507318,
+   "screening_enrichment_mean": 4.217391304347826,
+   "screening_precision_at20_mean": 0.41000000000000003
+  }
+ },
+ "comparison": {
+  "row_rmse_improvement": 0.23601290691564358,
+  "row_rmse_pct_improvement": 8.145420078775894,
+  "headroom_without_conditions": 1.1403765307939797,
+  "headroom_with_conditions": 2.0669694924129836,
+  "screening_spearman_delta": 0.021459766090160204,
+  "screening_enrichment_delta": 0.10869565217391308
+ }
+}
