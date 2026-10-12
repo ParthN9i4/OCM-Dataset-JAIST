@@ -12,12 +12,20 @@ PROTOCOL RULES (established after Prof. Taniike's validation round — see SESSI
 - Anything fit on data (scaler, DRST classifier, Stage 1, Stage 2) sees training-fold data only.
 - Catalyst-level metrics (max-yield Spearman, enrichment@10%, precision@20) are primary for the
   screening objective; row RMSE is secondary and must be labeled as such. Each (catalyst,
-  temperature) cell holds up to 27 measurements taken under 27 DIFFERENT reaction-condition
-  settings that this file does not record (5 x 27 = 135 conditions per catalyst). Those rows are
-  not replicates: 19.9% of total yield variance sits within cells and is therefore unreachable
-  from composition and temperature alone, which floors row-level RMSE at 1.757. That floor is a
-  property of the missing feature columns, not measurement noise, and it assumes the model already
-  knows each catalyst's cell means — so it is not attainable for an unseen catalyst.
+  temperature) cell holds up to 27 measurements taken under 27 DIFFERENT gas-flow conditions: an
+  exact 3x3x3 design of total flow (10/15/20 mL/min) x Ar fraction (0.70/0.40/0.15) x CH4:O2
+  (2/4/6), so 5 x 27 = 135 conditions per catalyst. Rows with poor mass balance were excluded by
+  the lab, so cells hold <= 27 distinct conditions. DATA_PATH does not record the conditions;
+  load_with_conditions() restores them. With composition and temperature only, 19.9% of yield
+  variance sits within cells, flooring row-level RMSE at 1.757 (1.651 without the 28 catalysts
+  described next). That floor assumes the model already knows each cell mean, so it is not
+  attainable for an unseen catalyst.
+- 28 catalysts carry a second run: 1,906 (catalyst, temperature, condition) slots appear twice.
+  In a cell one run is higher at every condition (median ratio ~2.3x), so the pairs are two runs
+  with a run-level offset, not repeat measurements, and must not be used as a noise estimate.
+  doubled_catalyst_mask() identifies them; report screening with and without them.
+- Significance of a difference between two models is a PAIRED CATALYST BOOTSTRAP
+  (paired_catalyst_bootstrap), never the seed-to-seed SD on the same catalysts.
 
 Usage:
     from ocm_eval import Data, grouped_folds, row_folds, run_fold, run_cv, lgb_params, xgb_params
@@ -82,15 +90,14 @@ def load_with_conditions(cond_path=CONDITIONS_PATH, map_path=NAME_MAP_PATH, path
     literature set. This rejoins them. Each catalyst was run at 5 temperatures x 27 gas-flow
     settings = 135 conditions; rows with poor mass balance were excluded, so cells hold <= 27.
 
-    Why this matters: grouping by (composition, temperature) leaves 19.9% of yield variance
-    within-group, flooring row-level RMSE at 1.757. Adding these three columns drops that to 2.3%
-    and 0.595 -- they recover 89% of what was previously unreachable. Row-level modelling is a
-    well-posed target again. See phase11_condition_baseline.py.
+    The flow columns make within-cell variation learnable: grouped-CV row RMSE improves 2.897 ->
+    2.661 (phase11_condition_baseline.py). They do NOT give a demonstrated catalyst-screening
+    gain; see phase11 for how screening must be scored with conditions.
 
     The join is by catalyst, not by row: the two files hold the same 89,074 yields in a different
-    order, with 607 (temperature, yield) collisions that make row matching ambiguous. Each
-    catalyst's sorted yield multiset is instead used as a fingerprint; this gives an exact 1:1
-    match over all 917 catalysts (verified in catalyst_name_to_composition.json).
+    order, and 607 rows share a (temperature, yield) key with another row, so row matching is
+    ambiguous. Each catalyst's (temperature, yield) multiset is the fingerprint instead. The map is
+    built and checked by build_name_map.py, and the multiset match is re-asserted on every load.
 
     Returns (df, feat_cols, groups, n_cat) where feat_cols is composition + temperature + the three
     flow columns, and groups matches the catalyst coding used by Data.load() elsewhere.
@@ -114,12 +121,110 @@ def load_with_conditions(cond_path=CONDITIONS_PATH, map_path=NAME_MAP_PATH, path
                      .reset_index(drop=True)], axis=1)
     out = out.rename(columns={'Temperature': 'Temperature_C', 'C2y': TARGET})
 
+    # every catalyst's (temperature, yield) multiset must agree between the two files
+    a = (lab.assign(_k=comp_key)[['_k', 'Temperature_C', TARGET]]
+         .sort_values(['_k', 'Temperature_C', TARGET]).reset_index(drop=True))
+    b = (cond[['_k', 'Temperature', 'C2y']]
+         .sort_values(['_k', 'Temperature', 'C2y']).reset_index(drop=True))
+    if (len(a) != len(b) or not (a._k.values == b._k.values).all()
+            or not np.allclose(a[['Temperature_C', TARGET]].values.astype(float),
+                               b[['Temperature', 'C2y']].values.astype(float))):
+        raise ValueError('conditions file and lab data disagree on a catalyst yield multiset')
+
     # catalyst codes aligned to the same ordering Data.load() produces
     _, uniques = pd.factorize(comp_key)
     code_of = {k: i for i, k in enumerate(uniques)}
     groups = out._k.map(code_of).values
     feat_cols = el + ['Temperature_C'] + COND_COLS
     return out, feat_cols, groups, len(uniques)
+
+
+# ------------------------------------------------------------------ shared evaluation helpers
+# phase8/9/10/11 each carry their own copy of the fold and bootstrap logic; scripts from phase11
+# onward use these. catalyst_folds reproduces those copies exactly, so folds stay paired across
+# scripts (and with formulation B) for the same seed.
+MIN_CELL = 20   # equal-effort rule from phase9: >= MIN_CELL rows in at least one temperature cell
+
+
+def catalyst_folds(seed, n_cat, k=5):
+    """Fold index per catalyst code (0..n_cat-1)."""
+    r = np.random.default_rng(seed); perm = r.permutation(n_cat); f = np.empty(n_cat, int)
+    for i, ch in enumerate(np.array_split(perm, k)): f[ch] = i
+    return f
+
+
+def equal_effort_mask(groups, temps, n_cat, min_cell=MIN_CELL):
+    """Boolean per catalyst: >= min_cell rows in at least one (catalyst, temperature) cell."""
+    max_cell = (pd.DataFrame({'c': groups, 't': temps}).groupby(['c', 't']).size()
+                .groupby(level=0).max().reindex(range(n_cat)).fillna(0).values)
+    return max_cell >= min_cell
+
+
+def design_axes(df):
+    """Derived design axes of the 3x3x3 gas-flow grid, rounded (raw flows carry ~1e-9 noise)."""
+    ar, ch4, o2 = (df[c].values.astype(float) for c in COND_COLS)
+    tot = ar + ch4 + o2
+    return pd.DataFrame({'total_flow': np.round(tot, 6), 'ar_fraction': np.round(ar / tot, 2),
+                         'ch4_o2': np.round(ch4 / o2, 1)}, index=df.index)
+
+
+def slot_keys(df):
+    """(temperature, total_flow, ar_fraction, ch4_o2) per row: one of 135 condition slots."""
+    ax = design_axes(df)
+    return pd.MultiIndex.from_arrays([df['Temperature_C'].values.astype(float), ax.total_flow.values,
+                                      ax.ar_fraction.values, ax.ch4_o2.values],
+                                     names=['Temperature_C', 'total_flow', 'ar_fraction', 'ch4_o2'])
+
+
+def condition_grid(df):
+    """The 135 slots (5 temperatures x 27 gas-flow conditions) with one canonical raw flow triple
+    each, plus a slot id. Returns a DataFrame with Temperature_C, COND_COLS, the design axes and
+    'slot'."""
+    keys = slot_keys(df)
+    g = (df[['Temperature_C'] + COND_COLS].assign(_k=list(keys))
+         .drop_duplicates('_k').sort_values('_k').reset_index(drop=True))
+    ax = design_axes(g)
+    g = pd.concat([g.drop(columns='_k'), ax], axis=1)
+    g['slot'] = np.arange(len(g))
+    return g
+
+
+def doubled_catalyst_mask(df, groups, n_cat):
+    """Boolean per catalyst: has at least one (temperature, condition) slot measured twice."""
+    k = pd.DataFrame({'c': groups}).join(slot_keys(df).to_frame(index=False))
+    dup = k.duplicated(keep=False)
+    return np.isin(np.arange(n_cat), np.unique(groups[dup.values]))
+
+
+def _enrichment(yt, yp, top_frac=0.10):
+    K = max(1, int(round(top_frac * len(yt))))
+    top_true = np.argsort(-yt, kind='stable')[:K]; top_pred = np.argsort(-yp, kind='stable')[:K]
+    return len(np.intersect1d(top_true, top_pred)) / K / top_frac
+
+
+def paired_catalyst_bootstrap(y_true, pred_a, pred_b, mask=None, n_boot=3000, seed=7,
+                              metric='spearman'):
+    """Paired bootstrap over CATALYSTS of metric(a) - metric(b), both against y_true.
+
+    y_true, pred_a, pred_b are per-catalyst arrays (use seed-averaged out-of-fold predictions).
+    With mask=None, n_boot=3000, seed=7 the resampling matches phase8_target_robustness.py.
+    metric: 'spearman' or 'enrichment' (top-10% overlap / 0.10).
+    """
+    y_true, pred_a, pred_b = (np.asarray(v, float) for v in (y_true, pred_a, pred_b))
+    idx_all = np.arange(len(y_true)) if mask is None else np.where(mask)[0]
+    n = len(idx_all)
+    rng = np.random.default_rng(seed)
+    f = ((lambda t, p: spearmanr(t, p)[0]) if metric == 'spearman' else _enrichment)
+    deltas = np.empty(n_boot)
+    for b in range(n_boot):
+        i = idx_all[rng.integers(0, n, n)]
+        deltas[b] = f(y_true[i], pred_a[i]) - f(y_true[i], pred_b[i])
+    point = f(y_true[idx_all], pred_a[idx_all]) - f(y_true[idx_all], pred_b[idx_all])
+    lo, hi = np.percentile(deltas, [2.5, 97.5])
+    return {'metric': metric, 'n_catalysts': int(n), 'delta_point': float(point),
+            'delta_boot_mean': float(deltas.mean()), 'ci95_low': float(lo), 'ci95_high': float(hi),
+            'p_a_better': float((deltas > 0).mean()), 'clears_zero': bool(lo > 0 or hi < 0),
+            'n_boot': int(n_boot)}
 
 
 # ---------------------------------------------------------------------------- params
