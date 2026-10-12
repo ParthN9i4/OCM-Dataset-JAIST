@@ -1,0 +1,134 @@
+{
+ "script": "build_name_map.py",
+ "population": "all 917 catalysts / 89,074 lab rows; no model, no seeds, no estimator",
+ "status": "complete",
+ "inputs": {
+  "conditions_file": "OCM_data_with_conditions.csv",
+  "lab_file": "OCM_lab_data_and_literature_datal.csv (year == 2025 rows)",
+  "rows_conditions_file": 89074,
+  "rows_lab_file": 89074,
+  "element_columns": 65
+ },
+ "checks": {
+  "name_format": {
+   "rule": "0b. Name == M1-M2-M3-Support on every row, and M1/M2/M3/Support constant within each Name",
+   "name_equals_join_all_rows": true,
+   "names_with_constant_parts": 917,
+   "n_names": 917,
+   "pass": true
+  },
+  "fingerprint_join": {
+   "rule": "0. fingerprint = sorted multiset of exact (temperature, yield) pairs per catalyst; unique within each file; 1:1 match for every catalyst",
+   "catalysts_conditions_file": 917,
+   "catalysts_lab_file": 917,
+   "unique_fingerprints_conditions_file": 917,
+   "unique_fingerprints_lab_file": 917,
+   "names_matched": 917,
+   "distinct_composition_keys_matched": 917,
+   "pass": true
+  },
+  "support_is_dominant_element": {
+   "rule": "1. element parsed from Support (e.g. La2O3 -> La) has the strictly largest loading (unique maximum)",
+   "n_pass": 917,
+   "n_total": 917,
+   "failing_names": [],
+   "pass": true
+  },
+  "promoters_present": {
+   "rule": "2. every non-'none' promoter in M1/M2/M3 has loading > 0",
+   "n_pass": 917,
+   "n_total": 917,
+   "failing_names": [],
+   "pass": true
+  },
+  "loadings_rule": {
+   "rule": "3. each non-'none' promoter slot adds 10/3 wt%, the support element adds 90 wt% (merged if same element), rescaled to sum to 100; all 65 loadings within 1e-6",
+   "n_pass": 917,
+   "n_total": 917,
+   "tolerance": 1e-06,
+   "max_abs_deviation_wt_pct": 4.13794509768195e-09,
+   "failing_names": [],
+   "pass": true,
+   "reported_not_gated": {
+    "catalysts_by_number_of_promoters": {
+     "1": 36,
+     "2": 89,
+     "3": 792
+    },
+    "n_pass_without_rescaling": 792,
+    "note_rescaling": "With 3 promoters the raw sum is already 100, so only catalysts with 1 or 2 promoters test the rescale step.",
+    "names_with_exactly_one_rule_satisfying_key": 917,
+    "names_with_zero_rule_satisfying_keys": 0,
+    "names_with_2plus_rule_satisfying_keys": 0,
+    "rule_only_map_agrees_with_fingerprint_map": 917,
+    "note_rule_only_map": "Built from Name and loadings alone, with no yields; an independent check on the fingerprint join."
+   }
+  },
+  "row_key_collisions": {
+   "definition": "5. Count rows whose exact (Temperature, C2y) key is shared with at least one other row, minus the number of such keys. Equivalently: rows that are not the first occurrence of their key. This is the \"607 collisions\" figure (672 rows in 65 shared keys; 672 - 65 = 607); it is why rows cannot be matched one by one between the two files. Most of it is zero yields: 551 of the 672 rows have C2y exactly 0, in 5 keys (one per temperature). Non-zero yields alone give 60 keys / 121 rows / 61 collisions.",
+   "conditions_file": {
+    "keys_shared_by_2plus_rows": 65,
+    "rows_in_those_keys": 672,
+    "collisions_rows_minus_keys": 607,
+    "of_which_keys_with_yield_exactly_0": 5,
+    "of_which_rows_with_yield_exactly_0": 551,
+    "nonzero_yield_keys": 60,
+    "nonzero_yield_rows": 121,
+    "nonzero_yield_collisions_rows_minus_keys": 61
+   },
+   "lab_file_year_2025": {
+    "keys_shared_by_2plus_rows": 65,
+    "rows_in_those_keys": 672,
+    "collisions_rows_minus_keys": 607,
+    "of_which_keys_with_yield_exactly_0": 5,
+    "of_which_rows_with_yield_exactly_0": 551,
+    "nonzero_yield_keys": 60,
+    "nonzero_yield_rows": 121,
+    "nonzero_yield_collisions_rows_minus_keys": 61
+   },
+   "collisions": 607,
+   "same_in_both_files": true,
+   "pass": true
+  },
+  "loader_codes_match_data_load": {
+   "rule": "4. load_with_conditions() runs (re-asserts the multiset match); same n_cat as Data.load(); each composition key gets the same code from both loaders; rows sorted by (code, temperature, yield) are identical arrays",
+   "load_with_conditions_rows": 89074,
+   "load_with_conditions_n_cat": 917,
+   "load_with_conditions_features": 69,
+   "data_load_rows": 89074,
+   "data_load_n_cat": 917,
+   "one_code_per_key_in_data_load": true,
+   "rows_with_same_code_as_data_load": 89074,
+   "rows_per_code_equal": true,
+   "sorted_code_temperature_yield_arrays_equal": true,
+   "pass": true,
+   "reported_not_gated": {
+    "groups_elementwise_equal": false,
+    "rows_equal_by_position_groups": 65,
+    "rows_equal_by_position_yields": 4,
+    "note": "The two loaders list rows in different orders, so groups from load_with_conditions() must not be used with row-ordered arrays from Data.load(). Codes agree per catalyst, not per row position."
+   }
+  }
+ },
+ "warnings": [],
+ "key_order": "taken from the map in git HEAD (same 917 names)",
+ "existing_file": {
+  "present": true,
+  "names_with_same_value": 917,
+  "bytes_identical_to_rebuild": true,
+  "sha256_before": "07487e43001cbf7e30b34215a3bf408d8f56e1618c44097bc66d75693f54d913"
+ },
+ "git_head_file": {
+  "available": true,
+  "names_with_same_value": 917,
+  "bytes_identical_to_rebuild": true
+ },
+ "map_written": false,
+ "map_write_note": "skipped: rebuilt bytes identical to the file on disk",
+ "sha256_after": "07487e43001cbf7e30b34215a3bf408d8f56e1618c44097bc66d75693f54d913",
+ "all_checks_pass": true,
+ "git_diff_cmd": "git diff HEAD --stat -- catalyst_name_to_composition.json",
+ "git_diff_stat_map": "",
+ "git_diff_stat_map_empty": true,
+ "runtime_seconds": 67.2
+}

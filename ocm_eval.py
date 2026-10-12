@@ -95,8 +95,8 @@ def load_with_conditions(cond_path=CONDITIONS_PATH, map_path=NAME_MAP_PATH, path
     gain; see phase11 for how screening must be scored with conditions.
 
     The join is by catalyst, not by row: the two files hold the same 89,074 yields in a different
-    order, and 607 rows share a (temperature, yield) key with another row, so row matching is
-    ambiguous. Each catalyst's (temperature, yield) multiset is the fingerprint instead. The map is
+    order, and 672 rows share a (temperature, yield) key with another row (607 beyond the first
+    row of each key; 551 of the 672 are zero yields), so row matching is ambiguous. Each catalyst's (temperature, yield) multiset is the fingerprint instead. The map is
     built and checked by build_name_map.py, and the multiset match is re-asserted on every load.
 
     Returns (df, feat_cols, groups, n_cat) where feat_cols is composition + temperature + the three

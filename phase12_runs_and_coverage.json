@@ -1,0 +1,1639 @@
+{
+ "about": {
+  "script": "phase12_runs_and_coverage.py",
+  "what": "Data-structure facts the documents rely on. No models are trained.",
+  "seed_convention": "Not applicable: no model, seed or prediction enters any number here.",
+  "populations": {
+   "all_917": "all catalysts",
+   "ND_889": "without the 28 doubled catalysts",
+   "doubled_28": "catalysts with at least one slot measured twice",
+   "EE_771": "equal effort: >= 20 rows in some (catalyst, temperature) cell"
+  },
+  "rows_all_917": 89074,
+  "n_catalysts_all_917": 917,
+  "n_catalysts_EE_771": 771,
+  "n_catalysts_ND_889": 889,
+  "dev_mode": false,
+  "n_random_draws_section2": 200,
+  "n_boot_section4": 3000,
+  "rng_seed": 7,
+  "runtime_minutes": 0.44436344305674236
+ },
+ "design": {
+  "grid": "3x3x3: total flow 10/15/20 mL/min x Ar fraction 0.70/0.40/0.15 x CH4:O2 2/4/6",
+  "n_conditions": 27,
+  "each_combination_exactly_once": true,
+  "temperatures_C": [
+   700,
+   750,
+   800,
+   850,
+   900
+  ],
+  "n_slots_per_catalyst": 135,
+  "max_abs_deviation_raw_flows_vs_design_axes_all_rows": {
+   "total_flow": 4.000000330961484e-09,
+   "ar_fraction": 8.000000661922968e-11,
+   "ch4_o2": 6.999999691004177e-09
+  }
+ },
+ "two_run_structure": {
+  "population": "doubled_28",
+  "names": [
+   "Ba-Ba-Ba-BaO",
+   "Ca-Nd-Tb-CaO",
+   "Ca-W-none-BaO",
+   "K-Mo-La-BaO",
+   "K-Y-La-ZrO2",
+   "La-Tb-none-La2O3",
+   "Li-Ca-Ca-ZrO2",
+   "Li-Co-Zn-BaO",
+   "Li-Mo-Nd-ZrO2",
+   "Li-Nd-Tb-BaO",
+   "Li-Ni-Pd-BaO",
+   "Li-Ti-Pd-TiO2",
+   "Li-Y-La-CaO",
+   "Li-Zn-Pd-TiO2",
+   "Mg-Ni-Y-CaO",
+   "Mn-Mn-Mn-BaO",
+   "Mn-Nd-W-TiO2",
+   "Mn-Pd-Nd-CaO",
+   "Mn-Y-Pd-BaO",
+   "Mo-Mo-Mo-BaO",
+   "Na-K-Ce-La2O3",
+   "Ni-Pd-Nd-CaO",
+   "Ni-Zn-La-TiO2",
+   "Sr-Zr-La-BaO",
+   "Ti-W-W-La2O3",
+   "Ti-Y-Ce-TiO2",
+   "Ti-Zr-Ba-La2O3",
+   "Zn-Zn-Hf-ZrO2"
+  ],
+  "catalysts": [
+   {
+    "name": "Ba-Ba-Ba-BaO",
+    "catalyst_code": 58,
+    "n_rows": 191,
+    "n_duplicated_slots": 73,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 13.84477962,
+    "median_hi_over_lo_pairs_lo_gt_0": 5.280040302074092
+   },
+   {
+    "name": "Ca-Nd-Tb-CaO",
+    "catalyst_code": 295,
+    "n_rows": 254,
+    "n_duplicated_slots": 119,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 15.68046757,
+    "median_hi_over_lo_pairs_lo_gt_0": 1.9963073038101673
+   },
+   {
+    "name": "Ca-W-none-BaO",
+    "catalyst_code": 65,
+    "n_rows": 224,
+    "n_duplicated_slots": 97,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 17.88785088,
+    "median_hi_over_lo_pairs_lo_gt_0": 3.8451503493927293
+   },
+   {
+    "name": "K-Mo-La-BaO",
+    "catalyst_code": 127,
+    "n_rows": 164,
+    "n_duplicated_slots": 34,
+    "temperatures_with_duplicated_slots": [
+     700,
+     900
+    ],
+    "observed_max": 18.78209546,
+    "median_hi_over_lo_pairs_lo_gt_0": 3.3104310275350155
+   },
+   {
+    "name": "K-Y-La-ZrO2",
+    "catalyst_code": 843,
+    "n_rows": 234,
+    "n_duplicated_slots": 100,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 18.25408286,
+    "median_hi_over_lo_pairs_lo_gt_0": 1.3047203992851812
+   },
+   {
+    "name": "La-Tb-none-La2O3",
+    "catalyst_code": 486,
+    "n_rows": 247,
+    "n_duplicated_slots": 113,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 13.25603427,
+    "median_hi_over_lo_pairs_lo_gt_0": 1.8977826233365944
+   },
+   {
+    "name": "Li-Ca-Ca-ZrO2",
+    "catalyst_code": 847,
+    "n_rows": 178,
+    "n_duplicated_slots": 52,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 10.88155576,
+    "median_hi_over_lo_pairs_lo_gt_0": 10.180336799389949
+   },
+   {
+    "name": "Li-Co-Zn-BaO",
+    "catalyst_code": 149,
+    "n_rows": 127,
+    "n_duplicated_slots": 30,
+    "temperatures_with_duplicated_slots": [
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 9.327606284,
+    "median_hi_over_lo_pairs_lo_gt_0": 1.5522304289993238
+   },
+   {
+    "name": "Li-Mo-Nd-ZrO2",
+    "catalyst_code": 860,
+    "n_rows": 246,
+    "n_duplicated_slots": 111,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 16.688445,
+    "median_hi_over_lo_pairs_lo_gt_0": 2.021332995529621
+   },
+   {
+    "name": "Li-Nd-Tb-BaO",
+    "catalyst_code": 159,
+    "n_rows": 112,
+    "n_duplicated_slots": 1,
+    "temperatures_with_duplicated_slots": [
+     850
+    ],
+    "observed_max": 17.5122517,
+    "median_hi_over_lo_pairs_lo_gt_0": 1.0922490603942219
+   },
+   {
+    "name": "Li-Ni-Pd-BaO",
+    "catalyst_code": 160,
+    "n_rows": 178,
+    "n_duplicated_slots": 55,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 19.29460088,
+    "median_hi_over_lo_pairs_lo_gt_0": 5.890382520052709
+   },
+   {
+    "name": "Li-Ti-Pd-TiO2",
+    "catalyst_code": 731,
+    "n_rows": 133,
+    "n_duplicated_slots": 22,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 9.616866385,
+    "median_hi_over_lo_pairs_lo_gt_0": 8.971133157089351
+   },
+   {
+    "name": "Li-Y-La-CaO",
+    "catalyst_code": 334,
+    "n_rows": 242,
+    "n_duplicated_slots": 111,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 16.69751018,
+    "median_hi_over_lo_pairs_lo_gt_0": 1.7614955304083022
+   },
+   {
+    "name": "Li-Zn-Pd-TiO2",
+    "catalyst_code": 734,
+    "n_rows": 138,
+    "n_duplicated_slots": 6,
+    "temperatures_with_duplicated_slots": [
+     750,
+     800,
+     900
+    ],
+    "observed_max": 7.49431,
+    "median_hi_over_lo_pairs_lo_gt_0": 2.4181786743992557
+   },
+   {
+    "name": "Mg-Ni-Y-CaO",
+    "catalyst_code": 345,
+    "n_rows": 137,
+    "n_duplicated_slots": 25,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 16.191,
+    "median_hi_over_lo_pairs_lo_gt_0": 13.283993765992475
+   },
+   {
+    "name": "Mn-Mn-Mn-BaO",
+    "catalyst_code": 197,
+    "n_rows": 210,
+    "n_duplicated_slots": 85,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 21.12321098,
+    "median_hi_over_lo_pairs_lo_gt_0": 1.7174045912377445
+   },
+   {
+    "name": "Mn-Nd-W-TiO2",
+    "catalyst_code": 746,
+    "n_rows": 216,
+    "n_duplicated_slots": 83,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 9.329057734,
+    "median_hi_over_lo_pairs_lo_gt_0": 1.345135926815415
+   },
+   {
+    "name": "Mn-Pd-Nd-CaO",
+    "catalyst_code": 357,
+    "n_rows": 173,
+    "n_duplicated_slots": 73,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 8.120553316,
+    "median_hi_over_lo_pairs_lo_gt_0": 1.6503466157053954
+   },
+   {
+    "name": "Mn-Y-Pd-BaO",
+    "catalyst_code": 204,
+    "n_rows": 227,
+    "n_duplicated_slots": 96,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 18.55794734,
+    "median_hi_over_lo_pairs_lo_gt_0": 7.491329575867536
+   },
+   {
+    "name": "Mo-Mo-Mo-BaO",
+    "catalyst_code": 209,
+    "n_rows": 201,
+    "n_duplicated_slots": 74,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 18.93818614,
+    "median_hi_over_lo_pairs_lo_gt_0": 3.7610901084923984
+   },
+   {
+    "name": "Na-K-Ce-La2O3",
+    "catalyst_code": 522,
+    "n_rows": 210,
+    "n_duplicated_slots": 80,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 19.00160933,
+    "median_hi_over_lo_pairs_lo_gt_0": 2.7779819684770874
+   },
+   {
+    "name": "Ni-Pd-Nd-CaO",
+    "catalyst_code": 374,
+    "n_rows": 65,
+    "n_duplicated_slots": 9,
+    "temperatures_with_duplicated_slots": [
+     850,
+     900
+    ],
+    "observed_max": 6.257454125,
+    "median_hi_over_lo_pairs_lo_gt_0": 1.093095175887607
+   },
+   {
+    "name": "Ni-Zn-La-TiO2",
+    "catalyst_code": 768,
+    "n_rows": 97,
+    "n_duplicated_slots": 33,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 2.134821,
+    "median_hi_over_lo_pairs_lo_gt_0": 1.803657657889625
+   },
+   {
+    "name": "Sr-Zr-La-BaO",
+    "catalyst_code": 248,
+    "n_rows": 204,
+    "n_duplicated_slots": 82,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 20.0504389,
+    "median_hi_over_lo_pairs_lo_gt_0": 1.2625091344398183
+   },
+   {
+    "name": "Ti-W-W-La2O3",
+    "catalyst_code": 545,
+    "n_rows": 226,
+    "n_duplicated_slots": 97,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 21.50044993,
+    "median_hi_over_lo_pairs_lo_gt_0": 2.060371665714965
+   },
+   {
+    "name": "Ti-Y-Ce-TiO2",
+    "catalyst_code": 787,
+    "n_rows": 208,
+    "n_duplicated_slots": 76,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850
+    ],
+    "observed_max": 12.64491976,
+    "median_hi_over_lo_pairs_lo_gt_0": 9.615987089013995
+   },
+   {
+    "name": "Ti-Zr-Ba-La2O3",
+    "catalyst_code": 546,
+    "n_rows": 257,
+    "n_duplicated_slots": 122,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 8.279026425,
+    "median_hi_over_lo_pairs_lo_gt_0": 3.3522555079723793
+   },
+   {
+    "name": "Zn-Zn-Hf-ZrO2",
+    "catalyst_code": 915,
+    "n_rows": 157,
+    "n_duplicated_slots": 47,
+    "temperatures_with_duplicated_slots": [
+     700,
+     750,
+     800,
+     850,
+     900
+    ],
+    "observed_max": 17.1791867,
+    "median_hi_over_lo_pairs_lo_gt_0": 1.4460878444263754
+   }
+  ],
+  "n_duplicated_slots": 1906,
+  "max_measurements_per_slot": 2,
+  "duplicated_slots_outside_doubled_28": 0,
+  "n_cells_with_duplicated_slots": 126,
+  "n_temperatures_with_duplicated_slots_per_catalyst": {
+   "1": 1,
+   "2": 2,
+   "3": 1,
+   "4": 2,
+   "5": 22
+  },
+  "n_catalysts_duplicated_at_all_5_temperatures": 22,
+  "duplicated_slots_per_cell_quartiles": [
+   7.0,
+   17.0,
+   23.0
+  ],
+  "file_order_check": {
+   "share_of_917_catalysts_listed_in_non_increasing_yield_order": 1.0,
+   "note": "The conditions file lists each catalyst by descending yield, so row order cannot identify the run. hi and lo are per-pair order statistics."
+  },
+  "hi_lo_ratio": {
+   "n_pairs_lo_eq_0_excluded": 29,
+   "n_pairs_used": 1877,
+   "pooled_median_over_pairs": {
+    "overall": 2.294809476829832,
+    "700": 3.1390636910987717,
+    "750": 2.9368587112078215,
+    "800": 2.6125122463987385,
+    "850": 1.831368549533635,
+    "900": 1.7894437460049002
+   },
+   "median_of_per_cell_medians": {
+    "overall": 2.8156562618720975,
+    "700": 3.3261370361983458,
+    "750": 2.9968530994185443,
+    "800": 3.479223478525916,
+    "850": 1.8339177064069094,
+    "900": 1.930250132709708
+   },
+   "pooled_quantiles_over_pairs": {
+    "q10": 1.1715551364669037,
+    "q25": 1.4881893049549442,
+    "q50": 2.294809476829832,
+    "q75": 5.45083786219471,
+    "q90": 11.631260065656452
+   },
+   "note": "pooled = median over all pairs; per-cell = median within each cell, then median over cells (each cell counts once). Both exclude pairs with lo = 0."
+  },
+  "smoothness_test": {
+   "population": "cells of the doubled_28 with >= 15 duplicated slots",
+   "n_cells": 73,
+   "model": "7-parameter categorical main effects (total flow, Ar fraction, CH4:O2), fitted per cell",
+   "estimator": "df-corrected residual SD per cell, median over cells; random_member = per-cell mean over 200 draws (seed 7), then median over cells",
+   "median_resid_sd": {
+    "hi": 1.1432450198163533,
+    "lo": 0.6147036562893606,
+    "pair_mean": 0.7525486893228163,
+    "random_member": 2.424126479034517
+   },
+   "random_member_alternative_aggregator": {
+    "what": "per-cell median over 200 draws (seed 7), then median over cells",
+    "median_resid_sd": 2.528165740815568,
+    "rng_seed_spread_seeds_0_to_5": {
+     "per_cell_mean_aggregator_min_max": [
+      2.4230396904516183,
+      2.47153934301754
+     ],
+     "per_cell_median_aggregator_min_max": [
+      2.4735420942192987,
+      2.569966122208666
+     ]
+    },
+    "note": "Monte Carlo: the random-member value moves with the RNG seed and with the aggregator. The audit value (~2.50) lies inside the seed range of the per-cell-median aggregator. The two aggregators give 2.12 and 2.21 times the hi value."
+   },
+   "median_relative_resid_sd_sd_over_series_mean": {
+    "hi": 0.13650969637291638,
+    "lo": 0.18662444844205525,
+    "pair_mean": 0.13778409314619725,
+    "random_member": 0.47174259219556314
+   },
+   "ordinary_complete_cells": {
+    "population": "cells with 27 distinct conditions (27 rows), ND_889 catalysts only",
+    "n_cells": 890,
+    "residual_df": 20,
+    "median_resid_sd": 0.7237491375533811,
+    "median_relative_resid_sd": 0.13515773246168677
+   }
+  },
+  "shared_pattern_test": {
+   "population": "cells of the doubled_28 with >= 10 duplicated slots",
+   "n_cells": 85,
+   "statistic": "Spearman(hi, lo) across the duplicated conditions of one cell",
+   "observed_median_over_cells": 0.4356521739130434,
+   "observed_quartiles_over_cells": [
+    0.014035087719298246,
+    0.76
+   ],
+   "null_A": {
+    "what": "permute lo across conditions within the cell, hi fixed; 200 draws",
+    "median_over_cells_of_per_cell_null_mean": 0.0008506493506493512,
+    "across_cell_median_per_draw_p95": 0.054412297974206346,
+    "across_cell_median_per_draw_max": 0.0843374450408859,
+    "n_cells_above_own_p95": 45,
+    "share_cells_above_own_p95": 0.5294117647058824,
+    "share_expected_by_chance": 0.05,
+    "binomial_p_one_sided": 1.1046898251183487e-35
+   },
+   "null_B": {
+    "what": "pool the cell values, pair at random, split into max/min; 200 draws",
+    "median_over_cells_of_per_cell_null_mean": 0.44698901098901106,
+    "population_value_continuous_iid": 0.4666666666666667,
+    "finite_sample_expectation_median_over_cells": 0.4484848484848485,
+    "finite_sample_note": "E[sample Spearman] = ((n-2) rho_S + 3 tau) / (n+1) with rho_S = 7/15 and Kendall tau = 1/3 for (min, max) of iid pairs; n = pairs in the cell. This is why the per-cell value sits below 7/15."
+   },
+   "null_B_note": "Null B is the order-statistic value of Spearman(max, min) for random pairs, 7/15 for any continuous data, so it asks whether pairing by condition beats random pairing of exchangeable values, not whether two offset runs share a condition pattern.",
+   "null_C_added_check": {
+    "what": "null A with each permuted pair re-sorted into max/min (keeps the order-statistic effect); not part of rule R2",
+    "median_over_cells_of_per_cell_null_mean": 0.0196,
+    "n_cells_above_own_p95": 40
+   },
+   "rule_R2": {
+    "a_median_above_null_A_p95_of_median": true,
+    "b_share_above_own_p95_exceeds_chance": true,
+    "passes": true
+   }
+  },
+  "conclusion": "Two runs with a run-level offset that share the condition pattern (rule R2 passes). Offset evidence: a series built from a random member of each pair is much rougher (median residual SD 2.42 over 73 cells) than the hi series (1.14), the lo series (0.61) or the pair means (0.75), as expected if each cell holds two smooth runs at different levels. The per-pair median hi/lo (2.29) is >= 1 by construction, so it is weak evidence on its own. Shared pattern: median Spearman(hi, lo) 0.436 vs null-A 95th percentile of the median 0.054; 45 of 85 cells individually exceed their own null-A 95th percentile, the rest are not individually distinguishable from null A."
+ },
+ "top_decile_inflation": {
+  "population": "all_917; truth = observed max per catalyst; top decile K = 92",
+  "K": 92,
+  "n_doubled": 28,
+  "expected_count_if_random": 2.8091603053435112,
+  "raw_max": {
+   "count_doubled_in_top_K": 10,
+   "hypergeom_p_X_ge_observed": 0.00018276740871051318,
+   "kth_value": 17.64385854,
+   "k_plus_1th_value": 17.62813854,
+   "median_percentile_rank_of_doubled_28": 0.8309705561613958,
+   "percentile_rank_definition": "average rank / 917; 1 = best"
+  },
+  "duplicated_slots_as_pair_mean": {
+   "count_doubled_in_top_K": 4,
+   "hypergeom_p_X_ge_observed": 0.30649394248601664,
+   "kth_value": 17.53481091,
+   "k_plus_1th_value": 17.51343246,
+   "median_percentile_rank_of_doubled_28": 0.5954198473282443,
+   "percentile_rank_definition": "average rank / 917; 1 = best"
+  },
+  "duplicated_slots_as_pair_min": {
+   "count_doubled_in_top_K": 4,
+   "hypergeom_p_X_ge_observed": 0.30649394248601664,
+   "kth_value": 17.53481091,
+   "k_plus_1th_value": 17.51343246,
+   "median_percentile_rank_of_doubled_28": 0.5485278080697928,
+   "percentile_rank_definition": "average rank / 917; 1 = best"
+  }
+ },
+ "exclusion_test": {
+  "population": "all_917; slots in observed cells; duplicated slots averaged first",
+  "percentile_definition": "(average rank - 1) / (n - 1) within the cell; 0 = worst, 1 = best",
+  "n_cells_with_one_measured_slot_no_percentile": 83,
+  "n_slots_in_observed_cells": {
+   "present": 87168,
+   "excluded": 31605
+  },
+  "n_slots_dropped_no_measured_neighbour": {
+   "present": 4286,
+   "excluded": 17017
+  },
+  "share_of_scored_excluded_slots_by_ratio": {
+   "ch4_o2_2": 0.2465725253633123,
+   "ch4_o2_4": 0.35919934192486974,
+   "ch4_o2_6": 0.39422813271181795
+  },
+  "comparison": {
+   "overall_pooled_over_ratios": {
+    "n_present": 82882,
+    "n_excluded": 14588,
+    "mean_percentile": {
+     "present": 0.5073012342393153,
+     "excluded": 0.45085616065775097,
+     "present_minus_excluded": 0.05644507358156431,
+     "ci95_low": 0.04867404199386512,
+     "ci95_high": 0.06395332153333183,
+     "ci_excludes_zero": true
+    },
+    "share_top_decile": {
+     "present": 0.12509350643082937,
+     "excluded": 0.09524952015355087,
+     "present_minus_excluded": 0.029843986277278495,
+     "ci95_low": 0.02454255213936795,
+     "ci95_high": 0.03504357688255709,
+     "ci_excludes_zero": true
+    },
+    "share_cell_best": {
+     "present": 0.04899133708163413,
+     "excluded": 0.043940224842336166,
+     "present_minus_excluded": 0.005051112239297967,
+     "ci95_low": 0.0016660068406128474,
+     "ci95_high": 0.008418119693380306,
+     "ci_excludes_zero": true
+    },
+    "mean_neighbour_cell_size": {
+     "present": 23.472376390531117,
+     "excluded": 20.693515217987386,
+     "present_minus_excluded": 2.7788611725437313,
+     "ci95_low": 2.539664081734062,
+     "ci95_high": 3.022229528303459,
+     "ci_excludes_zero": true
+    },
+    "note": "Confounded by CH4:O2: excluded slots concentrate at ratio 6, whose within-cell percentiles are low. R4 uses the per-ratio rows."
+   },
+   "ch4_o2_2": {
+    "n_present": 30587,
+    "n_excluded": 3597,
+    "mean_percentile": {
+     "present": 0.6294598633900571,
+     "excluded": 0.6112066266248308,
+     "present_minus_excluded": 0.018253236765226277,
+     "ci95_low": 0.005476248312283161,
+     "ci95_high": 0.031049903083302348,
+     "ci_excludes_zero": true
+    },
+    "share_top_decile": {
+     "present": 0.251315918527479,
+     "excluded": 0.24576035585209896,
+     "present_minus_excluded": 0.005555562675380016,
+     "ci95_low": -0.008281350814157299,
+     "ci95_high": 0.018800561535554504,
+     "ci_excludes_zero": false
+    },
+    "share_cell_best": {
+     "present": 0.10329551770359957,
+     "excluded": 0.12218515429524604,
+     "present_minus_excluded": -0.01888963659164647,
+     "ci95_low": -0.028823252420911053,
+     "ci95_high": -0.009106786797786653,
+     "ci_excludes_zero": true
+    },
+    "mean_neighbour_cell_size": {
+     "present": 23.126033935985877,
+     "excluded": 19.266194050597722,
+     "present_minus_excluded": 3.859839885388155,
+     "ci95_low": 3.4495367448083507,
+     "ci95_high": 4.264586229594754,
+     "ci_excludes_zero": true
+    },
+    "R4_criterion_met": false
+   },
+   "ch4_o2_4": {
+    "n_present": 26724,
+    "n_excluded": 5240,
+    "mean_percentile": {
+     "present": 0.5136438543283547,
+     "excluded": 0.484201325958221,
+     "present_minus_excluded": 0.02944252837013367,
+     "ci95_low": 0.019299507094513904,
+     "ci95_high": 0.039218490793074295,
+     "ci_excludes_zero": true
+    },
+    "share_top_decile": {
+     "present": 0.07019907199521029,
+     "excluded": 0.06803435114503817,
+     "present_minus_excluded": 0.002164720850172122,
+     "ci95_low": -0.004857825088280357,
+     "ci95_high": 0.009268849713202718,
+     "ci_excludes_zero": false
+    },
+    "share_cell_best": {
+     "present": 0.01874719353390211,
+     "excluded": 0.02681297709923664,
+     "present_minus_excluded": -0.008065783565334533,
+     "ci95_low": -0.012460868427789706,
+     "ci95_high": -0.0038748494473619384,
+     "ci_excludes_zero": true
+    },
+    "mean_neighbour_cell_size": {
+     "present": 24.086027540787306,
+     "excluded": 20.993797709923665,
+     "present_minus_excluded": 3.0922298308636407,
+     "ci95_low": 2.8231905993052155,
+     "ci95_high": 3.3674401097615188,
+     "ci_excludes_zero": true
+    },
+    "R4_criterion_met": false
+   },
+   "ch4_o2_6": {
+    "n_present": 25571,
+    "n_excluded": 5751,
+    "mean_percentile": {
+     "present": 0.3545513938305231,
+     "excluded": 0.32018161844630105,
+     "present_minus_excluded": 0.034369775384222034,
+     "ci95_low": 0.025005458227853057,
+     "ci95_high": 0.04340015253630487,
+     "ci_excludes_zero": true
+    },
+    "share_top_decile": {
+     "present": 0.031480974541472764,
+     "excluded": 0.025908537645626846,
+     "present_minus_excluded": 0.005572436895845918,
+     "ci95_low": 0.000803398460036684,
+     "ci95_high": 0.010327747253785765,
+     "ci_excludes_zero": true
+    },
+    "share_cell_best": {
+     "present": 0.015642720269054788,
+     "excluded": 0.010606850982437837,
+     "present_minus_excluded": 0.005035869286616951,
+     "ci95_low": 0.0017391096117687947,
+     "ci95_high": 0.008227704271269363,
+     "ci_excludes_zero": true
+    },
+    "mean_neighbour_cell_size": {
+     "present": 23.245336514019787,
+     "excluded": 21.31264127977743,
+     "present_minus_excluded": 1.932695234242356,
+     "ci95_low": 1.650481047156385,
+     "ci95_high": 2.219113767923093,
+     "ci_excludes_zero": true
+    },
+    "R4_criterion_met": false
+   },
+   "added_check_condition_stratified_mean_percentile": {
+    "what": "present minus excluded mean percentile within each of the 27 conditions, averaged with weights = n excluded; not part of R4",
+    "present_minus_excluded": 0.027506649836315025,
+    "ci95_low": 0.021007280570722774,
+    "ci95_high": 0.03371344308446687
+   }
+  },
+  "note_shares": "Top-decile and cell-best shares depend on cell size (a slot in a small cell is more often its best). A cell's average percentile is always 0.5, but one slot's percentile depends on which other slots its cell holds. Excluded slots' neighbours sit in smaller cells (mean_neighbour_cell_size), so part of the mean-percentile gap may be mechanical; see added_check_complete_neighbour_cells.",
+  "rule_R4": {
+   "n_ratios_meeting_criterion": 0,
+   "needed": 2,
+   "outcome_coupled_within_catalyst": false,
+   "verdict": "not outcome-coupled within catalyst by this rule",
+   "scope": {
+    "population": "excluded slots (in observed cells) of all_917, split by whether R4 could score them",
+    "n_excluded_slots": 31605,
+    "n_scored": 14588,
+    "n_dropped": 17017,
+    "share_scored": 0.4615725359911406,
+    "n_dropped_never_measured_at_any_temperature": 8979,
+    "mean_own_cell_measured_slots_scored_vs_dropped": [
+     14.398958047710448,
+     8.758535582064994
+    ],
+    "mean_own_cell_mean_yield_scored_vs_dropped": [
+     4.062163903093534,
+     2.517065455833821
+    ],
+    "mean_catalyst_observed_max_scored_vs_dropped": [
+     11.064958068116123,
+     7.0277911839136165
+    ],
+    "own_cell_mean_yield_note": "mean over the cell's measured slots, duplicated slots averaged",
+    "text": "Scored 14,588 of 31,605 excluded slots (46%). The other 17,017 have no measured T-50 or T+50 neighbour. Compared with the scored ones they sit in smaller cells (mean 8.8 vs 14.4 measured slots), lower-yield cells (mean cell yield 2.52 vs 4.06) and lower-max catalysts (mean observed max 7.03 vs 11.06). 8,979 are never measured at any temperature, so no within-catalyst test covers them. Between-catalyst coupling is reported separately (between_catalyst)."
+   },
+   "detail": "Per-ratio present-minus-excluded mean-percentile differences are 0.018 to 0.034, below the 0.05 threshold; their CIs exclude zero in 3 of 3 ratios. A small present-minus-excluded difference is detectable; part of it may be cell composition. One slot's percentile depends on which other slots its cell holds, and excluded slots' neighbours sit in smaller cells (mean 20.7 vs 23.5 measured slots). Restricted to neighbours in complete 27-slot cells, the differences are +0.013 [-0.026, +0.053], +0.013 [-0.013, +0.037], +0.022 [+0.002, +0.043] for ratios 2/4/6; the CI excludes zero in 1 of 3 (n excluded 472/791/1,018; low power). The cell-best share points the other way (higher for excluded slots, CI excludes zero) at ratios 2 and 4. Scope: 46% of excluded slots were scored (see scope)."
+  },
+  "sensitivity_percentile_r_over_n": {
+   "what": "same test with percentile = average rank / n (defined for n = 1). Its cell mean is (n + 1) / 2n, so it rises in small cells. This alone does not reproduce the audit; see audit_variant_pairs_r_over_n.",
+   "n_cells_with_one_measured_slot": 83,
+   "n_slots_dropped_no_measured_neighbour": {
+    "present": 4264,
+    "excluded": 16996
+   },
+   "mean_percentile": {
+    "overall_pooled_over_ratios": {
+     "present": 0.5307382400869133,
+     "excluded": 0.4830318759318679,
+     "present_minus_excluded": 0.04770636415504537,
+     "ci95_low": 0.04027199139530918,
+     "ci95_high": 0.05479468380115882,
+     "ci_excludes_zero": true
+    },
+    "ch4_o2_2": {
+     "present": 0.6476408823843007,
+     "excluded": 0.6376191471987928,
+     "present_minus_excluded": 0.010021735185507974,
+     "ci95_low": -0.0018231059142671672,
+     "ci95_high": 0.02187523367479664,
+     "ci_excludes_zero": false
+    },
+    "ch4_o2_4": {
+     "present": 0.5349461377069337,
+     "excluded": 0.5130453644631321,
+     "present_minus_excluded": 0.021900773243801575,
+     "ci95_low": 0.01230564793771038,
+     "ci95_high": 0.031187769175830576,
+     "ci_excludes_zero": true
+    },
+    "ch4_o2_6": {
+     "present": 0.3865429459584108,
+     "excluded": 0.35907420525329387,
+     "present_minus_excluded": 0.027468740705116956,
+     "ci95_low": 0.018279331526207827,
+     "ci95_high": 0.03621548370761426,
+     "ci_excludes_zero": true
+    }
+   },
+   "n_excluded_scored": 14609,
+   "R4_n_ratios_meeting_criterion": 0,
+   "R4_outcome_coupled_within_catalyst": false
+  },
+  "audit_variant_pairs_r_over_n": {
+   "what": "added check, not part of R4: percentile = r / n, and each (slot, measured neighbour) pair is a separate record instead of averaging T-50 and T+50. Records per slot: 1 or 2. It reproduces the audit to 3 decimals: n excluded 16,577; pooled 0.482 vs 0.530; per-ratio means. So the audit most likely counted pairs this way.",
+   "reproduces_audit_to_3_decimals": true,
+   "n_records_present": 124714,
+   "n_records_excluded": 16577,
+   "mean_percentile_pooled": {
+    "present": 0.5301564237864762,
+    "excluded": 0.4822689125833024,
+    "present_minus_excluded": 0.047887511203173805,
+    "ci95_low": 0.04048291206613509,
+    "ci95_high": 0.055060151254683894,
+    "ci_excludes_zero": true
+   },
+   "mean_percentile_by_ratio": {
+    "ch4_o2_2": {
+     "present": 0.6454139338610958,
+     "excluded": 0.6338127072473554,
+     "present_minus_excluded": 0.011601226613740412,
+     "ci95_low": -0.00025570075368129807,
+     "ci95_high": 0.023184629610388214,
+     "ci_excludes_zero": false,
+     "n_present": 46934,
+     "n_excluded": 4062
+    },
+    "ch4_o2_4": {
+     "present": 0.5321121104471449,
+     "excluded": 0.5136128683541058,
+     "present_minus_excluded": 0.018499242093039103,
+     "ci95_low": 0.00858509347819154,
+     "ci95_high": 0.028167819820724433,
+     "ci_excludes_zero": true,
+     "n_present": 39912,
+     "n_excluded": 5928
+    },
+    "ch4_o2_6": {
+     "present": 0.38524379719297236,
+     "excluded": 0.36060838977554394,
+     "present_minus_excluded": 0.024635407417428423,
+     "ci95_low": 0.015426835270243204,
+     "ci95_high": 0.03349795076715696,
+     "ci_excludes_zero": true,
+     "n_present": 37868,
+     "n_excluded": 6587
+    }
+   },
+   "R4_n_ratios_meeting_criterion": 0,
+   "R4_outcome_coupled_within_catalyst": false
+  },
+  "added_check_complete_neighbour_cells": {
+   "what": "added check, not part of R4: primary test, but only neighbours in cells with all 27 slots measured, so every neighbour percentile is taken against the same 27 conditions. Smaller and drawn from better-covered catalysts; low power.",
+   "mean_percentile_by_ratio": {
+    "ch4_o2_2": {
+     "present": 0.6134092120765345,
+     "excluded": 0.6001466753585398,
+     "present_minus_excluded": 0.01326253671799471,
+     "ci95_low": -0.025629238333397267,
+     "ci95_high": 0.053463302506242476,
+     "ci_excludes_zero": false,
+     "n_present": 11687,
+     "n_excluded": 472
+    },
+    "ch4_o2_4": {
+     "present": 0.5332478482109024,
+     "excluded": 0.5206651755324321,
+     "present_minus_excluded": 0.012582672678470352,
+     "ci95_low": -0.012553197477748709,
+     "ci95_high": 0.03662638275723285,
+     "ci_excludes_zero": false,
+     "n_present": 11368,
+     "n_excluded": 791
+    },
+    "ch4_o2_6": {
+     "present": 0.35654339825868425,
+     "excluded": 0.3342432371165182,
+     "present_minus_excluded": 0.02230016114216604,
+     "ci95_low": 0.001992053072941015,
+     "ci95_high": 0.04285103985227465,
+     "ci_excludes_zero": true,
+     "n_present": 11141,
+     "n_excluded": 1018
+    }
+   },
+   "n_ratios_ci_excludes_zero": 1,
+   "R4_n_ratios_meeting_criterion": 0
+  },
+  "added_check_nearest_measured_temperature": {
+   "what": "added check, not part of R4: primary test, but the neighbour is the nearest measured temperature at any distance (both sides averaged at that distance), to score more slots. n_excluded_dropped is slightly larger than rule_R4.scope.n_dropped_never_measured_at_any_temperature: it also drops slots whose only measured neighbours sit in 1-slot cells, which have no centred percentile.",
+   "n_excluded_scored": 22598,
+   "n_excluded_dropped": 9007,
+   "mean_percentile_by_ratio": {
+    "ch4_o2_2": {
+     "present": 0.6290921594223102,
+     "excluded": 0.6122508746901304,
+     "present_minus_excluded": 0.01684128473217983,
+     "ci95_low": 0.0024415220444633347,
+     "ci95_high": 0.032309375834707055,
+     "ci_excludes_zero": true,
+     "n_present": 31192,
+     "n_excluded": 5284
+    },
+    "ch4_o2_4": {
+     "present": 0.5127136978120344,
+     "excluded": 0.4908929610700393,
+     "present_minus_excluded": 0.021820736741995028,
+     "ci95_low": 0.011176064987881996,
+     "ci95_high": 0.032427765785949005,
+     "ci_excludes_zero": true,
+     "n_present": 27663,
+     "n_excluded": 8178
+    },
+    "ch4_o2_6": {
+     "present": 0.35346318287492656,
+     "excluded": 0.3260535091110624,
+     "present_minus_excluded": 0.027409673763864162,
+     "ci95_low": 0.017404428681824475,
+     "ci95_high": 0.03745794780752729,
+     "ci_excludes_zero": true,
+     "n_present": 26764,
+     "n_excluded": 9136
+    }
+   },
+   "R4_n_ratios_meeting_criterion": 0
+  },
+  "between_catalyst": {
+   "population": "all_917; observed max = max over all rows",
+   "spearman_excluded_slots_in_observed_cells_vs_observed_max": -0.2527714754319047,
+   "spearman_missing_slots_of_135_incl_absent_cells_vs_observed_max": -0.2865806945016305,
+   "spearman_rows_per_catalyst_vs_observed_max": 0.29322588856203524,
+   "note": "Two definitions. \"Excluded slots in observed cells\" matches this section's definition of excluded. \"Missing of 135\" also counts the slots of absent cells; the audit's -0.287 is this one. Quote the one that matches the wording."
+  },
+  "absent_cells": {
+   "what": "(catalyst, temperature) cells with no row; not slots of the within-catalyst test",
+   "n_absent_cells": 186,
+   "n_observed_cells": 4399,
+   "n_possible_cells": 4585,
+   "by_temperature": {
+    "700": 82,
+    "750": 35,
+    "800": 29,
+    "850": 24,
+    "900": 16
+   },
+   "n_catalysts_with_any_absent_cell": 106,
+   "mean_observed_max_catalysts_with_absent_cell": 8.402150536924527,
+   "mean_observed_max_catalysts_without": 10.746480316468558
+  },
+  "mean_yield_by_ch4_o2_all_rows": {
+   "ch4_o2_2": 5.964080279473807,
+   "ch4_o2_4": 5.367782265554833,
+   "ch4_o2_6": 4.2926949372403636
+  },
+  "catalysts_with_no_ratio_2_row": {
+   "n": 47,
+   "mean_observed_max": 1.383816957468085,
+   "mean_observed_max_all_917": 10.475489087862595
+  },
+  "per_condition_presence_distinct_cells": {
+   "note": "cells holding each of the 27 conditions, a duplicated slot counted once",
+   "pct_of_4399_observed_cells_min_max": [
+    62.264150943396224,
+    83.60991134348716
+   ],
+   "pct_of_4585_possible_cells_min_max": [
+    59.73827699018539,
+    80.21810250817884
+   ],
+   "by_condition": [
+    {
+     "total_flow": 10.0,
+     "ar_fraction": 0.15,
+     "ch4_o2": 2.0,
+     "n_cells": 3494,
+     "pct_of_observed_cells": 79.42714253239373,
+     "pct_of_possible_cells": 76.20501635768811
+    },
+    {
+     "total_flow": 10.0,
+     "ar_fraction": 0.15,
+     "ch4_o2": 4.0,
+     "n_cells": 3033,
+     "pct_of_observed_cells": 68.94748806546943,
+     "pct_of_possible_cells": 66.1504907306434
+    },
+    {
+     "total_flow": 10.0,
+     "ar_fraction": 0.15,
+     "ch4_o2": 6.0,
+     "n_cells": 3206,
+     "pct_of_observed_cells": 72.88020004546487,
+     "pct_of_possible_cells": 69.92366412213741
+    },
+    {
+     "total_flow": 10.0,
+     "ar_fraction": 0.4,
+     "ch4_o2": 2.0,
+     "n_cells": 3426,
+     "pct_of_observed_cells": 77.88133666742442,
+     "pct_of_possible_cells": 74.72191930207197
+    },
+    {
+     "total_flow": 10.0,
+     "ar_fraction": 0.4,
+     "ch4_o2": 4.0,
+     "n_cells": 3404,
+     "pct_of_observed_cells": 77.38122300522846,
+     "pct_of_possible_cells": 74.24209378407852
+    },
+    {
+     "total_flow": 10.0,
+     "ar_fraction": 0.4,
+     "ch4_o2": 6.0,
+     "n_cells": 3269,
+     "pct_of_observed_cells": 74.31234371448056,
+     "pct_of_possible_cells": 71.29770992366412
+    },
+    {
+     "total_flow": 10.0,
+     "ar_fraction": 0.7,
+     "ch4_o2": 2.0,
+     "n_cells": 2964,
+     "pct_of_observed_cells": 67.37894976130939,
+     "pct_of_possible_cells": 64.64558342420938
+    },
+    {
+     "total_flow": 10.0,
+     "ar_fraction": 0.7,
+     "ch4_o2": 4.0,
+     "n_cells": 3034,
+     "pct_of_observed_cells": 68.97022050466015,
+     "pct_of_possible_cells": 66.17230098146129
+    },
+    {
+     "total_flow": 10.0,
+     "ar_fraction": 0.7,
+     "ch4_o2": 6.0,
+     "n_cells": 2739,
+     "pct_of_observed_cells": 62.264150943396224,
+     "pct_of_possible_cells": 59.73827699018539
+    },
+    {
+     "total_flow": 15.0,
+     "ar_fraction": 0.15,
+     "ch4_o2": 2.0,
+     "n_cells": 3639,
+     "pct_of_observed_cells": 82.72334621504888,
+     "pct_of_possible_cells": 79.36750272628136
+    },
+    {
+     "total_flow": 15.0,
+     "ar_fraction": 0.15,
+     "ch4_o2": 4.0,
+     "n_cells": 2842,
+     "pct_of_observed_cells": 64.60559218004092,
+     "pct_of_possible_cells": 61.98473282442748
+    },
+    {
+     "total_flow": 15.0,
+     "ar_fraction": 0.15,
+     "ch4_o2": 6.0,
+     "n_cells": 2746,
+     "pct_of_observed_cells": 62.423278017731306,
+     "pct_of_possible_cells": 59.89094874591058
+    },
+    {
+     "total_flow": 15.0,
+     "ar_fraction": 0.4,
+     "ch4_o2": 2.0,
+     "n_cells": 3664,
+     "pct_of_observed_cells": 83.291657194817,
+     "pct_of_possible_cells": 79.91275899672846
+    },
+    {
+     "total_flow": 15.0,
+     "ar_fraction": 0.4,
+     "ch4_o2": 4.0,
+     "n_cells": 3272,
+     "pct_of_observed_cells": 74.38054103205273,
+     "pct_of_possible_cells": 71.36314067611778
+    },
+    {
+     "total_flow": 15.0,
+     "ar_fraction": 0.4,
+     "ch4_o2": 6.0,
+     "n_cells": 3150,
+     "pct_of_observed_cells": 71.60718345078426,
+     "pct_of_possible_cells": 68.70229007633588
+    },
+    {
+     "total_flow": 15.0,
+     "ar_fraction": 0.7,
+     "ch4_o2": 2.0,
+     "n_cells": 3510,
+     "pct_of_observed_cells": 79.79086155944533,
+     "pct_of_possible_cells": 76.55398037077427
+    },
+    {
+     "total_flow": 15.0,
+     "ar_fraction": 0.7,
+     "ch4_o2": 4.0,
+     "n_cells": 3106,
+     "pct_of_observed_cells": 70.60695612639236,
+     "pct_of_possible_cells": 67.74263904034896
+    },
+    {
+     "total_flow": 15.0,
+     "ar_fraction": 0.7,
+     "ch4_o2": 6.0,
+     "n_cells": 3173,
+     "pct_of_observed_cells": 72.13002955217095,
+     "pct_of_possible_cells": 69.20392584514723
+    },
+    {
+     "total_flow": 20.0,
+     "ar_fraction": 0.15,
+     "ch4_o2": 2.0,
+     "n_cells": 3677,
+     "pct_of_observed_cells": 83.58717890429644,
+     "pct_of_possible_cells": 80.19629225736097
+    },
+    {
+     "total_flow": 20.0,
+     "ar_fraction": 0.15,
+     "ch4_o2": 4.0,
+     "n_cells": 3006,
+     "pct_of_observed_cells": 68.33371220731985,
+     "pct_of_possible_cells": 65.56161395856053
+    },
+    {
+     "total_flow": 20.0,
+     "ar_fraction": 0.15,
+     "ch4_o2": 6.0,
+     "n_cells": 2814,
+     "pct_of_observed_cells": 63.969083882700616,
+     "pct_of_possible_cells": 61.37404580152672
+    },
+    {
+     "total_flow": 20.0,
+     "ar_fraction": 0.4,
+     "ch4_o2": 2.0,
+     "n_cells": 3678,
+     "pct_of_observed_cells": 83.60991134348716,
+     "pct_of_possible_cells": 80.21810250817884
+    },
+    {
+     "total_flow": 20.0,
+     "ar_fraction": 0.4,
+     "ch4_o2": 4.0,
+     "n_cells": 3366,
+     "pct_of_observed_cells": 76.5173903159809,
+     "pct_of_possible_cells": 73.41330425299891
+    },
+    {
+     "total_flow": 20.0,
+     "ar_fraction": 0.4,
+     "ch4_o2": 6.0,
+     "n_cells": 3107,
+     "pct_of_observed_cells": 70.62968856558308,
+     "pct_of_possible_cells": 67.76444929116686
+    },
+    {
+     "total_flow": 20.0,
+     "ar_fraction": 0.7,
+     "ch4_o2": 2.0,
+     "n_cells": 3479,
+     "pct_of_observed_cells": 79.08615594453285,
+     "pct_of_possible_cells": 75.87786259541984
+    },
+    {
+     "total_flow": 20.0,
+     "ar_fraction": 0.7,
+     "ch4_o2": 4.0,
+     "n_cells": 3112,
+     "pct_of_observed_cells": 70.74335076153672,
+     "pct_of_possible_cells": 67.87350054525628
+    },
+    {
+     "total_flow": 20.0,
+     "ar_fraction": 0.7,
+     "ch4_o2": 6.0,
+     "n_cells": 3258,
+     "pct_of_observed_cells": 74.06228688338258,
+     "pct_of_possible_cells": 71.05779716466739
+    }
+   ]
+  }
+ },
+ "precision": {
+  "label": "within-session condition-to-condition scatter on complete cells; an upper bound on independent per-condition noise; NOT run-to-run repeatability",
+  "population": "complete cells: 27 distinct conditions, ND_889 catalysts only",
+  "n_cells": 890,
+  "n_rows": 24030,
+  "model_19p": {
+   "what": "main effects + all two-way interactions of the 3 categorical axes; 19 parameters, 8 residual df per cell",
+   "pooled_resid_sd": 0.6809049845228826,
+   "median_per_cell_resid_sd": 0.40166964399378413,
+   "spearman_cell_sd_vs_cell_mean": 0.5324169089010282
+  },
+  "model_7p": {
+   "what": "main effects only; 7 parameters, 20 residual df per cell",
+   "pooled_resid_sd": 0.9329157583918541,
+   "median_per_cell_resid_sd": 0.7237491375533811,
+   "spearman_cell_sd_vs_cell_mean": 0.6400413686797833
+  },
+  "by_cell_mean_quintile": [
+   {
+    "quintile": 1,
+    "n_cells": 178,
+    "cell_mean_range": [
+     0.2606437074814815,
+     2.4769029629629635
+    ],
+    "pooled_resid_sd_19p": 0.2792332716536539,
+    "median_resid_sd_19p": 0.12609059359819624,
+    "pooled_resid_sd_7p": 0.41408517975913933,
+    "median_resid_sd_7p": 0.2342800943178743
+   },
+   {
+    "quintile": 2,
+    "n_cells": 178,
+    "cell_mean_range": [
+     2.5040790181851853,
+     4.936044155333334
+    ],
+    "pooled_resid_sd_19p": 0.6080464617551601,
+    "median_resid_sd_19p": 0.2912697311795218,
+    "pooled_resid_sd_7p": 0.7801368117914874,
+    "median_resid_sd_7p": 0.6514834422234865
+   },
+   {
+    "quintile": 3,
+    "n_cells": 178,
+    "cell_mean_range": [
+     4.94323739874074,
+     6.972327938851852
+    ],
+    "pooled_resid_sd_19p": 0.6932483377082271,
+    "median_resid_sd_19p": 0.43987835855473467,
+    "pooled_resid_sd_7p": 0.8394433357501967,
+    "median_resid_sd_7p": 0.7165403820068993
+   },
+   {
+    "quintile": 4,
+    "n_cells": 178,
+    "cell_mean_range": [
+     6.979428888777778,
+     9.754383222222222
+    ],
+    "pooled_resid_sd_19p": 0.7791049385211599,
+    "median_resid_sd_19p": 0.5225465607178339,
+    "pooled_resid_sd_7p": 1.0280726820558952,
+    "median_resid_sd_7p": 0.8908003549192718
+   },
+   {
+    "quintile": 5,
+    "n_cells": 178,
+    "cell_mean_range": [
+     9.789843415814813,
+     16.92449008148148
+    ],
+    "pooled_resid_sd_19p": 0.8847985686730523,
+    "median_resid_sd_19p": 0.6960931919190728,
+    "pooled_resid_sd_7p": 1.3453551674356765,
+    "median_resid_sd_7p": 1.2950104145002679
+   }
+  ],
+  "mean_yield_complete_cell_rows": 6.167462675110611,
+  "mean_yield_all_917_rows_outside_the_complete_ND_cells": 4.904548601647654,
+  "n_rows_all_917_outside_the_complete_ND_cells": 65044,
+  "note_other_rows": "every row not in these complete ND_889 cells, including all doubled_28 rows"
+ },
+ "floors": {
+  "grouping": "(catalyst, temperature); floor = RMSE of predicting each row by its cell mean",
+  "all_rows_all_917": {
+   "within_cell_variance_share": 0.19900903459460645,
+   "rmse_floor": 1.7571156136641113,
+   "n_rows": 89074
+  },
+  "rows_ND_889": {
+   "within_cell_variance_share": 0.17774139177047651,
+   "rmse_floor": 1.6510210471862319,
+   "n_rows": 83818
+  },
+  "all_917_duplicated_slots_averaged": {
+   "within_cell_variance_share": 0.1796614412935244,
+   "rmse_floor": 1.6574665186797413,
+   "n_rows": 87168
+  },
+  "note": "Not attainable for an unseen catalyst: it assumes the cell mean is known."
+ },
+ "work_note_numbers": {
+  "population": "the 4,399 observed (catalyst, temperature) cells, all_917",
+  "spearman_cell_size_rows_vs_cell_max": 0.4409853533603846,
+  "spearman_cell_distinct_conditions_vs_cell_max": 0.43162748346926433,
+  "note_distinct": "distinct-condition version uses duplicated slots averaged; the work note quotes the row-count version",
+  "n_absent_cells": 186,
+  "n_observed_cells": 4399,
+  "n_possible_cells": 4585
+ },
+ "reference_check": {
+  "what": "this script vs values from an independent audit, for checking only",
+  "rows": [
+   {
+    "quantity": "n duplicated slots",
+    "audit": 1906,
+    "this_script": 1906.0
+   },
+   {
+    "quantity": "cells with duplicated slots",
+    "audit": 126,
+    "this_script": 126.0
+   },
+   {
+    "quantity": "doubled catalysts duplicated at all 5 T",
+    "audit": 22,
+    "this_script": 22.0
+   },
+   {
+    "quantity": "pairs with lo = 0",
+    "audit": 29,
+    "this_script": 29.0
+   },
+   {
+    "quantity": "median hi/lo, pooled over pairs",
+    "audit": 2.29,
+    "this_script": 2.294809476829832
+   },
+   {
+    "quantity": "cells with >= 15 pairs",
+    "audit": 73,
+    "this_script": 73.0
+   },
+   {
+    "quantity": "resid SD median, pair means",
+    "audit": 0.75,
+    "this_script": 0.7525486893228163
+   },
+   {
+    "quantity": "resid SD median, hi",
+    "audit": 1.14,
+    "this_script": 1.1432450198163533
+   },
+   {
+    "quantity": "resid SD median, lo",
+    "audit": 0.62,
+    "this_script": 0.6147036562893606
+   },
+   {
+    "quantity": "resid SD median, ordinary complete cells",
+    "audit": 0.72,
+    "this_script": 0.7237491375533811
+   },
+   {
+    "quantity": "resid SD median, random member, per-cell mean over draws",
+    "audit": 2.5,
+    "this_script": 2.424126479034517,
+    "note": "Monte Carlo; moves with the RNG seed; primary aggregator"
+   },
+   {
+    "quantity": "resid SD median, random member, per-cell median over draws",
+    "audit": 2.5,
+    "this_script": 2.528165740815568,
+    "note": "Monte Carlo; moves with the RNG seed; probably the audit aggregator"
+   },
+   {
+    "quantity": "cells with >= 10 pairs",
+    "audit": 85,
+    "this_script": 85.0
+   },
+   {
+    "quantity": "median Spearman(hi, lo)",
+    "audit": 0.436,
+    "this_script": 0.4356521739130434
+   },
+   {
+    "quantity": "null A",
+    "audit": -0.005,
+    "this_script": 0.0008506493506493512,
+    "note": "Monte Carlo; moves with the RNG seed"
+   },
+   {
+    "quantity": "null B",
+    "audit": 0.467,
+    "this_script": 0.44698901098901106,
+    "note": "Monte Carlo; moves with the RNG seed; 7/15 = 0.467 is the large-n value, the finite-sample expectation is lower"
+   },
+   {
+    "quantity": "top decile, doubled count",
+    "audit": 10,
+    "this_script": 10.0
+   },
+   {
+    "quantity": "top decile, expected",
+    "audit": 2.8,
+    "this_script": 2.8091603053435112
+   },
+   {
+    "quantity": "top decile, P",
+    "audit": 0.000183,
+    "this_script": 0.00018276740871051318
+   },
+   {
+    "quantity": "top decile, pair mean",
+    "audit": 4,
+    "this_script": 4.0
+   },
+   {
+    "quantity": "top decile, pair min",
+    "audit": 4,
+    "this_script": 4.0
+   },
+   {
+    "quantity": "n excluded scored, primary",
+    "audit": 16577,
+    "this_script": 14588.0,
+    "note": "differs by design: primary averages T-50 and T+50 and uses (r-1)/(n-1); see the audit-variant row"
+   },
+   {
+    "quantity": "excluded mean pct, pooled, primary",
+    "audit": 0.482,
+    "this_script": 0.45085616065775097,
+    "note": "differs by design: primary averages T-50 and T+50 and uses (r-1)/(n-1); see the audit-variant row"
+   },
+   {
+    "quantity": "present mean pct, pooled, primary",
+    "audit": 0.53,
+    "this_script": 0.5073012342393153,
+    "note": "differs by design: primary averages T-50 and T+50 and uses (r-1)/(n-1); see the audit-variant row"
+   },
+   {
+    "quantity": "n excluded scored, audit variant",
+    "audit": 16577,
+    "this_script": 16577.0,
+    "note": "audit variant: r/n, each (slot, measured neighbour) pair a separate record"
+   },
+   {
+    "quantity": "excluded mean pct, pooled, audit variant",
+    "audit": 0.482,
+    "this_script": 0.4822689125833024,
+    "note": "audit variant: r/n, each (slot, measured neighbour) pair a separate record"
+   },
+   {
+    "quantity": "present mean pct, pooled, audit variant",
+    "audit": 0.53,
+    "this_script": 0.5301564237864762,
+    "note": "audit variant: r/n, each (slot, measured neighbour) pair a separate record"
+   },
+   {
+    "quantity": "excluded mean pct, ratio 2, audit variant",
+    "audit": 0.634,
+    "this_script": 0.6338127072473554,
+    "note": "audit variant: r/n, each (slot, measured neighbour) pair a separate record"
+   },
+   {
+    "quantity": "present mean pct, ratio 2, audit variant",
+    "audit": 0.645,
+    "this_script": 0.6454139338610958,
+    "note": "audit variant: r/n, each (slot, measured neighbour) pair a separate record"
+   },
+   {
+    "quantity": "excluded mean pct, ratio 4, audit variant",
+    "audit": 0.514,
+    "this_script": 0.5136128683541058,
+    "note": "audit variant: r/n, each (slot, measured neighbour) pair a separate record"
+   },
+   {
+    "quantity": "present mean pct, ratio 4, audit variant",
+    "audit": 0.532,
+    "this_script": 0.5321121104471449,
+    "note": "audit variant: r/n, each (slot, measured neighbour) pair a separate record"
+   },
+   {
+    "quantity": "excluded mean pct, ratio 6, audit variant",
+    "audit": 0.361,
+    "this_script": 0.36060838977554394,
+    "note": "audit variant: r/n, each (slot, measured neighbour) pair a separate record"
+   },
+   {
+    "quantity": "present mean pct, ratio 6, audit variant",
+    "audit": 0.385,
+    "this_script": 0.38524379719297236,
+    "note": "audit variant: r/n, each (slot, measured neighbour) pair a separate record"
+   },
+   {
+    "quantity": "Spearman(missing of 135, max)",
+    "audit": -0.287,
+    "this_script": -0.2865806945016305,
+    "note": "includes absent cells; excluded-in-observed-cells version stored separately"
+   },
+   {
+    "quantity": "Spearman(rows, max)",
+    "audit": 0.2932,
+    "this_script": 0.29322588856203524
+   },
+   {
+    "quantity": "complete ND cells",
+    "audit": 890,
+    "this_script": 890.0
+   },
+   {
+    "quantity": "precision pooled 19p",
+    "audit": 0.682,
+    "this_script": 0.6809049845228826,
+    "note": "differs by 0.001; the verifier's independent code matched this script; probably audit rounding"
+   },
+   {
+    "quantity": "precision median 19p",
+    "audit": 0.402,
+    "this_script": 0.40166964399378413
+   },
+   {
+    "quantity": "floor share all",
+    "audit": 0.199,
+    "this_script": 0.19900903459460645
+   },
+   {
+    "quantity": "floor RMSE all",
+    "audit": 1.757,
+    "this_script": 1.7571156136641113
+   },
+   {
+    "quantity": "floor share ND",
+    "audit": 0.178,
+    "this_script": 0.17774139177047651
+   },
+   {
+    "quantity": "floor RMSE ND",
+    "audit": 1.651,
+    "this_script": 1.6510210471862319
+   },
+   {
+    "quantity": "floor share averaged",
+    "audit": 0.18,
+    "this_script": 0.1796614412935244
+   },
+   {
+    "quantity": "floor RMSE averaged",
+    "audit": 1.658,
+    "this_script": 1.6574665186797413,
+    "note": "fourth-decimal rounding"
+   },
+   {
+    "quantity": "Spearman(cell size, cell max)",
+    "audit": 0.441,
+    "this_script": 0.4409853533603846
+   },
+   {
+    "quantity": "absent cells",
+    "audit": 186,
+    "this_script": 186.0
+   }
+  ]
+ }
+}
