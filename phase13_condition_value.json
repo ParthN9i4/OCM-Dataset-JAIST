@@ -43,7 +43,7 @@
    "seed_mean_of_pooled_oof": "OOF scores pooled over the 5 folds of a seed, metric per seed, then mean over seeds"
   },
   "test_rule": "differences judged only by catalyst bootstrap CIs (3000 resamples, seed 7); seed-to-seed spread is never a test; a CI including zero reads \"no detectable change\"",
-  "runtime_minutes": 3.304291029771169
+  "runtime_minutes": 6.554878755410512
  },
  "phase11_consistency": {
   "fair_screening_C_minus_A_spearman_465_complete": {
@@ -1984,13 +1984,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.25535652884405674,
         0.3226289668555071,
         0.2713323832769902,
         0.34253002001363153,
         0.283533399804253
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 917,
+       "mean_diff": 0.051755442419847336,
+       "boot_mean": 0.05186243260150891,
+       "ci95_low": -0.04764421118571426,
+       "ci95_high": 0.15759998225648858,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.051755442419847336,
+        0.051755442419847336,
+        0.051755442419847336,
+        0.051755442419847336,
+        0.051755442419847336
        ]
       }
      },
@@ -2043,13 +2062,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.3242411408184177,
         0.38084085726394296,
         0.32829758998573283,
         0.4126317753988328,
         0.35636508490337226
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 771,
+       "mean_diff": 0.058841622424124516,
+       "boot_mean": 0.05965983117468591,
+       "ci95_low": -0.04903494542266537,
+       "ci95_high": 0.175521063236819,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.058841622424124516,
+        0.058841622424124516,
+        0.058841622424124516,
+        0.058841622424124516,
+        0.058841622424124516
        ]
       }
      },
@@ -2102,13 +2140,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.26647524680989876,
         0.33365887764004504,
         0.2818437192789651,
         0.3465471366366704,
         0.2876933455174353
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 889,
+       "mean_diff": 0.06771470117885266,
+       "boot_mean": 0.06654568221714324,
+       "ci95_low": -0.03161149391020807,
+       "ci95_high": 0.16849900097249731,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.06771470117885264,
+        0.06771470117885264,
+        0.06771470117885264,
+        0.06771470117885264,
+        0.06771470117885264
        ]
       }
      }
@@ -2163,13 +2220,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.20394795095419846,
         0.24521401517175576,
         0.1658703431303163,
         0.2914875364471101,
         0.22528572338386046
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 917,
+       "mean_diff": 0.0019322216717557394,
+       "boot_mean": 0.0025172402144002294,
+       "ci95_low": -0.05863910687988003,
+       "ci95_high": 0.06090519412746732,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.0019322216717557433,
+        0.0019322216717557433,
+        0.0019322216717557433,
+        0.0019322216717557433,
+        0.0019322216717557433
        ]
       }
      },
@@ -2222,13 +2298,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.2582001464202334,
         0.2818553216867704,
         0.2249759384922179,
         0.35054394178858633,
         0.27634123708430613
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 771,
+       "mean_diff": 0.019518792491569396,
+       "boot_mean": 0.019065512395679864,
+       "ci95_low": -0.04886164004865434,
+       "ci95_high": 0.08581148896566151,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.01951879249156939,
+        0.01951879249156939,
+        0.01951879249156939,
+        0.01951879249156939,
+        0.01951879249156939
        ]
       }
      },
@@ -2281,13 +2376,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.1976035093565804,
         0.24196440611248596,
         0.1632207101698538,
         0.28877171720134986,
         0.220013143208099
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 889,
+       "mean_diff": -0.0007702121676040392,
+       "boot_mean": -0.0011967485806032865,
+       "ci95_low": -0.06520737983906072,
+       "ci95_high": 0.06090294102986506,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        -0.0007702121676040352,
+        -0.0007702121676040352,
+        -0.0007702121676040352,
+        -0.0007702121676040352,
+        -0.0007702121676040352
        ]
       }
      }
@@ -2342,13 +2456,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.21407208503925843,
         0.2119050082055616,
         0.15534764567829878,
         0.19182780016739368,
         0.16923630351853872
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 917,
+       "mean_diff": 0.010538794953653207,
+       "boot_mean": 0.010840323117288974,
+       "ci95_low": -0.04110270067827155,
+       "ci95_high": 0.060849330670378954,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.010538794953653207,
+        0.010538794953653207,
+        0.010538794953653207,
+        0.010538794953653207,
+        0.010538794953653207
        ]
       }
      },
@@ -2401,13 +2534,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.259816978154345,
         0.24840986313035018,
         0.19613654017639431,
         0.22753747760246434,
         0.1806567296815824
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 771,
+       "mean_diff": 0.012775406328793763,
+       "boot_mean": 0.011919872028567218,
+       "ci95_low": -0.04557658477671856,
+       "ci95_high": 0.06689205091249999,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.012775406328793766,
+        0.012775406328793766,
+        0.012775406328793766,
+        0.012775406328793766,
+        0.012775406328793766
        ]
       }
      },
@@ -2460,13 +2612,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.21123925166591676,
         0.216087628856018,
         0.15385617987739034,
         0.19145602516422947,
         0.17488594791226098
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 889,
+       "mean_diff": 0.005556146901012356,
+       "boot_mean": 0.005672288842375319,
+       "ci95_low": -0.04688514496796964,
+       "ci95_high": 0.05665094008121487,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.00555614690101236,
+        0.00555614690101236,
+        0.00555614690101236,
+        0.00555614690101236,
+        0.00555614690101236
        ]
       }
      }
@@ -2523,13 +2694,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.2062971293146129,
         0.25744627141875687,
         0.1884751926145038,
         0.2720708534394766,
         0.23242300538495095
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 917,
+       "mean_diff": 0.011473365804253005,
+       "boot_mean": 0.011922160210580702,
+       "ci95_low": -0.08105772140794713,
+       "ci95_high": 0.1031424104899264,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.011473365804253007,
+        0.011473365804253007,
+        0.011473365804253007,
+        0.011473365804253007,
+        0.011473365804253007
        ]
       }
      },
@@ -2582,13 +2772,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.2502190866647212,
         0.3017069405862517,
         0.22328907126005193,
         0.3294753821374838,
         0.2762968627094683
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 771,
+       "mean_diff": 0.018353862153696495,
+       "boot_mean": 0.018747443019494377,
+       "ci95_low": -0.08796799280316148,
+       "ci95_high": 0.12748169845497734,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.0183538621536965,
+        0.0183538621536965,
+        0.0183538621536965,
+        0.0183538621536965,
+        0.0183538621536965
        ]
       }
      },
@@ -2641,13 +2850,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.21478500897862773,
         0.2677101460146232,
         0.19766381541282343,
         0.27275673823734536,
         0.23623375187626552
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 889,
+       "mean_diff": 0.02053665018785153,
+       "boot_mean": 0.019847625161825658,
+       "ci95_low": -0.07023832516667601,
+       "ci95_high": 0.11165110196299216,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.02053665018785153,
+        0.02053665018785153,
+        0.02053665018785153,
+        0.02053665018785153,
+        0.02053665018785153
        ]
       }
      }
@@ -2702,13 +2930,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.2390091773157034,
         0.2302874618069793,
         0.17301466820283531,
         0.2689446147268266,
         0.21244456206488554
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 917,
+       "mean_diff": 0.014920265851690307,
+       "boot_mean": 0.015342587211816444,
+       "ci95_low": -0.03626631392399125,
+       "ci95_high": 0.06293566238673669,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.014920265851690307,
+        0.014920265851690307,
+        0.014920265851690307,
+        0.014920265851690307,
+        0.014920265851690307
        ]
       }
      },
@@ -2761,13 +3008,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.27842237876070036,
         0.2642260262127108,
         0.20053109681712064,
         0.30552017603307396,
         0.24587817891893649
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 771,
+       "mean_diff": 0.03999242221141377,
+       "boot_mean": 0.04000904939846241,
+       "ci95_low": -0.01242568160903047,
+       "ci95_high": 0.09668752447738331,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.03999242221141377,
+        0.03999242221141377,
+        0.03999242221141377,
+        0.03999242221141377,
+        0.03999242221141377
        ]
       }
      },
@@ -2820,13 +3086,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.23834753400674916,
         0.23114623277727783,
         0.17080880357480313,
         0.2700972898931384,
         0.21354580795163106
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 889,
+       "mean_diff": 0.014043695799775043,
+       "boot_mean": 0.013800320459619438,
+       "ci95_low": -0.036165316176293566,
+       "ci95_high": 0.06400081665641172,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.014043695799775047,
+        0.014043695799775047,
+        0.014043695799775047,
+        0.014043695799775047,
+        0.014043695799775047
        ]
       }
      }
@@ -2881,13 +3166,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.22492372050763362,
         0.23195457361068705,
         0.17692171483478736,
         0.18523244029334787,
         0.1644063065572519
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 917,
+       "mean_diff": 0.018175451627589958,
+       "boot_mean": 0.018206516713896753,
+       "ci95_low": -0.025769947579075803,
+       "ci95_high": 0.061877452654212114,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.018175451627589958,
+        0.018175451627589958,
+        0.018175451627589958,
+        0.018175451627589958,
+        0.018175451627589958
        ]
       }
      },
@@ -2940,13 +3244,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.252313799343061,
         0.25803152398054474,
         0.20065166388391698,
         0.20300756230090794,
         0.1756617855875487
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 771,
+       "mean_diff": 0.029641621896887144,
+       "boot_mean": 0.029134007111257233,
+       "ci95_low": -0.020815217916212728,
+       "ci95_high": 0.0794834125293288,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.029641621896887148,
+        0.029641621896887148,
+        0.029641621896887148,
+        0.029641621896887148,
+        0.029641621896887148
        ]
       }
      },
@@ -2999,13 +3322,32 @@
        "reading": "above zero",
        "n_boot": 3000,
        "rng_seed": 7,
-       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better",
+       "what": "mean over catalysts of seed-averaged regret_family_rule - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; a per-seed rule against a 5-seed ensemble, not a design-axes effect",
        "per_seed_mean_edge": [
         0.2229058284094488,
         0.23196419137795277,
         0.17217590318672665,
         0.1831389598830146,
         0.16601722506861644
+       ]
+      },
+      "model_C_seed_averaged_minus_model_Cp_seed_averaged": {
+       "n_catalysts": 889,
+       "mean_diff": 0.013929563137232835,
+       "boot_mean": 0.013752057197146967,
+       "ci95_low": -0.030389082895303718,
+       "ci95_high": 0.05653203422016311,
+       "clears_zero": false,
+       "reading": "no detectable change",
+       "n_boot": 3000,
+       "rng_seed": 7,
+       "what": "ADDED CHECK, outside the rule: mean over catalysts of seed-averaged regret_model_C_seed_averaged - regret_model_Cp_seed_averaged; > 0 means model_Cp_seed_averaged better; both are 5-seed ensembles, so this isolates the design axes",
+       "per_seed_mean_edge": [
+        0.013929563137232828,
+        0.013929563137232828,
+        0.013929563137232828,
+        0.013929563137232828,
+        0.013929563137232828
        ]
       }
      }
@@ -5484,6 +5826,7 @@
      "random_seed_mean_p97_5": 0.8411957952362442,
      "random_seed_mean_mean": 0.8118529902719289,
      "verdict": "better than random at K",
+     "random_per_seed_p97_5_stricter_secondary": 0.8719385859164287,
      "secondary_vs_per_seed_p97_5": true
     },
     "greedy_K5": {
@@ -5491,6 +5834,7 @@
      "random_seed_mean_p97_5": 0.8852513888728526,
      "random_seed_mean_mean": 0.8665401951802056,
      "verdict": "better than random at K",
+     "random_per_seed_p97_5_stricter_secondary": 0.9032119976756402,
      "secondary_vs_per_seed_p97_5": true
     },
     "greedy_K10": {
@@ -5498,6 +5842,7 @@
      "random_seed_mean_p97_5": 0.9247917838576659,
      "random_seed_mean_mean": 0.9169434948125386,
      "verdict": "better than random at K",
+     "random_per_seed_p97_5_stricter_secondary": 0.9355428100429498,
      "secondary_vs_per_seed_p97_5": true
     },
     "greedy_K20": {
@@ -5505,6 +5850,7 @@
      "random_seed_mean_p97_5": 0.9530982686757659,
      "random_seed_mean_mean": 0.9479389554363816,
      "verdict": "not better than random at K",
+     "random_per_seed_p97_5_stricter_secondary": 0.9595267085838105,
      "secondary_vs_per_seed_p97_5": false
     },
     "most_often_max_K3": {
@@ -5512,6 +5858,7 @@
      "random_seed_mean_p97_5": 0.8411957952362442,
      "random_seed_mean_mean": 0.8118529902719289,
      "verdict": "better than random at K",
+     "random_per_seed_p97_5_stricter_secondary": 0.8719385859164287,
      "secondary_vs_per_seed_p97_5": true
     },
     "most_often_max_K5": {
@@ -5519,6 +5866,7 @@
      "random_seed_mean_p97_5": 0.8852513888728526,
      "random_seed_mean_mean": 0.8665401951802056,
      "verdict": "better than random at K",
+     "random_per_seed_p97_5_stricter_secondary": 0.9032119976756402,
      "secondary_vs_per_seed_p97_5": true
     },
     "most_often_max_K10": {
@@ -5526,6 +5874,7 @@
      "random_seed_mean_p97_5": 0.9247917838576659,
      "random_seed_mean_mean": 0.9169434948125386,
      "verdict": "better than random at K",
+     "random_per_seed_p97_5_stricter_secondary": 0.9355428100429498,
      "secondary_vs_per_seed_p97_5": true
     },
     "most_often_max_K20": {
@@ -5533,9 +5882,59 @@
      "random_seed_mean_p97_5": 0.9530982686757659,
      "random_seed_mean_mean": 0.9479389554363816,
      "verdict": "better than random at K",
+     "random_per_seed_p97_5_stricter_secondary": 0.9595267085838105,
      "secondary_vs_per_seed_p97_5": true
     }
    }
+  },
+  "rule_b_matched_coverage_added_check": {
+   "what": "ADDED CHECK, outside the rule. Per seed and random draw: Spearman(designed score, truth) - Spearman(random score, truth) on the held-out catalysts covered by both (headline scoring, all_917, pooled OOF per seed); then the seed mean per draw index. Descriptive, no test.",
+   "results": {
+    "greedy_K3": {
+     "mean_over_draws_of_seed_mean_spearman_diff": 0.09863842210241548,
+     "share_of_draws_with_positive_seed_mean_diff": 1.0,
+     "mean_share_of_heldout_catalysts_covered_by_both": 0.827824427480916
+    },
+    "greedy_K5": {
+     "mean_over_draws_of_seed_mean_spearman_diff": 0.061476310098702094,
+     "share_of_draws_with_positive_seed_mean_diff": 1.0,
+     "mean_share_of_heldout_catalysts_covered_by_both": 0.8951363140676118
+    },
+    "greedy_K10": {
+     "mean_over_draws_of_seed_mean_spearman_diff": 0.0217266163928426,
+     "share_of_draws_with_positive_seed_mean_diff": 1.0,
+     "mean_share_of_heldout_catalysts_covered_by_both": 0.9494438386041439
+    },
+    "greedy_K20": {
+     "mean_over_draws_of_seed_mean_spearman_diff": -0.004712068415987182,
+     "share_of_draws_with_positive_seed_mean_diff": 0.04,
+     "mean_share_of_heldout_catalysts_covered_by_both": 0.9713020719738279
+    },
+    "most_often_max_K3": {
+     "mean_over_draws_of_seed_mean_spearman_diff": 0.11197213619415283,
+     "share_of_draws_with_positive_seed_mean_diff": 1.0,
+     "mean_share_of_heldout_catalysts_covered_by_both": 0.8508080697928025
+    },
+    "most_often_max_K5": {
+     "mean_over_draws_of_seed_mean_spearman_diff": 0.09056425774170243,
+     "share_of_draws_with_positive_seed_mean_diff": 1.0,
+     "mean_share_of_heldout_catalysts_covered_by_both": 0.8865059978189749
+    },
+    "most_often_max_K10": {
+     "mean_over_draws_of_seed_mean_spearman_diff": 0.06400984017442188,
+     "share_of_draws_with_positive_seed_mean_diff": 1.0,
+     "mean_share_of_heldout_catalysts_covered_by_both": 0.9159454743729553
+    },
+    "most_often_max_K20": {
+     "mean_over_draws_of_seed_mean_spearman_diff": 0.05061290382900797,
+     "share_of_draws_with_positive_seed_mean_diff": 1.0,
+     "mean_share_of_heldout_catalysts_covered_by_both": 0.9308080697928026
+    }
+   }
+  },
+  "greedy_min_coverage_guard": {
+   "what": "greedy skips a candidate slot if < 3 covered training catalysts; minimum over seed-fold pairs of the number of training catalysts measuring any slot (>= 3 means the guard never binds)",
+   "min_training_catalysts_measuring_any_slot": 244
   },
   "slot_choice_frequency": {
    "n_seed_fold_pairs": 25,
@@ -5811,6 +6210,7 @@
     "fold": 0,
     "n_train_catalysts": 733,
     "n_heldout_catalysts": 184,
+    "min_training_catalysts_measuring_any_slot": 254,
     "greedy_slots": [
      65,
      101,
@@ -5983,6 +6383,7 @@
     "fold": 1,
     "n_train_catalysts": 733,
     "n_heldout_catalysts": 184,
+    "min_training_catalysts_measuring_any_slot": 249,
     "greedy_slots": [
      59,
      104,
@@ -6155,6 +6556,7 @@
     "fold": 2,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 246,
     "greedy_slots": [
      59,
      5,
@@ -6327,6 +6729,7 @@
     "fold": 3,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 260,
     "greedy_slots": [
      65,
      104,
@@ -6499,6 +6902,7 @@
     "fold": 4,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 251,
     "greedy_slots": [
      59,
      32,
@@ -6671,6 +7075,7 @@
     "fold": 0,
     "n_train_catalysts": 733,
     "n_heldout_catalysts": 184,
+    "min_training_catalysts_measuring_any_slot": 259,
     "greedy_slots": [
      65,
      104,
@@ -6843,6 +7248,7 @@
     "fold": 1,
     "n_train_catalysts": 733,
     "n_heldout_catalysts": 184,
+    "min_training_catalysts_measuring_any_slot": 250,
     "greedy_slots": [
      59,
      32,
@@ -7015,6 +7421,7 @@
     "fold": 2,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 256,
     "greedy_slots": [
      59,
      104,
@@ -7187,6 +7594,7 @@
     "fold": 3,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 251,
     "greedy_slots": [
      65,
      101,
@@ -7359,6 +7767,7 @@
     "fold": 4,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 244,
     "greedy_slots": [
      59,
      104,
@@ -7531,6 +7940,7 @@
     "fold": 0,
     "n_train_catalysts": 733,
     "n_heldout_catalysts": 184,
+    "min_training_catalysts_measuring_any_slot": 251,
     "greedy_slots": [
      65,
      101,
@@ -7703,6 +8113,7 @@
     "fold": 1,
     "n_train_catalysts": 733,
     "n_heldout_catalysts": 184,
+    "min_training_catalysts_measuring_any_slot": 257,
     "greedy_slots": [
      65,
      101,
@@ -7875,6 +8286,7 @@
     "fold": 2,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 247,
     "greedy_slots": [
      59,
      32,
@@ -8047,6 +8459,7 @@
     "fold": 3,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 246,
     "greedy_slots": [
      59,
      104,
@@ -8219,6 +8632,7 @@
     "fold": 4,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 259,
     "greedy_slots": [
      59,
      32,
@@ -8391,6 +8805,7 @@
     "fold": 0,
     "n_train_catalysts": 733,
     "n_heldout_catalysts": 184,
+    "min_training_catalysts_measuring_any_slot": 248,
     "greedy_slots": [
      59,
      32,
@@ -8563,6 +8978,7 @@
     "fold": 1,
     "n_train_catalysts": 733,
     "n_heldout_catalysts": 184,
+    "min_training_catalysts_measuring_any_slot": 258,
     "greedy_slots": [
      65,
      101,
@@ -8735,6 +9151,7 @@
     "fold": 2,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 249,
     "greedy_slots": [
      59,
      104,
@@ -8907,6 +9324,7 @@
     "fold": 3,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 251,
     "greedy_slots": [
      59,
      104,
@@ -9079,6 +9497,7 @@
     "fold": 4,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 254,
     "greedy_slots": [
      65,
      101,
@@ -9251,6 +9670,7 @@
     "fold": 0,
     "n_train_catalysts": 733,
     "n_heldout_catalysts": 184,
+    "min_training_catalysts_measuring_any_slot": 256,
     "greedy_slots": [
      59,
      104,
@@ -9423,6 +9843,7 @@
     "fold": 1,
     "n_train_catalysts": 733,
     "n_heldout_catalysts": 184,
+    "min_training_catalysts_measuring_any_slot": 254,
     "greedy_slots": [
      65,
      104,
@@ -9595,6 +10016,7 @@
     "fold": 2,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 250,
     "greedy_slots": [
      65,
      95,
@@ -9767,6 +10189,7 @@
     "fold": 3,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 245,
     "greedy_slots": [
      59,
      32,
@@ -9939,6 +10362,7 @@
     "fold": 4,
     "n_train_catalysts": 734,
     "n_heldout_catalysts": 183,
+    "min_training_catalysts_measuring_any_slot": 255,
     "greedy_slots": [
      65,
      101,
@@ -10108,6 +10532,7 @@
    }
   ],
   "composition_model_on_K_slot_labels": {
+   "comparison_note": "minus_<ref> = metric(variant) - metric(ref), paired catalyst bootstrap on seed-averaged OOF predictions vs the observed row max. minus_all_measured_slots_label_control isolates the cost of the slot reduction (same pipeline, same slot-mean convention). minus_B_median and minus_B_max also contain the label statistic (the control itself differs from B_median).",
    "greedy_K3_label": {
     "all_917": {
      "per_seed": [
@@ -10200,6 +10625,30 @@
       "clears_zero": false,
       "n_boot": 3000,
       "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_spearman_seed_averaged": {
+      "metric": "spearman",
+      "n_catalysts": 917,
+      "delta_point": -0.008989281902300528,
+      "delta_boot_mean": -0.00893880145386428,
+      "ci95_low": -0.019243354474374405,
+      "ci95_high": 0.0007882672661875476,
+      "p_a_better": 0.041,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_enrichment_seed_averaged": {
+      "metric": "enrichment",
+      "n_catalysts": 917,
+      "delta_point": -0.21739130434782616,
+      "delta_boot_mean": -0.16847826086956524,
+      "ci95_low": -1.0869565217391304,
+      "ci95_high": 0.7608695652173911,
+      "p_a_better": 0.305,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
      }
     },
     "EE_771": {
@@ -10266,6 +10715,18 @@
       "ci95_low": -0.014367474541206605,
       "ci95_high": 0.009624871237409132,
       "p_a_better": 0.35533333333333333,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_spearman_seed_averaged": {
+      "metric": "spearman",
+      "n_catalysts": 771,
+      "delta_point": -0.00048640096018159884,
+      "delta_boot_mean": -0.0002614272319119435,
+      "ci95_low": -0.012189152832966035,
+      "ci95_high": 0.012162101235603504,
+      "p_a_better": 0.47633333333333333,
       "clears_zero": false,
       "n_boot": 3000,
       "reading": "no detectable change"
@@ -10338,6 +10799,18 @@
       "clears_zero": true,
       "n_boot": 3000,
       "reading": "below B_max"
+     },
+     "minus_all_measured_slots_label_control_spearman_seed_averaged": {
+      "metric": "spearman",
+      "n_catalysts": 889,
+      "delta_point": -0.011458057569709301,
+      "delta_boot_mean": -0.011342476253263904,
+      "ci95_low": -0.021761641229079486,
+      "ci95_high": -0.0013239489511924852,
+      "p_a_better": 0.012,
+      "clears_zero": true,
+      "n_boot": 3000,
+      "reading": "below all_measured_slots_label_control"
      }
     }
    },
@@ -10433,6 +10906,30 @@
       "clears_zero": false,
       "n_boot": 3000,
       "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_spearman_seed_averaged": {
+      "metric": "spearman",
+      "n_catalysts": 917,
+      "delta_point": -0.004210364435117131,
+      "delta_boot_mean": -0.004154921085701501,
+      "ci95_low": -0.01339620549033509,
+      "ci95_high": 0.004653423564732967,
+      "p_a_better": 0.18733333333333332,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_enrichment_seed_averaged": {
+      "metric": "enrichment",
+      "n_catalysts": 917,
+      "delta_point": -0.21739130434782616,
+      "delta_boot_mean": -0.23525362318840579,
+      "ci95_low": -1.0869565217391308,
+      "ci95_high": 0.6521739130434785,
+      "p_a_better": 0.25066666666666665,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
      }
     },
     "EE_771": {
@@ -10502,6 +10999,18 @@
       "clears_zero": false,
       "n_boot": 3000,
       "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_spearman_seed_averaged": {
+      "metric": "spearman",
+      "n_catalysts": 771,
+      "delta_point": 0.004458356908912275,
+      "delta_boot_mean": 0.004674059441057382,
+      "ci95_low": -0.005979591063889281,
+      "ci95_high": 0.01595524101292945,
+      "p_a_better": 0.805,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
      }
     },
     "ND_889": {
@@ -10568,6 +11077,18 @@
       "ci95_low": -0.016624428272817713,
       "ci95_high": 0.0014629401433340242,
       "p_a_better": 0.055,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_spearman_seed_averaged": {
+      "metric": "spearman",
+      "n_catalysts": 889,
+      "delta_point": -0.0062589390113056975,
+      "delta_boot_mean": -0.006166897884644241,
+      "ci95_low": -0.015398318229033356,
+      "ci95_high": 0.0025758420585460682,
+      "p_a_better": 0.09466666666666666,
       "clears_zero": false,
       "n_boot": 3000,
       "reading": "no detectable change"
@@ -10666,6 +11187,30 @@
       "clears_zero": false,
       "n_boot": 3000,
       "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_spearman_seed_averaged": {
+      "metric": "spearman",
+      "n_catalysts": 917,
+      "delta_point": -0.0020397505313668463,
+      "delta_boot_mean": -0.002022575150388518,
+      "ci95_low": -0.011062575833929047,
+      "ci95_high": 0.007063995877453754,
+      "p_a_better": 0.334,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_enrichment_seed_averaged": {
+      "metric": "enrichment",
+      "n_catalysts": 917,
+      "delta_point": -0.32608695652173925,
+      "delta_boot_mean": -0.23014492753623192,
+      "ci95_low": -0.9782608695652169,
+      "ci95_high": 0.543478260869565,
+      "p_a_better": 0.21766666666666667,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
      }
     },
     "EE_771": {
@@ -10735,6 +11280,18 @@
       "clears_zero": false,
       "n_boot": 3000,
       "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_spearman_seed_averaged": {
+      "metric": "spearman",
+      "n_catalysts": 771,
+      "delta_point": 0.006464469584164911,
+      "delta_boot_mean": 0.00654906580309902,
+      "ci95_low": -0.004573645687125219,
+      "ci95_high": 0.01779953563067348,
+      "p_a_better": 0.875,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
      }
     },
     "ND_889": {
@@ -10801,6 +11358,18 @@
       "ci95_low": -0.014147527923369093,
       "ci95_high": 0.004165865325005039,
       "p_a_better": 0.135,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_spearman_seed_averaged": {
+      "metric": "spearman",
+      "n_catalysts": 889,
+      "delta_point": -0.003640882575678739,
+      "delta_boot_mean": -0.0035874620770972657,
+      "ci95_low": -0.01309970069542836,
+      "ci95_high": 0.005230008683302796,
+      "p_a_better": 0.22133333333333333,
       "clears_zero": false,
       "n_boot": 3000,
       "reading": "no detectable change"
@@ -10899,6 +11468,30 @@
       "clears_zero": false,
       "n_boot": 3000,
       "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_spearman_seed_averaged": {
+      "metric": "spearman",
+      "n_catalysts": 917,
+      "delta_point": -0.00030709084638336215,
+      "delta_boot_mean": -0.00020890767968121022,
+      "ci95_low": -0.009879026098841675,
+      "ci95_high": 0.009525986164891245,
+      "p_a_better": 0.4836666666666667,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_enrichment_seed_averaged": {
+      "metric": "enrichment",
+      "n_catalysts": 917,
+      "delta_point": -0.43478260869565233,
+      "delta_boot_mean": -0.2947463768115942,
+      "ci95_low": -0.9782608695652173,
+      "ci95_high": 0.43478260869565233,
+      "p_a_better": 0.16033333333333333,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
      }
     },
     "EE_771": {
@@ -10968,6 +11561,18 @@
       "clears_zero": false,
       "n_boot": 3000,
       "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_spearman_seed_averaged": {
+      "metric": "spearman",
+      "n_catalysts": 771,
+      "delta_point": 0.008424290775453147,
+      "delta_boot_mean": 0.008450751437350523,
+      "ci95_low": -0.003038883005372325,
+      "ci95_high": 0.019939060875023215,
+      "p_a_better": 0.9273333333333333,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
      }
     },
     "ND_889": {
@@ -11034,6 +11639,18 @@
       "ci95_low": -0.013728316938787845,
       "ci95_high": 0.005782938937761426,
       "p_a_better": 0.232,
+      "clears_zero": false,
+      "n_boot": 3000,
+      "reading": "no detectable change"
+     },
+     "minus_all_measured_slots_label_control_spearman_seed_averaged": {
+      "metric": "spearman",
+      "n_catalysts": 889,
+      "delta_point": -0.002518106888627969,
+      "delta_boot_mean": -0.0023845288150535554,
+      "ci95_low": -0.01211894048500913,
+      "ci95_high": 0.007131406644047929,
+      "p_a_better": 0.31466666666666665,
       "clears_zero": false,
       "n_boot": 3000,
       "reading": "no detectable change"
@@ -11384,7 +12001,14 @@
   "per_cell_linear_LOO": {
    "n_fits": 85004,
    "n_rank_deficient_fits": 966,
-   "note": "REFERENCE BOUND: uses the held-out catalyst's own cell data"
+   "n_undetermined_points_excluded": 34,
+   "note": "REFERENCE BOUND: uses the held-out catalyst's own cell data. A rank-deficient fit whose left-out design row lies in the row space of the other rows gives a unique prediction and is kept. An undetermined point (left-out row outside that row space: the slot holds the only instance of an axis level among the cell's measured slots) is excluded; lstsq would return a minimum-norm extrapolation there. Results: results.<population>.reference_bound_on_determined_slots.",
+   "superseded_all_917_rmse_with_min_norm_extrapolations": {
+    "value": 1.1881770636633093,
+    "n_slots": 85004,
+    "max_abs_e_at_undetermined_points": 23.171864275125284,
+    "note": "SUPERSEDED, do not quote. The convention of checkpoint commit ca58c53: every eligible slot, minimum-norm lstsq predictions at the undetermined points. Recomputed here for traceability."
+   }
   },
   "results": {
    "all_917": {
@@ -11396,16 +12020,14 @@
      "lgbm_C": 1.3370069344486124,
      "lgbm_Cp": 1.3316389980962418,
      "amplitude": 1.456977125533504,
-     "flat_p0": 1.7494515188900859,
-     "per_cell_linear_LOO_reference_bound": 1.188177063663309
+     "flat_p0": 1.7494515188900859
     },
     "share_of_flat_sse_explained": {
      "shared_effect": 0.2596915825934629,
      "lgbm_C": 0.4159318879347357,
      "lgbm_Cp": 0.4206124120920126,
      "amplitude": 0.3064118838844653,
-     "flat_p0": 0.0,
-     "per_cell_linear_LOO_reference_bound": 0.5387264995411523
+     "flat_p0": 0.0
     },
     "vs_lgbm_C_catalyst_bootstrap": {
      "shared_effect_minus_lgbm_C": {
@@ -11467,24 +12089,37 @@
        132.51239052218904
       ],
       "n_boot": 3000
-     },
-     "per_cell_linear_LOO_reference_bound_minus_lgbm_C": {
-      "n_catalysts": 876,
-      "rmse_diff_point": -0.1488298707853033,
-      "rmse_diff_boot_mean": -0.14896129906692973,
-      "ci95_low": -0.16965231393941577,
-      "ci95_high": -0.12741942200617665,
-      "clears_zero": true,
-      "reading": "model better than lgbm_C",
-      "mean_per_catalyst_sse_diff": -36.46854107742254,
-      "mean_per_catalyst_sse_diff_ci95": [
-       -41.76855925770922,
-       -31.05430650504682
-      ],
-      "n_boot": 3000
      }
     },
-    "lgbm_C_share_of_shared_to_reference_gap_closed": 0.5306111854335472
+    "reference_bound_on_determined_slots": {
+     "what": "REFERENCE BOUND, uses the held-out catalyst's own cell data. Scored on the eligible slots whose leave-one-out prediction is determined; lgbm_C, shared_effect, flat_p0 etc. on the same slots. Do not compare with within_shape_rmse_seed_averaged, which uses every eligible slot.",
+     "n_slots": 84970,
+     "n_slots_excluded_undetermined": 34,
+     "within_shape_rmse_seed_averaged_same_slots": {
+      "shared_effect": 1.5052719224771847,
+      "lgbm_C": 1.3369481510282206,
+      "lgbm_Cp": 1.331588282565096,
+      "amplitude": 1.4570807864761426,
+      "flat_p0": 1.7493619698725793,
+      "per_cell_linear_LOO_reference_bound": 1.179133577117259
+     },
+     "reference_bound_minus_lgbm_C_catalyst_bootstrap": {
+      "n_catalysts": 876,
+      "rmse_diff_point": -0.15781457391096132,
+      "rmse_diff_boot_mean": -0.15790513919875276,
+      "ci95_low": -0.17802775935000173,
+      "ci95_high": -0.1376745541668175,
+      "clears_zero": true,
+      "reading": "model better than lgbm_C",
+      "mean_per_catalyst_sse_diff": -38.515306925207,
+      "mean_per_catalyst_sse_diff_ci95": [
+       -43.739508015844365,
+       -33.407279998032
+      ],
+      "n_boot": 3000
+     },
+     "lgbm_C_share_of_shared_to_reference_gap_closed": 0.5161115638309941
+    }
    },
    "EE_771": {
     "n_catalysts": 771,
@@ -11495,16 +12130,14 @@
      "lgbm_C": 1.3373083452462295,
      "lgbm_Cp": 1.331661358959584,
      "amplitude": 1.4610685647413044,
-     "flat_p0": 1.760066021505044,
-     "per_cell_linear_LOO_reference_bound": 1.1785335066741283
+     "flat_p0": 1.760066021505044
     },
     "share_of_flat_sse_explained": {
      "shared_effect": 0.2652302851498388,
      "lgbm_C": 0.42269516897281567,
      "lgbm_Cp": 0.42756038870479585,
      "amplitude": 0.3108983717659429,
-     "flat_p0": 0.0,
-     "per_cell_linear_LOO_reference_bound": 0.5516409388938398
+     "flat_p0": 0.0
     },
     "vs_lgbm_C_catalyst_bootstrap": {
      "shared_effect_minus_lgbm_C": {
@@ -11566,24 +12199,37 @@
        147.9222027476151
       ],
       "n_boot": 3000
-     },
-     "per_cell_linear_LOO_reference_bound_minus_lgbm_C": {
-      "n_catalysts": 771,
-      "rmse_diff_point": -0.15877483857210128,
-      "rmse_diff_boot_mean": -0.15867636774147656,
-      "ci95_low": -0.1797380783335072,
-      "ci95_high": -0.13814910413093973,
-      "clears_zero": true,
-      "reading": "model better than lgbm_C",
-      "mean_per_catalyst_sse_diff": -42.19118661976713,
-      "mean_per_catalyst_sse_diff_ci95": [
-       -48.038449160603484,
-       -36.484314440385276
-      ],
-      "n_boot": 3000
      }
     },
-    "lgbm_C_share_of_shared_to_reference_gap_closed": 0.519115310989441
+    "reference_bound_on_determined_slots": {
+     "what": "REFERENCE BOUND, uses the held-out catalyst's own cell data. Scored on the eligible slots whose leave-one-out prediction is determined; lgbm_C, shared_effect, flat_p0 etc. on the same slots. Do not compare with within_shape_rmse_seed_averaged, which uses every eligible slot.",
+     "n_slots": 81415,
+     "n_slots_excluded_undetermined": 20,
+     "within_shape_rmse_seed_averaged_same_slots": {
+      "shared_effect": 1.5086629444567958,
+      "lgbm_C": 1.3371965667092875,
+      "lgbm_Cp": 1.3315557562975113,
+      "amplitude": 1.4611018491440864,
+      "flat_p0": 1.7599107831336354,
+      "per_cell_linear_LOO_reference_bound": 1.1715545895393114
+     },
+     "reference_bound_minus_lgbm_C_catalyst_bootstrap": {
+      "n_catalysts": 771,
+      "rmse_diff_point": -0.1656419771699762,
+      "rmse_diff_boot_mean": -0.16564353418804728,
+      "ci95_low": -0.1862716186349579,
+      "ci95_high": -0.1459241940277566,
+      "clears_zero": true,
+      "reading": "model better than lgbm_C",
+      "mean_per_catalyst_sse_diff": -43.88115403353134,
+      "mean_per_catalyst_sse_diff_ci95": [
+       -49.42041059640365,
+       -38.54946874498055
+      ],
+      "n_boot": 3000
+     },
+     "lgbm_C_share_of_shared_to_reference_gap_closed": 0.5086387662788093
+    }
    },
    "ND_889": {
     "n_catalysts": 848,
@@ -11594,16 +12240,14 @@
      "lgbm_C": 1.3218116538648699,
      "lgbm_Cp": 1.316778848620778,
      "amplitude": 1.4440117107095267,
-     "flat_p0": 1.743459765237019,
-     "per_cell_linear_LOO_reference_bound": 1.1715762561079603
+     "flat_p0": 1.743459765237019
     },
     "share_of_flat_sse_explained": {
      "shared_effect": 0.26459010215011547,
      "lgbm_C": 0.42520193913372106,
      "lgbm_Cp": 0.4295706998745067,
      "amplitude": 0.3140103364110274,
-     "flat_p0": 0.0,
-     "per_cell_linear_LOO_reference_bound": 0.548438128739998
+     "flat_p0": 0.0
     },
     "vs_lgbm_C_catalyst_bootstrap": {
      "shared_effect_minus_lgbm_C": {
@@ -11665,24 +12309,37 @@
        133.65965774877827
       ],
       "n_boot": 3000
-     },
-     "per_cell_linear_LOO_reference_bound_minus_lgbm_C": {
-      "n_catalysts": 848,
-      "rmse_diff_point": -0.15023539775690953,
-      "rmse_diff_boot_mean": -0.1499525586820226,
-      "ci95_low": -0.1717598345187924,
-      "ci95_high": -0.12860695567223474,
-      "clears_zero": true,
-      "reading": "model better than lgbm_C",
-      "mean_per_catalyst_sse_diff": -36.074659004147826,
-      "mean_per_catalyst_sse_diff_ci95": [
-       -41.5512051972448,
-       -30.800574382779192
-      ],
-      "n_boot": 3000
      }
     },
-    "lgbm_C_share_of_shared_to_reference_gap_closed": 0.5356596456471253
+    "reference_bound_on_determined_slots": {
+     "what": "REFERENCE BOUND, uses the held-out catalyst's own cell data. Scored on the eligible slots whose leave-one-out prediction is determined; lgbm_C, shared_effect, flat_p0 etc. on the same slots. Do not compare with within_shape_rmse_seed_averaged, which uses every eligible slot.",
+     "n_slots": 81631,
+     "n_slots_excluded_undetermined": 34,
+     "within_shape_rmse_seed_averaged_same_slots": {
+      "shared_effect": 1.4951422363570788,
+      "lgbm_C": 1.3217433968462213,
+      "lgbm_Cp": 1.3167192382614628,
+      "amplitude": 1.4441151562912427,
+      "flat_p0": 1.7433637328473892,
+      "per_cell_linear_LOO_reference_bound": 1.1620198671155995
+     },
+     "reference_bound_minus_lgbm_C_catalyst_bootstrap": {
+      "n_catalysts": 848,
+      "rmse_diff_point": -0.15972352973062187,
+      "rmse_diff_boot_mean": -0.15942525742233993,
+      "ci95_low": -0.18078781608396582,
+      "ci95_high": -0.13904654534267388,
+      "clears_zero": true,
+      "reading": "model better than lgbm_C",
+      "mean_per_catalyst_sse_diff": -38.1890067431327,
+      "mean_per_catalyst_sse_diff_ci95": [
+       -43.608419078479564,
+       -33.20892495351672
+      ],
+      "n_boot": 3000
+     },
+     "lgbm_C_share_of_shared_to_reference_gap_closed": 0.5205259553889675
+    }
    },
    "complete_27_slot_cells_all_917": {
     "n_catalysts": 437,
@@ -11693,16 +12350,14 @@
      "lgbm_C": 1.2662508077930668,
      "lgbm_Cp": 1.2601926744795702,
      "amplitude": 1.4450084749403311,
-     "flat_p0": 1.7572071583031559,
-     "per_cell_linear_LOO_reference_bound": 1.0903893256820367
+     "flat_p0": 1.7572071583031559
     },
     "share_of_flat_sse_explained": {
      "shared_effect": 0.2750250325652275,
      "lgbm_C": 0.48072962856618784,
      "lgbm_Cp": 0.48568644100391956,
      "amplitude": 0.3237693348488777,
-     "flat_p0": 0.0,
-     "per_cell_linear_LOO_reference_bound": 0.6149498870408698
+     "flat_p0": 0.0
     },
     "vs_lgbm_C_catalyst_bootstrap": {
      "shared_effect_minus_lgbm_C": {
@@ -11764,8 +12419,21 @@
        97.9461681985042
       ],
       "n_boot": 3000
+     }
+    },
+    "reference_bound_on_determined_slots": {
+     "what": "REFERENCE BOUND, uses the held-out catalyst's own cell data. Scored on the eligible slots whose leave-one-out prediction is determined; lgbm_C, shared_effect, flat_p0 etc. on the same slots. Do not compare with within_shape_rmse_seed_averaged, which uses every eligible slot.",
+     "n_slots": 25785,
+     "n_slots_excluded_undetermined": 0,
+     "within_shape_rmse_seed_averaged_same_slots": {
+      "shared_effect": 1.4961821506705,
+      "lgbm_C": 1.2662508077930668,
+      "lgbm_Cp": 1.2601926744795702,
+      "amplitude": 1.4450084749403311,
+      "flat_p0": 1.7572071583031559,
+      "per_cell_linear_LOO_reference_bound": 1.0903893256820367
      },
-     "per_cell_linear_LOO_reference_bound_minus_lgbm_C": {
+     "reference_bound_minus_lgbm_C_catalyst_bootstrap": {
       "n_catalysts": 437,
       "rmse_diff_point": -0.17586148211103003,
       "rmse_diff_boot_mean": -0.17614746169831627,
@@ -11779,9 +12447,9 @@
        -19.04282779962035
       ],
       "n_boot": 3000
-     }
-    },
-    "lgbm_C_share_of_shared_to_reference_gap_closed": 0.5666224948259502
+     },
+     "lgbm_C_share_of_shared_to_reference_gap_closed": 0.5666224948259502
+    }
    }
   },
   "rule_c": {
@@ -11813,7 +12481,7 @@
     }
    },
    "verdict": "stop: headroom too small",
-   "numbers": "all_917 within-shape RMSE (seed-averaged): lgbm_C 1.337, lgbm_Cp 1.332, amplitude 1.457, shared_effect 1.505; reference bound (per-cell LOO, uses the catalyst's own data) 1.188; flat 1.749"
+   "numbers": "all_917 within-shape RMSE (seed-averaged, 85004 eligible slots): lgbm_C 1.337, lgbm_Cp 1.332, amplitude 1.457, shared_effect 1.505, flat 1.749. Reference bound (per-cell LOO, uses the catalyst's own data) on its 84970 determined slots 1.179 vs lgbm_C on the same slots 1.337"
   },
   "in_sample_row_level_framing": {
    "what": "IN-SAMPLE, descriptive: all rows of all_917, cell = (catalyst, temperature); shared effect per (temperature, condition) = mean row deviation from its cell mean over all cells; centred within cell. Not out-of-fold, not the shape metric.",
@@ -11821,7 +12489,7 @@
    "pct_points_explained_by_shared_effect": 4.57941438696933
   },
   "audit_convention_check_rows": {
-   "what": "ADDED CHECK, audit convention, not the metric: rows instead of slot means (the 1,906 duplicated slots enter twice and \"other rows\" include the other run), cells by row count. per_cell_linear_LOO_raw_flows = per-cell OLS on intercept + raw Ar, CH4, O2 flows, leave one row out; complete 27-row cells only (ill-conditioned in small cells).",
+   "what": "ADDED CHECK, audit convention, not the metric: rows instead of slot means (the 1,906 duplicated slots enter twice and \"other rows\" include the other run), cells by row count. per_cell_linear_LOO_raw_flows = per-cell OLS on intercept + raw Ar, CH4, O2 flows, leave one row out; complete 27-row cells only (ill-conditioned in small cells). The LOO entries are scored on their determined rows only (undetermined rows dropped, count stored); the model entries use every row of the set.",
    "seed_averaging": "same seed-averaged predictions as the metric",
    "rows_cells_ge_8_rows_all_917": {
     "n_rows": 86910,
@@ -11829,7 +12497,8 @@
     "lgbm_C": 1.4699551439136629,
     "lgbm_Cp": 1.46506986046864,
     "amplitude": 1.5787116649288775,
-    "per_cell_linear_LOO_design_axes": 1.3531292865036806
+    "per_cell_linear_LOO_design_axes": 1.3454307392192104,
+    "per_cell_linear_LOO_design_axes_n_rows_excluded_undetermined": 34
    },
    "rows_cells_with_27_rows_all_917": {
     "n_rows": 24165,
@@ -11838,7 +12507,13 @@
     "lgbm_Cp": 1.2296478376015594,
     "amplitude": 1.4246552377683332,
     "per_cell_linear_LOO_design_axes": 1.0556381309609129,
-    "per_cell_linear_LOO_raw_flows": 1.1554444902739986
+    "per_cell_linear_LOO_design_axes_n_rows_excluded_undetermined": 0,
+    "per_cell_linear_LOO_raw_flows": 1.1554444902739986,
+    "per_cell_linear_LOO_raw_flows_n_rows_excluded_undetermined": 0
+   },
+   "n_undetermined_rows": {
+    "per_cell_linear_LOO_design_axes": 34,
+    "per_cell_linear_LOO_raw_flows": 0
    }
   }
  },
@@ -13094,7 +13769,7 @@
     "note": "metric convention"
    },
    {
-    "quantity": "c complete cells per-cell slopes [metric: design axes]",
+    "quantity": "c complete cells per-cell slopes [metric: design axes, determined slots]",
     "audit": 1.155,
     "this_script": 1.0903893256820367,
     "note": "metric convention"
@@ -13112,10 +13787,10 @@
     "note": "metric convention"
    },
    {
-    "quantity": "c cells >= 8 per-cell slopes [metric: design axes]",
+    "quantity": "c cells >= 8 per-cell slopes [metric: design axes, determined slots]",
     "audit": 1.426,
-    "this_script": 1.188177063663309,
-    "note": "metric convention"
+    "this_script": 1.179133577117259,
+    "note": "metric convention; undetermined slots excluded"
    },
    {
     "quantity": "c cells >= 8 LGBM C [metric]",
@@ -13124,10 +13799,10 @@
     "note": "metric convention"
    },
    {
-    "quantity": "c LGBM share of shared-to-slopes gap closed [metric, cells >= 8]",
+    "quantity": "c LGBM share of shared-to-slopes gap closed [metric, cells >= 8, determined slots]",
     "audit": 0.7,
-    "this_script": 0.5306111854335472,
-    "note": "metric convention"
+    "this_script": 0.5161115638309941,
+    "note": "metric convention; all three RMSEs on the same determined slots"
    },
    {
     "quantity": "c 27-row cells shared effect [audit convention: rows]",
@@ -13154,7 +13829,7 @@
    {
     "quantity": "c >= 8-row cells per-cell slopes, design axes [audit convention]",
     "audit": 1.426,
-    "this_script": 1.3531292865036806,
+    "this_script": 1.3454307392192104,
     "note": "audit basis for small cells unknown; raw flows are ill-conditioned there"
    },
    {

@@ -1,9 +1,10 @@
 """
 phase8b_label_sweep.py -- the committed training-label sweep for formulation B.
 
-QUESTION. Formulation B trains on one row per catalyst, so a catalyst's measurements (up to 135) must
-be collapsed into one training label. Does that choice change how well the model ranks catalysts by
-their observed maximum yield? Does the adopted label rank at least as well as the observed max?
+QUESTION. Formulation B trains on one row per catalyst, so a catalyst's measurements (135 condition
+slots; up to 257 rows for a doubled catalyst) must be collapsed into one training label. Does that
+choice change how well the model ranks catalysts by their observed maximum yield? Does the adopted
+label rank at least as well as the observed max?
 
 WHY THIS SCRIPT EXISTS. phase8_target_robustness.py swept q0.50-q1.00 and recommended keeping the
 observed max. The PI has since adopted the per-cell median ("B_median"), and that choice has been
@@ -12,11 +13,14 @@ mean-of-five label and a five-row arm. This script makes that sweep reproducible
 same way, and adds a fair version of the five-row arm.
 
 PROTOCOL (as phase8). Data.load(); one row per catalyst; features = the catalyst's composition columns
-(66 columns: prep_enc + 65 element loadings; prep_enc is constant in the lab data, so 65 carry
-information); catalyst-grouped 5-fold CV with catalyst_folds(seed); seeds 0, 1, 2, 7, 13; TUNED
-LightGBM from grouped_tuning.json (300 trees, n_jobs=2); StandardScaler fit on the training fold
-only. Every arm uses the same folds. A label is built from measured rows only: a slot excluded by the
-lab's mass-balance check is missing, never yield 0 (phase12 rule R4 verdict).
+(66 columns: prep_enc + 65 element loadings. prep_enc and 31 of the element columns are constant in
+the lab data, so 34 columns vary across the 917 catalysts; stored and asserted); catalyst-grouped
+5-fold CV with catalyst_folds(seed); seeds 0, 1, 2, 7, 13; TUNED LightGBM from grouped_tuning.json
+(overrides stored in the JSON); StandardScaler fit on the training fold only. Every arm uses the same
+folds. One difference from phase8: n_jobs=2 here, the lgb_params default n_jobs=-1 there. R1's exact
+reproduction shows it has no effect. A label is built from measured rows only: a slot excluded by the
+lab's mass-balance check is missing, never yield 0 (phase12_runs_and_coverage.json
+exclusion_test.rule_R4 verdict).
 
 LABELS. A cell is a (catalyst, temperature) pair. L_q = max over the catalyst's cells of the
 within-cell q-quantile (pandas linear interpolation; phase8 target_quantile).
@@ -60,7 +64,10 @@ The paired catalyst bootstrap always uses seed-averaged predictions. It reports 
 (the quantity phase8 stored) and a point delta on the full population; both are labelled.
 Descriptive diagnostics, no test: the seed-averaging gain per arm (seed-averaged minus per-seed mean
 Spearman), and each arm's point delta vs q1.00 when only the first k seeds are averaged. They explain
-why the uncommitted 2-seed audit found larger deltas than this 5-seed run.
+why the uncommitted 2-seed audit found larger deltas than this 5-seed run. Seed spread per arm: the
+median over catalysts of the across-seed SD (ddof=1) of the out-of-fold prediction, and the mean
+Spearman between the out-of-fold predictions of every pair of seeds. This describes how much a model
+varies between seeds. It is never used to test a difference between labels.
 
 CONDITION-MIX FACTS (load_with_conditions; no model, no seed). Spearman across all observed cells
 between the share of CH4:O2 = 6 rows in the cell and (a) the cell median, (b) the cell max. The share
@@ -68,6 +75,15 @@ of catalysts whose single highest row is at CH4:O2 = 2. The change in the q0.50 
 each catalyst's single highest row is dropped (Data.load rows; descriptive). These are descriptive and
 carry no test. One wording rule: the caution says the cell max shows "about the same association" if
 |rho(max)| >= |rho(median)| - 0.02; otherwise "a weaker association".
+
+WORDING RULES (descriptive; they change no reading).
+  W1 five_row_unfair. Its reading says its predictions "vary more between seeds" only if its median
+     across-seed SD is above both mean_of_five's and five_row_fair's AND its mean pairwise seed Spearman
+     is below both of theirs. Otherwise it says the seed spread does not single it out. Not measured
+     with one seed (--dev).
+  W2 boundary. A bootstrap reading is listed as "near the zero boundary" if the CI bound nearer zero is
+     closer to zero than 10% of the CI width. This file holds over 100 bootstrap CIs at 95% each, so
+     some "detected" readings are expected by chance; boundary readings should not be over-read.
 
 RULES (fixed before the results).
   R1 reproduction. The q0.50, q0.75 and q1.00 arms, and the two other arms phase8 also ran
@@ -85,8 +101,15 @@ RULES (fixed before the results).
   R4 adopted-label claim. The verdict says q0.50 "ranks at least as well as the observed max" only if
      no 95% CI of q0.50 - q1.00 lies entirely below zero, over 2 metrics (Spearman, enrichment) x 3
      populations. This is a no-detectable-loss claim, not a superiority claim. If R4 fails, the verdict
-     names the detected loss instead.
-  R5 five-row identity. Each catalyst's five rows get exactly the same prediction (asserted).
+     names the detected loss instead. The verdict also lists, per metric, which label the point estimate
+     favours, the largest loss the CI does not exclude, and every label detectably better than q1.00.
+  R5 five-row identity. Each catalyst's five rows get exactly the same prediction: max spread 0 over
+     len(seeds) x 2 arms x 917 catalyst predictions. A fixed tree model gives identical outputs for
+     identical inputs, so this holds by construction. It checks the row stacking and reshape only. It
+     is not evidence about labels. The script stops if R5 fails.
+  R6 supersedes wording. The verdict says "the evidence permits either" (q0.50 or q1.00) only if all six
+     95% CIs of q0.50 - q1.00 (2 metrics x 3 populations) include zero. Otherwise it names each
+     detected difference instead.
 
 Output:  phase8b_label_sweep.json
 Usage:   python3 phase8b_label_sweep.py [--dev]
@@ -116,8 +139,21 @@ METRICS = ['spearman', 'enrichment', 'precision_at20']
 BOOT_METRICS = ['spearman', 'enrichment']
 MAX_LABEL, MED_LABEL = 'q1.00', 'q0.50'
 ADOPTED_TEXT = 'q0.50 (per-cell median, then max over temperatures)'
+CAUTION_TOL = 0.02         # caution wording: "about the same association" if |rho(max)| >= |rho(median)| - this
+W2_FRAC = 0.10             # rule W2: boundary if the CI bound nearer zero is within this share of the CI width
 
 t0 = time.time(); log = lambda *a: print(f"[{time.time()-t0:6.1f}s]", *a, flush=True)
+
+
+def _f(v, fmt='+.4f'):
+    """Format v; if a nonzero v would print as zero, add decimals (up to 8) so it does not read as 0."""
+    s = format(v, fmt)
+    sign, dec = fmt.split('.')
+    d = int(dec.rstrip('f'))
+    while v != 0 and float(s) == 0 and d < 8:
+        d += 1
+        s = format(v, f"{sign}.{d}f")
+    return s
 
 # ------------------------------------------------------------------------------- data (as phase8)
 d = Data.load()
@@ -130,6 +166,9 @@ Xc = lab.groupby('cat_id')[el_cols].first().values.astype(float)
 cellg = lab.groupby(['cat_id', 'Temperature_C'])[TARGET]
 TRUE_MAX = lab.groupby('cat_id')[TARGET].max().values          # the screening objective
 assert n_cat == 917 and Xc.shape == (917, 66) and lab.prep_enc.nunique() == 1
+N_VARYING = int((Xc.std(0) > 0).sum())                          # columns that differ between catalysts
+assert N_VARYING == 34, N_VARYING
+ROWS_PER_CAT = np.bincount(d.groups, minlength=n_cat)
 
 
 def target_quantile(q):
@@ -192,7 +231,8 @@ def oof(seed, y=None, five=False, mcs=None):
         p = m.predict(sc.transform(Xva))
         if five:
             p5 = p.reshape(5, len(va))
-            assert (p5 == p5[0]).all(), 'R5: five rows of one catalyst got different predictions'
+            if not (p5 == p5[0]).all():
+                raise RuntimeError('R5 failed: five rows of one catalyst got different predictions')
             FIVE_ROW_CHECK['n_catalyst_predictions_checked'] += len(va)
             FIVE_ROW_CHECK['max_abs_spread_across_five_rows'] = max(
                 FIVE_ROW_CHECK['max_abs_spread_across_five_rows'], float(np.ptp(p5, axis=0).max()))
@@ -282,8 +322,15 @@ for name in [MED_LABEL, 'q0.75', MAX_LABEL, 'nearest_rank_upper_quartile', 'medi
             c['catalyst_bootstrap_ci95_high'] = _cmp(b['ci95_high'], b8['ci95_high'])
             c['catalyst_bootstrap_p_better'] = _cmp(b['p_a_better'], b8['p_better_than_control'])
     PHASE8_CHECK[name] = c
+PHASE8_CHECK['population'] = 'all_917'
+PHASE8_CHECK['estimator'] = (
+    'per_seed_spearman, spearman_mean, enrichment_mean, precision_at20_mean: per-seed out-of-fold '
+    'metrics (mean over seeds); spearman_seed_averaged_predictions: on seed-averaged out-of-fold '
+    f'predictions; catalyst_bootstrap_*: arm - q1.00 Spearman, paired catalyst bootstrap on seed-averaged '
+    f'predictions, {N_BOOT} resamples, seed {BOOT_SEED}; target_mean: label mean, no model')
 PHASE8_CHECK['rule_R1_passes'] = bool(r1_ok)
-assert r1_ok, 'R1 failed: phase8_target_robustness.json not reproduced exactly'
+if not r1_ok:
+    raise RuntimeError('R1 failed: phase8_target_robustness.json not reproduced exactly')
 log("R1 passes: phase8 reproduced exactly" + (" (dev: seed 0 only)" if DEV else ""))
 
 # ------------------------------------------------------------------------------- R2: phase9 reproduction
@@ -300,19 +347,56 @@ if not DEV:
                 PHASE9_CHECK[f'{name}_{pn}_{m}_seed_averaged'] = {
                     'this_script': mine, 'phase9_json': P9[key][p9][m], 'abs_diff': diff}
     PHASE9_CHECK['rule_R2_passes'] = bool(r2_ok)
-    assert r2_ok, 'R2 failed: phase9_equal_effort_eval.json not reproduced exactly'
+    if not r2_ok:
+        raise RuntimeError('R2 failed: phase9_equal_effort_eval.json not reproduced exactly')
     log("R2 passes: phase9 reproduced exactly")
 
 # ------------------------------------------------------------------------------- five-row diagnostics
-FIVE_ROW_CHECK['rule_R5_passes'] = True                      # the assert inside oof() enforces it
+n_expected_five = len(SEEDS) * 2 * n_cat
+r5_ok = (FIVE_ROW_CHECK['n_catalyst_predictions_checked'] == n_expected_five
+         and FIVE_ROW_CHECK['max_abs_spread_across_five_rows'] == 0.0)
+FIVE_ROW_CHECK['n_catalyst_predictions_expected'] = n_expected_five
+FIVE_ROW_CHECK['rule_R5_passes'] = bool(r5_ok)
 FIVE_ROW_CHECK['note'] = ('max_abs_spread_across_five_rows is the largest spread among the five '
-                          'predictions of any catalyst; R5 requires exactly 0.')
+                          'predictions of any catalyst; R5 requires exactly 0. It holds by construction '
+                          '(identical inputs to a fixed tree model) and checks the row stacking and reshape '
+                          'only; it is not evidence about labels.')
+if not r5_ok:
+    raise RuntimeError('R5 failed: five-row prediction check')
 for nm in ['five_row_unfair', 'five_row_fair']:
     FIVE_ROW_CHECK[f'{nm}_vs_mean_of_five_seed_averaged_predictions'] = {
         'population': 'all_917', 'estimator': 'on seed-averaged out-of-fold predictions; descriptive, no test',
         'pearson': float(np.corrcoef(MP[nm], MP['mean_of_five'])[0, 1]),
         'spearman': float(spearmanr(MP[nm], MP['mean_of_five'])[0]),
         'max_abs_diff_yield_pct': float(np.abs(MP[nm] - MP['mean_of_five']).max())}
+# seed spread per arm (descriptive; describes model variance between seeds, never a test)
+SEED_SPREAD = {'what': ('all_917; median over catalysts of the across-seed SD (ddof=1) of the out-of-fold '
+                        'prediction (yield %), and mean Spearman between the out-of-fold predictions of every '
+                        'pair of seeds; descriptive, not a test of any difference')}
+if len(SEEDS) > 1:
+    for k in ARMS:
+        P = np.vstack(PRED[k])
+        SEED_SPREAD[k] = {
+            'median_across_seed_sd_yield_pct': float(np.median(P.std(axis=0, ddof=1))),
+            'mean_pairwise_seed_spearman': float(np.mean([spearmanr(P[i], P[j])[0]
+                                                          for i in range(len(P)) for j in range(i + 1, len(P))]))}
+    _sp = {k: SEED_SPREAD[k] for k in ['five_row_unfair', 'mean_of_five', 'five_row_fair']}
+    w1 = (_sp['five_row_unfair']['median_across_seed_sd_yield_pct']
+          > max(_sp['mean_of_five']['median_across_seed_sd_yield_pct'],
+                _sp['five_row_fair']['median_across_seed_sd_yield_pct'])
+          and _sp['five_row_unfair']['mean_pairwise_seed_spearman']
+          < min(_sp['mean_of_five']['mean_pairwise_seed_spearman'],
+                _sp['five_row_fair']['mean_pairwise_seed_spearman']))
+    spread_txt = (f"Seed spread (median across-seed SD of catalyst predictions; mean pairwise seed Spearman): "
+                  + "; ".join(f"{k} {v['median_across_seed_sd_yield_pct']:.3f} yield-%, {v['mean_pairwise_seed_spearman']:.3f}"
+                              for k, v in _sp.items())
+                  + (". Its predictions vary more between seeds than those of mean_of_five and five_row_fair, "
+                     "consistent with a less regularised model." if w1 else
+                     ". The seed spread does not single it out."))
+else:
+    w1 = None
+    spread_txt = "Seed spread not measured (one seed)."
+SEED_SPREAD['rule_W1_five_row_unfair_varies_more'] = w1
 _u = BOOT[f'vs_{MAX_LABEL}']['five_row_unfair']['all_917']['spearman']
 FIVE_ROW_CHECK['five_row_unfair_reading'] = (
     f"all_917: per-seed mean Spearman {RES['five_row_unfair']['all_917']['per_seed_mean']['spearman']:.4f} vs "
@@ -322,8 +406,8 @@ FIVE_ROW_CHECK['five_row_unfair_reading'] = (
     f"{_u['delta_boot_mean']:+.4f} [{_u['ci95_low']:+.4f}, {_u['ci95_high']:+.4f}], "
     f"{'detected' if _u['clears_zero'] else 'no detectable change'}. Seed-averaging gain: five_row_unfair "
     f"{RES['five_row_unfair']['all_917']['seed_averaged_predictions']['spearman'] - RES['five_row_unfair']['all_917']['per_seed_mean']['spearman']:+.4f}, "
-    f"q1.00 {RES[MAX_LABEL]['all_917']['seed_averaged_predictions']['spearman'] - RES[MAX_LABEL]['all_917']['per_seed_mean']['spearman']:+.4f}; "
-    f"consistent with a less regularised model whose predictions vary more between seeds.")
+    f"q1.00 {RES[MAX_LABEL]['all_917']['seed_averaged_predictions']['spearman'] - RES[MAX_LABEL]['all_917']['per_seed_mean']['spearman']:+.4f} "
+    f"(the gain is not specific to this arm; see seed_averaging_gain). " + spread_txt)
 FIVE_ROW_CHECK['min_child_samples'] = {
     'TUNED_rows': TUNED['min_child_samples'], 'five_row_unfair_rows': TUNED['min_child_samples'],
     'five_row_unfair_catalysts_equivalent': TUNED['min_child_samples'] / 5,
@@ -385,6 +469,7 @@ def label_q_from(frame, q):
 
 
 INFL = {'population': f'catalysts with >= 2 rows ({int(keep.sum())} of {n_cat}); no model',
+        'n_catalysts': int(keep.sum()),
         'what': ("drop each catalyst's single highest row, rebuild the label, compare. "
                  "Absolute change in yield %; relative = change / label (label > 0)."), 'labels': {}}
 for q in Q5:
@@ -473,8 +558,12 @@ if not DEV:
                                        'ci95': [b_all(k)['ci95_low'], b_all(k)['ci95_high']]}}
     q5 = NSEED['q0.50']
     two_diff = max(AUDIT[f'two_seed_bootstrap_{k}_vs_q1.00']['abs_diff'] for k in ['mean_of_five', 'q0.75', 'q0.50'])
+    gm_two = AUDIT['two_seed_bootstrap_global_min_vs_q1.00']
     AUDIT['two_seed_explanation'] = (
-        f"Averaging seeds 0 and 1 only reproduces the audit's 2-seed bootstrap deltas to within {two_diff:.4f}. "
+        f"Averaging seeds 0 and 1 only reproduces the audit's 2-seed bootstrap deltas (all_917 Spearman, arm - "
+        f"q1.00) for mean_of_five, q0.75 and q0.50 to within {two_diff:.4f}. For global_min it gives "
+        f"{gm_two['this_script']:+.4f} vs the audit's {gm_two['audit_value_uncommitted']:+.4f} "
+        f"(off by {gm_two['abs_diff']:.4f}; see global_min_explanation). "
         f"The remainder is not explained here; the audit's seeds and resampling are not recorded. "
         f"The q0.50 - q1.00 point delta changes with the number of seeds averaged: 1 seed {q5['1']:+.4f}, "
         f"2 seeds {q5['2']:+.4f}, {len(SEEDS)} seeds {q5[str(len(SEEDS))]:+.4f}. Seed-averaging over all seeds "
@@ -510,17 +599,29 @@ sp, en = mb['all_917']['spearman'], mb['all_917']['enrichment']
 infl = INFL['labels']
 
 
-def _ci(b, fmt='+.4f'):
-    return f"{b['delta_boot_mean']:{fmt}} [{b['ci95_low']:{fmt}}, {b['ci95_high']:{fmt}}], {b['reading']}"
+def _ci(b, fmt='+.4f', unit=''):
+    return (f"{_f(b['delta_boot_mean'], fmt)}{unit} [{_f(b['ci95_low'], fmt)}, {_f(b['ci95_high'], fmt)}], "
+            f"{b['reading']}")
 
 
-single_row_txt = (f"dropping each catalyst's single highest row moves the q0.50 label by a median "
+def _metric_txt(b, fmt, unit=''):
+    """Bootstrap-mean delta and CI, plus which label the point delta favours and the largest loss not excluded."""
+    fav = MED_LABEL if b['delta_point'] > 0 else (MAX_LABEL if b['delta_point'] < 0 else 'neither')
+    t = f"{_ci(b, fmt, unit)}; point delta {b['delta_point']:{fmt}}{unit} favours {fav}"
+    if not b['clears_zero'] and b['ci95_low'] < 0:
+        t += f"; a loss of up to {-b['ci95_low']:{fmt.lstrip('+')}}{unit} is not excluded"
+    return t
+
+
+single_row_txt = (f"in the {INFL['n_catalysts']} of {n_cat} catalysts with >= 2 rows, dropping each "
+                  f"catalyst's single highest row moves the q0.50 label by a median "
                   f"{infl['q0.50']['median_abs_change_yield_pct']:.2f} yield-% and the observed max by "
                   f"{infl['q1.00']['median_abs_change_yield_pct']:.2f}")
 if R4:
-    rank_txt = (f"ranks at least as well as the observed max: no detectable loss on any population or metric "
-                f"(all_917, q0.50 - q1.00, seed-averaged predictions, bootstrap-mean delta and 95% CI: "
-                f"Spearman {_ci(sp)}; enrichment@10% {_ci(en, '+.2f')})")
+    rank_txt = (f"ranks at least as well as the observed max in the sense of rule R4: no 95% CI of q0.50 - q1.00 "
+                f"lies entirely below zero (2 metrics x 3 populations). This is a no-detectable-loss claim, not a "
+                f"superiority claim. all_917, seed-averaged out-of-fold predictions, bootstrap-mean delta "
+                f"[95% CI]: Spearman {_metric_txt(sp, '+.4f')}. Enrichment@10% {_metric_txt(en, '+.2f', 'x')}.")
 else:
     rank_txt = (f"does NOT rank at least as well as the observed max: detected loss on {', '.join(losses)} "
                 f"(all_917 Spearman {_ci(sp)})")
@@ -540,10 +641,74 @@ for name in ARMS:
                                     'ci95': [b['ci95_low'], b['ci95_high']], 'reading': b['reading']}
             SENS[name][pn][met] = row
 
+# R6: "the evidence permits either" only if all six q0.50 - q1.00 CIs include zero
+six = {f"{pn} {met}": mb[pn][met] for pn in POP_NAMES for met in BOOT_METRICS}
+R6 = not any(b['clears_zero'] for b in six.values())
+six_txt = "; ".join(f"{k} {_ci(b, '+.4f' if k.endswith('spearman') else '+.2f')}" for k, b in six.items())
+detected_six = [k for k, b in six.items() if b['clears_zero']]
+
+# reading limits: no superiority, estimator dependence, multiplicity
+better_than_max, worse_than_max = [], []
+for name in ARMS:
+    if name == MAX_LABEL:
+        continue
+    for pn in POP_NAMES:
+        for met in BOOT_METRICS:
+            b = BOOT[f'vs_{MAX_LABEL}'][name][pn][met]
+            f_ = '+.4f' if met == 'spearman' else '+.2f'
+            if b['ci95_low'] > 0:
+                better_than_max.append(f"{name} {pn} {met} {_ci(b, f_)[:-len(b['reading']) - 2]}")
+            if b['ci95_high'] < 0:
+                worse_than_max.append(f"{name} {pn} {met} {_ci(b, f_)[:-len(b['reading']) - 2]}")
+med_better = [k for k, b in six.items() if b['ci95_low'] > 0]
+
+BOUNDARY, n_ci, n_det = [], 0, 0
+for ref in [MAX_LABEL, MED_LABEL]:
+    for name, byp in BOOT[f'vs_{ref}'].items():
+        if ref == MED_LABEL and name == MAX_LABEL:
+            continue                      # mirror of q0.50 - q1.00; count each comparison once
+        for pn, bym in byp.items():
+            for met, b in bym.items():
+                n_ci += 1; n_det += int(b['clears_zero'])
+                near = min(abs(b['ci95_low']), abs(b['ci95_high']))
+                if near < W2_FRAC * (b['ci95_high'] - b['ci95_low']):
+                    BOUNDARY.append({'comparison': f"{name} - {ref}", 'population': pn, 'metric': met,
+                                     'ci95': [b['ci95_low'], b['ci95_high']], 'reading': b['reading']})
+for k, b in AUD2.items():
+    n_ci += 1; n_det += int(b['reading'] == 'detected')
+_enr = {k: (r_all(k, 'per_seed_mean', 'enrichment'), r_all(k, 'seed_averaged_predictions', 'enrichment'))
+        for k in [MED_LABEL, MAX_LABEL]}
+READING_LIMITS = {
+    'not_superiority': (
+        f"q0.50 is detectably better than q1.00 on: {', '.join(med_better) if med_better else 'none of the 6 comparisons'}. "
+        f"Labels detectably better than q1.00 (CI entirely above zero; bootstrap-mean delta [95% CI]): "
+        f"{'; '.join(better_than_max) if better_than_max else 'none'}. Documents must not turn the adopted-label "
+        f"verdict into a superiority claim."),
+    'detectably_worse_than_q1.00': worse_than_max,
+    'enrichment_estimator_note': (
+        f"all_917 enrichment@10%, q0.50 vs q1.00, depends on the estimator: per-seed mean "
+        f"{_enr[MED_LABEL][0]:.3f}x vs {_enr[MAX_LABEL][0]:.3f}x ({_enr[MED_LABEL][0] - _enr[MAX_LABEL][0]:+.3f}x"
+        + ("; equal to phase8's stored enrichment_mean values, checked by R1" if not DEV else "; dev, seed 0 only")
+        + f"); seed-averaged predictions "
+        f"{_enr[MED_LABEL][1]:.3f}x vs {_enr[MAX_LABEL][1]:.3f}x (point delta {en['delta_point']:+.3f}x); "
+        f"bootstrap-mean delta {en['delta_boot_mean']:+.3f}x. Quote one estimator at a time and name it."),
+    'multiplicity': (
+        f"This file holds {n_ci} distinct paired-bootstrap 95% CIs (q1.00 - q0.50 counted once, as q0.50 - "
+        f"q1.00; the 2-seed audit CIs included); {n_det} read 'detected'. At 95% per CI some "
+        f"detections are expected by chance. {len(BOUNDARY)} readings sit near the zero boundary (rule W2, "
+        f"listed in boundary_readings); do not over-read them."
+        + (f" The q0.50 - q1.00 all_917 Spearman reading is '{AUD2[MED_LABEL]['reading']}' with seeds 0 and 1 "
+           f"averaged and '{sp['reading']}' with all {len(SEEDS)} seeds." if AUD2 else "")),
+    'boundary_rule': f"W2: CI bound nearer zero is closer to zero than {W2_FRAC:.0%} of the CI width",
+    'boundary_readings': BOUNDARY,
+}
+
 VERDICT = {
     'adopted_label': ADOPTED_TEXT,
     'reason': f"not set by a single high reading ({single_row_txt}); {rank_txt}",
     'rule_R4_passes': bool(R4),
+    'rule_R6_passes': bool(R6),
+    'reading_limits': READING_LIMITS,
     'sensitivity_table': {
         'what': ('every label minus q1.00 (observed max) and minus q0.50 (adopted), per population and '
                  'metric; paired catalyst bootstrap on seed-averaged out-of-fold predictions, '
@@ -555,24 +720,27 @@ VERDICT = {
          f"single highest row at CH4:O2 = 2, the edge of the tested grid. The true optimum may lie outside "
          f"it, so every label here is a within-grid quantity."),
         (f"The cell median shifts with which conditions survived the mass-balance check: across "
-         f"{CELL_MIX['n_cells']} cells, Spearman(share of CH4:O2 = 6 rows, cell median) = "
-         f"{CELL_MIX['spearman_share_ch4o2_6_vs_cell_median']:+.3f}. Within cells the CH4:O2 = 6 median "
-         f"lies below the CH4:O2 = 2 median in "
-         f"{CELL_MIX['within_cell_check']['share_cells_ratio6_median_below_ratio2_median']:.0%} of "
-         f"{CELL_MIX['within_cell_check']['n_cells']} cells, so a cell that lost CH4:O2 = 2 rows has a "
-         f"lower median. The cell max shows "
+         f"{CELL_MIX['n_cells']} observed cells, Spearman(share of CH4:O2 = 6 rows, cell median) = "
+         f"{CELL_MIX['spearman_share_ch4o2_6_vs_cell_median']:+.3f}. This is an across-cell association that "
+         f"mixes catalysts. Within the {CELL_MIX['within_cell_check']['n_cells']} cells holding both ratios, "
+         f"the CH4:O2 = 6 median lies below the CH4:O2 = 2 median in "
+         f"{CELL_MIX['within_cell_check']['share_cells_ratio6_median_below_ratio2_median']:.0%} of them, "
+         f"so a cell that lost CH4:O2 = 2 rows tends to have a lower median. The cell max shows "
          + ('about the same association' if abs(CELL_MIX['spearman_share_ch4o2_6_vs_cell_max'])
-            >= abs(CELL_MIX['spearman_share_ch4o2_6_vs_cell_median']) - 0.02 else 'a weaker association')
+            >= abs(CELL_MIX['spearman_share_ch4o2_6_vs_cell_median']) - CAUTION_TOL else 'a weaker association')
          + f" ({CELL_MIX['spearman_share_ch4o2_6_vs_cell_max']:+.3f})"
-         + (", so this caution applies to the observed max as well and is not a reason to prefer it."
+         + (", so this caution applies to the observed max as well and is not a reason to prefer the max "
+            "over the median."
             if abs(CELL_MIX['spearman_share_ch4o2_6_vs_cell_max'])
-            >= abs(CELL_MIX['spearman_share_ch4o2_6_vs_cell_median']) - 0.02 else "."))],
+            >= abs(CELL_MIX['spearman_share_ch4o2_6_vs_cell_median']) - CAUTION_TOL else "."))],
     'supersedes': ("phase8_target_robustness.json verdict 'KEEP the observed maximum' -- the PI adopted the "
-                   "median; the evidence permits either"),
-    'supersedes_basis': (f"all_917 q0.50 - q1.00: Spearman {_ci(sp)}; enrichment {_ci(en, '+.2f')}. "
-                         f"Neither label is detectably better on all_917 Spearman."
-                         if not sp['clears_zero'] else
-                         f"all_917 q0.50 - q1.00 Spearman {_ci(sp)}: the CI excludes zero."),
+                   "median; " + ("the evidence permits either" if R6 else
+                                 "the evidence does not permit either: q0.50 - q1.00 detected on "
+                                 + ", ".join(detected_six))),
+    'supersedes_basis': (f"rule R6; q0.50 - q1.00, seed-averaged out-of-fold predictions, bootstrap-mean delta "
+                         f"[95% CI]: {six_txt}. "
+                         + ("None of the six CIs excludes zero." if R6 else
+                            f"Detected on: {', '.join(detected_six)}.")),
 }
 
 RUNTIME = (time.time() - t0) / 60
@@ -580,9 +748,21 @@ OUT = {
     'about': {
         'script': 'phase8b_label_sweep.py',
         'what': 'Training-label sweep for formulation B; every arm scored against TRUE_MAX (observed max).',
-        'protocol': ('Data.load(); one row per catalyst; 66 composition columns (prep_enc constant); '
-                     'catalyst_folds 5-fold; TUNED LightGBM (grouped_tuning.json), n_jobs=2; train-fold '
-                     'StandardScaler'),
+        'protocol': ('Data.load(); one row per catalyst; 66 composition columns (prep_enc + 65 element '
+                     'loadings; 34 vary across the 917 catalysts); catalyst_folds 5-fold; TUNED LightGBM '
+                     '(grouped_tuning.json), n_jobs=2; train-fold StandardScaler'),
+        'n_feature_columns': int(Xc.shape[1]),
+        'n_feature_columns_varying_across_catalysts': N_VARYING,
+        'feature_columns_constant_in_lab_data': [c for c, v in zip(el_cols, Xc.std(0)) if v == 0],
+        'rows_per_catalyst_data_load': {'min': int(ROWS_PER_CAT.min()), 'median': float(np.median(ROWS_PER_CAT)),
+                                        'max': int(ROWS_PER_CAT.max()),
+                                        'n_catalysts_above_135': int((ROWS_PER_CAT > 135).sum())},
+        'tuned_overrides': TUNED,
+        'lightgbm_n_jobs': N_JOBS,
+        'n_jobs_note': ('phase8 used the lgb_params default n_jobs=-1; R1 reproduces phase8 exactly with '
+                        'n_jobs=2, so it has no effect here'),
+        'wording_thresholds': {'caution_cell_max_same_association_tolerance': CAUTION_TOL,
+                               'W2_boundary_fraction_of_ci_width': W2_FRAC},
         'seeds': SEEDS, 'n_boot': N_BOOT, 'boot_seed': BOOT_SEED, 'dev_run': DEV,
         'populations': {'all_917': 'all catalysts', 'EE_771': f'>= {MIN_CELL} rows in some cell',
                         'ND_889': 'without the 28 doubled catalysts'},
@@ -609,6 +789,7 @@ OUT = {
     'phase8_reproduction_R1': PHASE8_CHECK,
     'phase9_reproduction_R2': PHASE9_CHECK,
     'five_row_checks_R5': FIVE_ROW_CHECK,
+    'seed_spread': SEED_SPREAD,
     'condition_mix_facts': {'cell_ratio6_share': CELL_MIX, 'peak_ratio': PEAK,
                             'single_highest_row_influence': INFL},
     'seed_averaging_gain': SEED_AVG_GAIN,
@@ -649,7 +830,7 @@ for pn in POP_NAMES:
                 cols.append(f"{'reference':>28s}")
             else:
                 b = BOOT[f'vs_{ref}'][name][pn]['spearman']
-                cols.append(f"{b['delta_boot_mean']:+.4f} [{b['ci95_low']:+.4f}, {b['ci95_high']:+.4f}]"
+                cols.append(f"{_f(b['delta_boot_mean'])} [{_f(b['ci95_low'])}, {_f(b['ci95_high'])}]"
                             f"{'*' if b['clears_zero'] else ' '}".rjust(28))
         print(f"{name:28s} {r['per_seed_mean']['spearman']:9.4f} {sa['spearman']:9.4f} "
               f"{sa['enrichment']:6.2f}x {sa['precision_at20']:5.2f}  {cols[0]}  {cols[1]}")
@@ -662,7 +843,8 @@ for name in ARMS:
     for ref in [MAX_LABEL, MED_LABEL]:
         if name != ref:
             b = BOOT[f'vs_{ref}'][name]['all_917']['enrichment']
-            out.append(f"vs {ref} {b['delta_boot_mean']:+.2f} [{b['ci95_low']:+.2f}, {b['ci95_high']:+.2f}] "
+            out.append(f"vs {ref} {_f(b['delta_boot_mean'], '+.2f')} [{_f(b['ci95_low'], '+.2f')}, "
+                       f"{_f(b['ci95_high'], '+.2f')}] "
                        f"{b['reading']}")
     print(f"  {name:28s} " + "; ".join(out))
 
@@ -670,8 +852,9 @@ print(f"\nR1 phase8 reproduction: {'pass' if PHASE8_CHECK['rule_R1_passes'] else
       + (" (dev: seed 0 only)" if DEV else " (exact)"))
 if not DEV:
     print(f"R2 phase9 reproduction: {'pass' if PHASE9_CHECK['rule_R2_passes'] else 'FAIL'} (exact)")
-print(f"R5 five-row identity: pass ({FIVE_ROW_CHECK['n_catalyst_predictions_checked']} catalyst "
-      f"predictions, max spread {FIVE_ROW_CHECK['max_abs_spread_across_five_rows']})")
+print(f"R5 five-row identity: {'pass' if FIVE_ROW_CHECK['rule_R5_passes'] else 'FAIL'} "
+      f"({FIVE_ROW_CHECK['n_catalyst_predictions_checked']} catalyst predictions, max spread "
+      f"{FIVE_ROW_CHECK['max_abs_spread_across_five_rows']}; holds by construction, checks stacking only)")
 for nm in ['five_row_unfair', 'five_row_fair']:
     c = FIVE_ROW_CHECK[f'{nm}_vs_mean_of_five_seed_averaged_predictions']
     print(f"  {nm} vs mean_of_five predictions (all_917, seed-averaged): Pearson {c['pearson']:.4f}, "
@@ -695,8 +878,9 @@ print(f"Peak at CH4:O2 = 2 (all_917, single highest row): {PEAK['n_peak_at_ch4o2
       f"{PEAK['n_catalysts_max_tied_across_ratios']}.")
 for k in ['q0.50', 'q1.00']:
     v = INFL['labels'][k]
-    print(f"Drop single highest row, label {k}: median change {v['median_abs_change_yield_pct']:.3f} yield-%, "
-          f"unchanged for {v['share_catalysts_unchanged']:.0%} of catalysts.")
+    print(f"Drop single highest row ({INFL['n_catalysts']} of {n_cat} catalysts with >= 2 rows), label {k}: "
+          f"median change {v['median_abs_change_yield_pct']:.3f} yield-%, unchanged for "
+          f"{v['share_catalysts_unchanged']:.0%} of them.")
 if NEAR:
     print("\nNear-identical numbers that are DIFFERENT quantities (all_917 Spearman):")
     for s in NEAR:
@@ -706,6 +890,11 @@ print(f"\nVERDICT: adopted label = {VERDICT['adopted_label']}")
 print(f"  reason: {VERDICT['reason']}")
 for c in VERDICT['cautions']:
     print(f"  caution: {c}")
-print(f"  supersedes: {VERDICT['supersedes']}")
+print(f"  supersedes (R6 {'pass' if R6 else 'FAIL'}): {VERDICT['supersedes']}")
 print(f"  basis: {VERDICT['supersedes_basis']}")
+for k in ['not_superiority', 'enrichment_estimator_note', 'multiplicity']:
+    print(f"  limit: {READING_LIMITS[k]}")
+print("  boundary readings (W2): " + "; ".join(
+    f"{x['comparison']} {x['population']} {x['metric']} [{_f(x['ci95'][0])}, {_f(x['ci95'][1])}] {x['reading']}"
+    for x in BOUNDARY))
 log(f"done in {RUNTIME:.1f} min")

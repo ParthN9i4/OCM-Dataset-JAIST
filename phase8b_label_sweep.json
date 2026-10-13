@@ -2,7 +2,66 @@
  "about": {
   "script": "phase8b_label_sweep.py",
   "what": "Training-label sweep for formulation B; every arm scored against TRUE_MAX (observed max).",
-  "protocol": "Data.load(); one row per catalyst; 66 composition columns (prep_enc constant); catalyst_folds 5-fold; TUNED LightGBM (grouped_tuning.json), n_jobs=2; train-fold StandardScaler",
+  "protocol": "Data.load(); one row per catalyst; 66 composition columns (prep_enc + 65 element loadings; 34 vary across the 917 catalysts); catalyst_folds 5-fold; TUNED LightGBM (grouped_tuning.json), n_jobs=2; train-fold StandardScaler",
+  "n_feature_columns": 66,
+  "n_feature_columns_varying_across_catalysts": 34,
+  "feature_columns_constant_in_lab_data": [
+   "prep_enc",
+   "Ag",
+   "Au",
+   "B",
+   "Be",
+   "Bi",
+   "C",
+   "Cd",
+   "Cr",
+   "Dy",
+   "Er",
+   "Gd",
+   "Ho",
+   "In",
+   "Ir",
+   "Lu",
+   "P",
+   "Pb",
+   "Pr",
+   "Pt",
+   "Re",
+   "Rh",
+   "Ru",
+   "Sc",
+   "Sm",
+   "Sn",
+   "Ta",
+   "Te",
+   "Th",
+   "Tl",
+   "Tm",
+   "Yb"
+  ],
+  "rows_per_catalyst_data_load": {
+   "min": 1,
+   "median": 105.0,
+   "max": 257,
+   "n_catalysts_above_135": 23
+  },
+  "tuned_overrides": {
+   "n_estimators": 300,
+   "learning_rate": 0.03,
+   "num_leaves": 127,
+   "max_depth": -1,
+   "min_child_samples": 20,
+   "subsample": 0.6,
+   "colsample_bytree": 0.8,
+   "reg_alpha": 0.0,
+   "reg_lambda": 1.0
+  },
+  "lightgbm_n_jobs": 2,
+  "n_jobs_note": "phase8 used the lgb_params default n_jobs=-1; R1 reproduces phase8 exactly with n_jobs=2, so it has no effect here",
+  "wording_thresholds": {
+   "caution_cell_max_same_association_tolerance": 0.02,
+   "W2_boundary_fraction_of_ci_width": 0.1
+  },
   "seeds": [
    0,
    1,
@@ -25,7 +84,7 @@
   },
   "truth": "TRUE_MAX = observed max over all the catalyst's rows, for every arm",
   "median_label_vs_groupby_median_max_abs_diff": 2.220446049250313e-16,
-  "runtime_minutes": 5.285348359743754
+  "runtime_minutes": 7.895599830150604
  },
  "label_definitions": {
   "q0.00": "cell minimum, then max over temperatures",
@@ -3243,6 +3302,8 @@
     "exact": true
    }
   },
+  "population": "all_917",
+  "estimator": "per_seed_spearman, spearman_mean, enrichment_mean, precision_at20_mean: per-seed out-of-fold metrics (mean over seeds); spearman_seed_averaged_predictions: on seed-averaged out-of-fold predictions; catalyst_bootstrap_*: arm - q1.00 Spearman, paired catalyst bootstrap on seed-averaged predictions, 3000 resamples, seed 7; target_mean: label mean, no model",
   "rule_R1_passes": true
  },
  "phase9_reproduction_R2": {
@@ -3311,8 +3372,9 @@
  "five_row_checks_R5": {
   "n_catalyst_predictions_checked": 9170,
   "max_abs_spread_across_five_rows": 0.0,
+  "n_catalyst_predictions_expected": 9170,
   "rule_R5_passes": true,
-  "note": "max_abs_spread_across_five_rows is the largest spread among the five predictions of any catalyst; R5 requires exactly 0.",
+  "note": "max_abs_spread_across_five_rows is the largest spread among the five predictions of any catalyst; R5 requires exactly 0. It holds by construction (identical inputs to a fixed tree model) and checks the row stacking and reshape only; it is not evidence about labels.",
   "five_row_unfair_vs_mean_of_five_seed_averaged_predictions": {
    "population": "all_917",
    "estimator": "on seed-averaged out-of-fold predictions; descriptive, no test",
@@ -3327,7 +3389,7 @@
    "spearman": 0.9994442547400195,
    "max_abs_diff_yield_pct": 0.9848131174282493
   },
-  "five_row_unfair_reading": "all_917: per-seed mean Spearman 0.7584 vs q1.00 0.7606; on seed-averaged predictions 0.7707 vs 0.7672; bootstrap delta +0.0035 [-0.0102, +0.0179], no detectable change. Seed-averaging gain: five_row_unfair +0.0123, q1.00 +0.0065; consistent with a less regularised model whose predictions vary more between seeds.",
+  "five_row_unfair_reading": "all_917: per-seed mean Spearman 0.7584 vs q1.00 0.7606; on seed-averaged predictions 0.7707 vs 0.7672; bootstrap delta +0.0035 [-0.0102, +0.0179], no detectable change. Seed-averaging gain: five_row_unfair +0.0123, q1.00 +0.0065 (the gain is not specific to this arm; see seed_averaging_gain). Seed spread (median across-seed SD of catalyst predictions; mean pairwise seed Spearman): five_row_unfair 0.571 yield-%, 0.958; mean_of_five 0.343 yield-%, 0.982; five_row_fair 0.348 yield-%, 0.982. Its predictions vary more between seeds than those of mean_of_five and five_row_fair, consistent with a less regularised model.",
   "min_child_samples": {
    "TUNED_rows": 20,
    "five_row_unfair_rows": 20,
@@ -3335,6 +3397,54 @@
    "five_row_fair_rows": 100,
    "five_row_fair_catalysts_equivalent": 20
   }
+ },
+ "seed_spread": {
+  "what": "all_917; median over catalysts of the across-seed SD (ddof=1) of the out-of-fold prediction (yield %), and mean Spearman between the out-of-fold predictions of every pair of seeds; descriptive, not a test of any difference",
+  "q0.00": {
+   "median_across_seed_sd_yield_pct": 0.2871182504078354,
+   "mean_pairwise_seed_spearman": 0.9765468247420295
+  },
+  "q0.25": {
+   "median_across_seed_sd_yield_pct": 0.3152617792077915,
+   "mean_pairwise_seed_spearman": 0.9810836349490071
+  },
+  "q0.50": {
+   "median_across_seed_sd_yield_pct": 0.343233623715947,
+   "mean_pairwise_seed_spearman": 0.9820124147579523
+  },
+  "q0.75": {
+   "median_across_seed_sd_yield_pct": 0.37345615294783613,
+   "mean_pairwise_seed_spearman": 0.9824384895038906
+  },
+  "q1.00": {
+   "median_across_seed_sd_yield_pct": 0.4770362217179855,
+   "mean_pairwise_seed_spearman": 0.9773158832258186
+  },
+  "nearest_rank_upper_quartile": {
+   "median_across_seed_sd_yield_pct": 0.3783580270819348,
+   "mean_pairwise_seed_spearman": 0.9823517895996396
+  },
+  "global_min": {
+   "median_across_seed_sd_yield_pct": 0.12150349522523063,
+   "mean_pairwise_seed_spearman": 0.9351668863692725
+  },
+  "median_of_all_raw_rows": {
+   "median_across_seed_sd_yield_pct": 0.27045268120483557,
+   "mean_pairwise_seed_spearman": 0.9807179356960178
+  },
+  "mean_of_five": {
+   "median_across_seed_sd_yield_pct": 0.3430596127327869,
+   "mean_pairwise_seed_spearman": 0.9824826747638464
+  },
+  "five_row_unfair": {
+   "median_across_seed_sd_yield_pct": 0.5711485772854411,
+   "mean_pairwise_seed_spearman": 0.9583851916506569
+  },
+  "five_row_fair": {
+   "median_across_seed_sd_yield_pct": 0.34775467001535587,
+   "mean_pairwise_seed_spearman": 0.9823600228365814
+  },
+  "rule_W1_five_row_unfair_varies_more": true
  },
  "condition_mix_facts": {
   "cell_ratio6_share": {
@@ -3369,6 +3479,7 @@
   },
   "single_highest_row_influence": {
    "population": "catalysts with >= 2 rows (913 of 917); no model",
+   "n_catalysts": 913,
    "what": "drop each catalyst's single highest row, rebuild the label, compare. Absolute change in yield %; relative = change / label (label > 0).",
    "labels": {
     "q0.00": {
@@ -3613,7 +3724,7 @@
     ]
    }
   },
-  "two_seed_explanation": "Averaging seeds 0 and 1 only reproduces the audit's 2-seed bootstrap deltas to within 0.0003. The remainder is not explained here; the audit's seeds and resampling are not recorded. The q0.50 - q1.00 point delta changes with the number of seeds averaged: 1 seed +0.0114, 2 seeds +0.0082, 5 seeds +0.0049. Seed-averaging over all seeds raises q1.00 by +0.0065 and q0.50 by +0.0055. The committed result is the 5-seed one. 2-seed q0.50 CI lower bound: audit -0.0001, this script +0.0002.",
+  "two_seed_explanation": "Averaging seeds 0 and 1 only reproduces the audit's 2-seed bootstrap deltas (all_917 Spearman, arm - q1.00) for mean_of_five, q0.75 and q0.50 to within 0.0003. For global_min it gives -0.0901 vs the audit's -0.0907 (off by 0.0006; see global_min_explanation). The remainder is not explained here; the audit's seeds and resampling are not recorded. The q0.50 - q1.00 point delta changes with the number of seeds averaged: 1 seed +0.0114, 2 seeds +0.0082, 5 seeds +0.0049. Seed-averaging over all seeds raises q1.00 by +0.0065 and q0.50 by +0.0055. The committed result is the 5-seed one. 2-seed q0.50 CI lower bound: audit -0.0001, this script +0.0002.",
   "global_min_explanation": "Candidates for the audit's -0.0907 (all_917, global_min - q1.00 Spearman): two_seed_bootstrap_delta -0.0901, five_seed_bootstrap_delta -0.0933, difference_of_per_seed_means -0.1033. Closest: two_seed_bootstrap_delta. The 5-seed bootstrap CI [-0.1188, -0.0685] is entirely below zero: detected loss."
  },
  "near_identical_numbers": [
@@ -3624,8 +3735,142 @@
  ],
  "verdict": {
   "adopted_label": "q0.50 (per-cell median, then max over temperatures)",
-  "reason": "not set by a single high reading (dropping each catalyst's single highest row moves the q0.50 label by a median 0.01 yield-% and the observed max by 0.38); ranks at least as well as the observed max: no detectable loss on any population or metric (all_917, q0.50 - q1.00, seed-averaged predictions, bootstrap-mean delta and 95% CI: Spearman +0.0049 [-0.0021, +0.0120], no detectable change; enrichment@10% -0.17 [-0.76, +0.43], no detectable change)",
+  "reason": "not set by a single high reading (in the 913 of 917 catalysts with >= 2 rows, dropping each catalyst's single highest row moves the q0.50 label by a median 0.01 yield-% and the observed max by 0.38); ranks at least as well as the observed max in the sense of rule R4: no 95% CI of q0.50 - q1.00 lies entirely below zero (2 metrics x 3 populations). This is a no-detectable-loss claim, not a superiority claim. all_917, seed-averaged out-of-fold predictions, bootstrap-mean delta [95% CI]: Spearman +0.0049 [-0.0021, +0.0120], no detectable change; point delta +0.0049 favours q0.50; a loss of up to 0.0021 is not excluded. Enrichment@10% -0.17x [-0.76, +0.43], no detectable change; point delta -0.22x favours q1.00; a loss of up to 0.76x is not excluded.",
   "rule_R4_passes": true,
+  "rule_R6_passes": true,
+  "reading_limits": {
+   "not_superiority": "q0.50 is detectably better than q1.00 on: none of the 6 comparisons. Labels detectably better than q1.00 (CI entirely above zero; bootstrap-mean delta [95% CI]): q0.75 all_917 spearman +0.0063 [+0.0007, +0.0122]; q0.75 EE_771 spearman +0.0087 [+0.0010, +0.0162]; q0.75 ND_889 spearman +0.0070 [+0.0015, +0.0126]; nearest_rank_upper_quartile all_917 spearman +0.0061 [+0.0005, +0.0119]; nearest_rank_upper_quartile EE_771 spearman +0.0086 [+0.0009, +0.0159]; nearest_rank_upper_quartile ND_889 spearman +0.0068 [+0.0014, +0.0126]; mean_of_five EE_771 spearman +0.0088 [+0.0011, +0.0166]; five_row_fair EE_771 spearman +0.0088 [+0.0007, +0.0170]. Documents must not turn the adopted-label verdict into a superiority claim.",
+   "detectably_worse_than_q1.00": [
+    "global_min all_917 spearman -0.0933 [-0.1188, -0.0685]",
+    "global_min EE_771 spearman -0.0662 [-0.0937, -0.0386]",
+    "global_min ND_889 spearman -0.0987 [-0.1250, -0.0738]"
+   ],
+   "enrichment_estimator_note": "all_917 enrichment@10%, q0.50 vs q1.00, depends on the estimator: per-seed mean 4.261x vs 4.283x (-0.022x; equal to phase8's stored enrichment_mean values, checked by R1); seed-averaged predictions 4.130x vs 4.348x (point delta -0.217x); bootstrap-mean delta -0.165x. Quote one estimator at a time and name it.",
+   "multiplicity": "This file holds 118 distinct paired-bootstrap 95% CIs (q1.00 - q0.50 counted once, as q0.50 - q1.00; the 2-seed audit CIs included); 26 read 'detected'. At 95% per CI some detections are expected by chance. 12 readings sit near the zero boundary (rule W2, listed in boundary_readings); do not over-read them. The q0.50 - q1.00 all_917 Spearman reading is 'detected' with seeds 0 and 1 averaged and 'no detectable change' with all 5 seeds.",
+   "boundary_rule": "W2: CI bound nearer zero is closer to zero than 10% of the CI width",
+   "boundary_readings": [
+    {
+     "comparison": "q0.50 - q1.00",
+     "population": "EE_771",
+     "metric": "spearman",
+     "ci95": [
+      -2.804999009653728e-05,
+      0.018080218313303816
+     ],
+     "reading": "no detectable change"
+    },
+    {
+     "comparison": "q0.75 - q1.00",
+     "population": "all_917",
+     "metric": "spearman",
+     "ci95": [
+      0.0006610190650258279,
+      0.012226919006958617
+     ],
+     "reading": "detected"
+    },
+    {
+     "comparison": "q0.75 - q1.00",
+     "population": "EE_771",
+     "metric": "spearman",
+     "ci95": [
+      0.0009739205378981874,
+      0.016178175562432586
+     ],
+     "reading": "detected"
+    },
+    {
+     "comparison": "nearest_rank_upper_quartile - q1.00",
+     "population": "all_917",
+     "metric": "spearman",
+     "ci95": [
+      0.0005212247245434899,
+      0.011922717020694978
+     ],
+     "reading": "detected"
+    },
+    {
+     "comparison": "nearest_rank_upper_quartile - q1.00",
+     "population": "EE_771",
+     "metric": "spearman",
+     "ci95": [
+      0.0009052142436063449,
+      0.01593781655914821
+     ],
+     "reading": "detected"
+    },
+    {
+     "comparison": "mean_of_five - q1.00",
+     "population": "all_917",
+     "metric": "spearman",
+     "ci95": [
+      -0.00033917170177354675,
+      0.011400368041301618
+     ],
+     "reading": "no detectable change"
+    },
+    {
+     "comparison": "mean_of_five - q1.00",
+     "population": "EE_771",
+     "metric": "spearman",
+     "ci95": [
+      0.001080427780515411,
+      0.016561135738881
+     ],
+     "reading": "detected"
+    },
+    {
+     "comparison": "mean_of_five - q1.00",
+     "population": "ND_889",
+     "metric": "spearman",
+     "ci95": [
+      -0.00026654738358501944,
+      0.010985657233584464
+     ],
+     "reading": "no detectable change"
+    },
+    {
+     "comparison": "five_row_fair - q1.00",
+     "population": "all_917",
+     "metric": "spearman",
+     "ci95": [
+      -0.000785624793280845,
+      0.011731222974621874
+     ],
+     "reading": "no detectable change"
+    },
+    {
+     "comparison": "five_row_fair - q1.00",
+     "population": "EE_771",
+     "metric": "spearman",
+     "ci95": [
+      0.0006687719981728292,
+      0.016978429642280947
+     ],
+     "reading": "detected"
+    },
+    {
+     "comparison": "five_row_fair - q1.00",
+     "population": "ND_889",
+     "metric": "spearman",
+     "ci95": [
+      -0.00022113180966287492,
+      0.011498370596706222
+     ],
+     "reading": "no detectable change"
+    },
+    {
+     "comparison": "q0.25 - q0.50",
+     "population": "EE_771",
+     "metric": "spearman",
+     "ci95": [
+      -0.008998733843151224,
+      -0.00020444445105069739
+     ],
+     "reading": "detected"
+    }
+   ]
+  },
   "sensitivity_table": {
    "what": "every label minus q1.00 (observed max) and minus q0.50 (adopted), per population and metric; paired catalyst bootstrap on seed-averaged out-of-fold predictions, 3000 resamples, seed 7; delta_boot_mean = bootstrap mean (phase8 convention), delta_point = full-population difference",
    "rows": {
@@ -4945,9 +5190,9 @@
   },
   "cautions": [
    "84.5% of catalysts (775/917) have their single highest row at CH4:O2 = 2, the edge of the tested grid. The true optimum may lie outside it, so every label here is a within-grid quantity.",
-   "The cell median shifts with which conditions survived the mass-balance check: across 4399 cells, Spearman(share of CH4:O2 = 6 rows, cell median) = -0.249. Within cells the CH4:O2 = 6 median lies below the CH4:O2 = 2 median in 81% of 3812 cells, so a cell that lost CH4:O2 = 2 rows has a lower median. The cell max shows about the same association (-0.248), so this caution applies to the observed max as well and is not a reason to prefer it."
+   "The cell median shifts with which conditions survived the mass-balance check: across 4399 observed cells, Spearman(share of CH4:O2 = 6 rows, cell median) = -0.249. This is an across-cell association that mixes catalysts. Within the 3812 cells holding both ratios, the CH4:O2 = 6 median lies below the CH4:O2 = 2 median in 81% of them, so a cell that lost CH4:O2 = 2 rows tends to have a lower median. The cell max shows about the same association (-0.248), so this caution applies to the observed max as well and is not a reason to prefer the max over the median."
   ],
   "supersedes": "phase8_target_robustness.json verdict 'KEEP the observed maximum' -- the PI adopted the median; the evidence permits either",
-  "supersedes_basis": "all_917 q0.50 - q1.00: Spearman +0.0049 [-0.0021, +0.0120], no detectable change; enrichment -0.17 [-0.76, +0.43], no detectable change. Neither label is detectably better on all_917 Spearman."
+  "supersedes_basis": "rule R6; q0.50 - q1.00, seed-averaged out-of-fold predictions, bootstrap-mean delta [95% CI]: all_917 spearman +0.0049 [-0.0021, +0.0120], no detectable change; all_917 enrichment -0.17 [-0.76, +0.43], no detectable change; EE_771 spearman +0.0090 [-0.00003, +0.0181], no detectable change; EE_771 enrichment +0.07 [-0.65, +0.91], no detectable change; ND_889 spearman +0.0049 [-0.0018, +0.0119], no detectable change; ND_889 enrichment -0.22 [-0.90, +0.45], no detectable change. None of the six CIs excludes zero."
  }
 }

@@ -53,6 +53,11 @@ DATA AND CONVENTIONS
   per-seed means and medians, and the share of top-k picks that are unmeasured.
   Comparisons (regret_a - regret_b > 0 means b is better): family - model_C_per_seed,
   global - model_C_per_seed, family - model_Cp_seed_averaged. Per-seed mean edges are stored.
+  family - model_Cp_seed_averaged sets a per-seed rule against a 5-seed ensemble, so it is not a
+  design-axes effect. ADDED CHECK, outside the rule: model_C_seed_averaged - model_Cp_seed_averaged,
+  both 5-seed ensembles, isolates the design axes.
+  Per-seed results are stored as per-seed means and medians (every strategy, scoring, k, population)
+  and per-seed mean edges (every comparison); per-catalyst arrays are not stored.
   RULE (a). PASS if, at k = 3, headline scoring, all_917: the 95% CI of mean(regret_family -
   regret_model_C_per_seed) lies above zero AND the per-seed mean of that edge is > 0 in all 5 seeds.
   Otherwise FAIL. The same evaluation at k = 1 and k = 5 is secondary, as is the optimistic scoring.
@@ -62,6 +67,8 @@ DATA AND CONVENTIONS
     greedy          add the slot that maximises Spearman(max over the chosen slots the catalyst
                     measured, truth) over training catalysts; catalysts with no measured chosen slot are
                     left out of the objective. Ties: lower slot id. Nested in K (one run to K = 20).
+                    A candidate is skipped if fewer than 3 training catalysts would be covered (a
+                    guard for Spearman; it never binds here, the stored minimum per-slot count says so).
     most_often_max  the K slots that most often hold a training catalyst's argmax slot; count ties go
                     to the higher training mean slot yield, then the lower slot id.
     random          200 draws of K distinct slots per (seed, fold, K); RNG seeded by (7, seed, fold, K).
@@ -80,17 +87,24 @@ DATA AND CONVENTIONS
   random at K" if its seed-mean Spearman (headline scoring, all_917) exceeds the 97.5th percentile of
   the 200 random seed-mean Spearman values at the same K, computed with the same covered-catalyst
   definition. Otherwise "not better than random at K". The 97.5th percentile of the 1,000 per-seed
-  random values is stored as a stricter secondary reference; it does not enter the rule.
-  COMPOSITION MODEL ON K-SLOT LABELS (descriptive, no rule). Per seed and fold, each training catalyst
-  is labelled by max over the fold's greedy K slots (training catalysts with none measured are dropped).
+  random values is stored and printed as a stricter secondary reference; it does not enter the rule.
+  Under the rule, designed and random Spearmans are computed on different covered sets (each
+  protocol's own). ADDED CHECK, outside the rule (matched coverage): per seed and random draw,
+  Spearman(designed) - Spearman(random) on the held-out catalysts covered by both; reported as the
+  mean over draws of the seed-mean difference and the share of draws with a positive seed-mean
+  difference. Descriptive, no test.
   Diagnostic (no rule): greedy's training objective is also evaluated on most_often_max's K slots, to
   show whether greedy forward selection is a good optimiser of its own objective.
+  COMPOSITION MODEL ON K-SLOT LABELS (descriptive, no rule). Per seed and fold, each training catalyst
+  is labelled by max over the fold's greedy K slots (training catalysts with none measured are dropped).
   Formulation-B LightGBM on the 65 composition columns predicts the held-out catalysts. Scored against
   the observed row max on all_917, EE_771, ND_889, per seed and on seed-averaged predictions. Paired
   catalyst bootstrap (Spearman; enrichment on all_917) vs phase11 cat_B_median and cat_B_max. Added
-  control: the same pipeline with label = max over all measured slot yields, which separates the
-  effect of the reduction from the slot-mean convention. Pipeline check: B_median and B_max are
-  retrained here and compared with the npz.
+  control: the same pipeline with label = max over all measured slot yields. Each K-slot label is
+  also bootstrapped against this control (same metrics). That difference is the cost of the reduction
+  alone; the deltas vs B_median and B_max also contain the label statistic (B_median: per-temperature
+  row median, then max; B_max: max of rows; control: max of slot means). Pipeline check: B_median and
+  B_max are retrained here and compared with the npz.
 
 (c) COMPOSITION x CONDITION. Within-cell shape of held-out catalysts, defined the same way for every
   model. Cell = (catalyst, temperature). Eligible cell: >= 8 measured slots. For each measured slot r of
@@ -108,17 +122,27 @@ DATA AND CONVENTIONS
     (5) per_cell_linear_LOO  REFERENCE BOUND, not a model for unseen catalysts: per-cell OLS on
                        intercept + total flow + Ar fraction + CH4:O2 (numeric), fitted leaving slot r out
                        and evaluated at r. With an intercept the fitted mean over the other slots equals
-                       their mean yield, so e_r = y_r - p_r(fit without r).
+                       their mean yield, so e_r = y_r - p_r(fit without r). Undetermined slots: when r
+                       holds the only instance of an axis level among the cell's measured slots, r's
+                       design row is outside the row space of the other slots (test: rank of the other
+                       rows < rank with r added), so the fit without r cannot determine p_r. These slots
+                       are excluded from the bound (count stored per population). The bound, and
+                       lgbm_C, shared_effect and flat on the same slots, are reported in a separate
+                       block; the bound is never compared with numbers from the full slot set. A
+                       rank-deficient fit whose r lies in the row space gives a unique p_r and is kept.
     flat (p = 0)       no-shape reference.
   Populations: all_917, EE_771, ND_889 (eligible cells), and complete 27-slot cells of all_917.
   Bootstrap vs lgbm_C: per-catalyst SSE and slot counts, catalysts resampled; RMSE(model) - RMSE(lgbm_C)
-  (used by the rule) and the mean per-catalyst SSE difference.
+  (used by the rule) and the mean per-catalyst SSE difference. Models (1)-(4) and flat use every
+  eligible slot; the bound's bootstrap uses its own slots, with lgbm_C on the same slots.
   RULE (c). Further response-surface modelling is worth pursuing only if a model among (1), (3), (4)
   has, on all_917: RMSE(lgbm_C) - RMSE(model) >= 0.05 AND the 95% CI of RMSE(model) - RMSE(lgbm_C)
   entirely below zero. Otherwise: "stop: headroom too small", with the numbers.
   Added checks, not the metric and outside the rule: (i) an in-sample row-level variance split, to
   compare with the audit's "4.6 of 19.9 points"; (ii) the audit's convention (rows instead of slot
   means, cells by row count, and per-cell slopes on the raw flows), to explain differences from it.
+  Its per-cell LOO entries drop undetermined rows by the same test (count stored) and are scored on
+  the remaining rows.
 
 (d) ARGMAX TABLE. Descriptive; no rule. Rows, not slot means. Each share is labelled by its statistic.
     S1  the catalyst's single highest row.
@@ -419,6 +443,7 @@ MEAN_TRUTH = {pn: float(TRUTH[m].mean()) for pn, m in POPS.items()}
 
 PAIRS_A = [('family_rule', 'model_C_per_seed'), ('global_rule', 'model_C_per_seed'),
            ('family_rule', 'model_Cp_seed_averaged')]
+PAIRS_A_ADDED = [('model_C_seed_averaged', 'model_Cp_seed_averaged')]   # design axes, both 5-seed ensembles
 CMP_A = {}
 for sc in SCORINGS:
     CMP_A[sc] = {}
@@ -426,10 +451,15 @@ for sc in SCORINGS:
         CMP_A[sc][f'k{k}'] = {}
         for pn, m in POPS.items():
             CMP_A[sc][f'k{k}'][pn] = {}
-            for a, b in PAIRS_A:
+            for a, b in PAIRS_A + PAIRS_A_ADDED:
                 d = REG[a][sc][k].mean(0) - REG[b][sc][k].mean(0)
                 r = boot_mean_diff(d, m)
                 r['what'] = f'mean over catalysts of seed-averaged regret_{a} - regret_{b}; > 0 means {b} better'
+                if (a, b) in PAIRS_A_ADDED:
+                    r['what'] = ('ADDED CHECK, outside the rule: ' + r['what'] + '; both are 5-seed ensembles, '
+                                 'so this isolates the design axes')
+                elif b == 'model_Cp_seed_averaged':
+                    r['what'] += '; a per-seed rule against a 5-seed ensemble, not a design-axes effect'
                 r['per_seed_mean_edge'] = [float((REG[a][sc][k][i] - REG[b][sc][k][i])[m].mean())
                                            for i in range(NSEED)]
                 CMP_A[sc][f'k{k}'][pn][f'{a}_minus_{b}'] = r
@@ -487,7 +517,7 @@ def greedy_choose(SYt, Tt, kmax):
                 continue
             new = np.fmax(cur, SYt[:, j])
             m = ~np.isnan(new)
-            if m.sum() < 3:
+            if m.sum() < 3:                          # Spearman guard; never binds here (see stored minimum)
                 continue
             r = spearmanr(new[m], Tt[m])[0]
             if np.isfinite(r) and r > best:
@@ -533,7 +563,9 @@ for i, s in enumerate(SEEDS):
         g_sl, g_tr = greedy_choose(SYtr, Ttr, KMAX)
         m_sl, m_cnt = most_often_max(SYtr, KMAX)
         CHOICES.append({'seed': s, 'fold': k, 'n_train_catalysts': int(len(tr)),
-                        'n_heldout_catalysts': int(len(va)), 'greedy_slots': g_sl, 'greedy_train_trace': g_tr,
+                        'n_heldout_catalysts': int(len(va)),
+                        'min_training_catalysts_measuring_any_slot': int(MEAS[tr].sum(0).min()),
+                        'greedy_slots': g_sl, 'greedy_train_trace': g_tr,
                         'most_often_max_slots': m_sl,
                         'most_often_max_counts': [int(m_cnt[j]) for j in m_sl],
                         'most_often_max_train_objective_at_K': {
@@ -557,6 +589,8 @@ for i, s in enumerate(SEEDS):
 for ch in CHOOSERS:
     for K in KS_PROT:
         assert not np.isnan(DSCORE[ch][K]).all(1).any()
+MIN_SLOT_TRAIN = min(c['min_training_catalysts_measuring_any_slot'] for c in CHOICES)
+assert MIN_SLOT_TRAIN >= 3          # so the greedy guard (< 3 covered training catalysts) never binds
 
 
 def prot_metrics(sc, m):
@@ -639,7 +673,29 @@ for ch in CHOOSERS:
             'random_seed_mean_mean': rr['seed_mean_draws_mean'],
             'verdict': ('better than random at K' if dval > rr['seed_mean_draws_p97_5']
                         else 'not better than random at K'),
+            'random_per_seed_p97_5_stricter_secondary': rr['per_seed_draws_p97_5_stricter_secondary'],
             'secondary_vs_per_seed_p97_5': bool(dval > rr['per_seed_draws_p97_5_stricter_secondary'])}
+
+# ADDED CHECK, outside the rule: designed vs random on the held-out catalysts covered by both
+MATCHED = {'what': ('ADDED CHECK, outside the rule. Per seed and random draw: Spearman(designed score, truth) - '
+                    'Spearman(random score, truth) on the held-out catalysts covered by both (headline scoring, '
+                    'all_917, pooled OOF per seed); then the seed mean per draw index. Descriptive, no test.'),
+           'results': {}}
+for ch in CHOOSERS:
+    for K in KS_PROT:
+        D = np.empty((NSEED, N_RANDOM)); CB = np.empty((NSEED, N_RANDOM))
+        for i in range(NSEED):
+            ds = DSCORE[ch][K][i]
+            for d in range(N_RANDOM):
+                rs = RSCORE[K][i, d]
+                both = np.isfinite(ds) & np.isfinite(rs)
+                CB[i, d] = both.mean()
+                D[i, d] = spearmanr(ds[both], TRUTH[both])[0] - spearmanr(rs[both], TRUTH[both])[0]
+        sm = D.mean(0)
+        MATCHED['results'][f'{ch}_K{K}'] = {
+            'mean_over_draws_of_seed_mean_spearman_diff': float(sm.mean()),
+            'share_of_draws_with_positive_seed_mean_diff': float((sm > 0).mean()),
+            'mean_share_of_heldout_catalysts_covered_by_both': float(CB.mean())}
 
 # slot choice summary
 slot_freq = {}
@@ -661,11 +717,19 @@ TRAIN_OBJ = {'what': ('the greedy objective (Spearman of max over chosen measure
 
 # composition model on K-slot labels
 B_NPZ = {'B_median': Z['cat_B_median'].astype(float), 'B_max': Z['cat_B_max'].astype(float)}
-COMPM = {}
+CONTROL = 'all_measured_slots_label_control'
+COMPM = {'comparison_note': (
+    'minus_<ref> = metric(variant) - metric(ref), paired catalyst bootstrap on seed-averaged OOF predictions vs '
+    'the observed row max. minus_all_measured_slots_label_control isolates the cost of the slot reduction (same '
+    'pipeline, same slot-mean convention). minus_B_median and minus_B_max also contain the label statistic '
+    '(the control itself differs from B_median).')}
 variants = {f'greedy_K{K}_label': CPRED[K] for K in KS_PROT}
-variants['all_measured_slots_label_control'] = CPRED_ALLSLOT
+variants[CONTROL] = CPRED_ALLSLOT
 for vn, P in variants.items():
     Pa = P.mean(0)
+    refs = dict(B_NPZ)
+    if vn != CONTROL:
+        refs[CONTROL] = CPRED_ALLSLOT.mean(0)
     blk = {}
     for pn, m in POPS.items():
         per = [screen(TRUE_MAX, P[i], m) for i in range(NSEED)]
@@ -673,10 +737,10 @@ for vn, P in variants.items():
                    'per_seed_mean': {q: float(np.mean([p[q] for p in per]))
                                      for q in ('spearman', 'precision_top10pct', 'enrichment_top10pct')},
                    'seed_averaged_predictions': screen(TRUE_MAX, Pa, m)}
-        for bn in ('B_median', 'B_max'):
+        for bn, ref in refs.items():
             mets = ['spearman', 'enrichment'] if pn == 'all_917' else ['spearman']
             for met in mets:
-                bb = paired_catalyst_bootstrap(TRUE_MAX, Pa, B_NPZ[bn], mask=m, n_boot=N_BOOT,
+                bb = paired_catalyst_bootstrap(TRUE_MAX, Pa, ref, mask=m, n_boot=N_BOOT,
                                                seed=BOOT_SEED, metric=met)
                 bb['reading'] = reading(bb['ci95_low'], bb['ci95_high'], f'above {bn}', f'below {bn}')
                 blk[pn][f'minus_{bn}_{met}_seed_averaged'] = bb
@@ -705,11 +769,16 @@ RES['b_reduced_protocol'] = {
                              'Zero-imputation on the covered catalysts equals the headline (asserted).'),
     'aggregation': 'seed_mean_of_pooled_oof',
     'designed': PROT, 'random': RAND, 'rule_b': RULE_B,
+    'rule_b_matched_coverage_added_check': MATCHED,
+    'greedy_min_coverage_guard': {
+        'what': ('greedy skips a candidate slot if < 3 covered training catalysts; minimum over seed-fold pairs '
+                 'of the number of training catalysts measuring any slot (>= 3 means the guard never binds)'),
+        'min_training_catalysts_measuring_any_slot': int(MIN_SLOT_TRAIN)},
     'slot_choice_frequency': {'n_seed_fold_pairs': n_folds_total, **slot_freq},
     'training_objective_by_chooser': TRAIN_OBJ,
     'choices_per_seed_fold': CHOICES,
     'composition_model_on_K_slot_labels': COMPM}
-log("(b) rule: " + '; '.join(f"{k} {v['designed_seed_mean_spearman']:.3f} vs p97.5 "
+log("(b) rule: " + '; '.join(f"{k} {v['designed_seed_mean_spearman']:.3f} vs seed-mean p97.5 "
                              f"{v['random_seed_mean_p97_5']:.3f}" for k, v in RULE_B['results'].items()))
 
 # =============================================================================== (c) shape
@@ -774,23 +843,48 @@ PRED_C = {'shared_effect': P_SH.mean(0), 'lgbm_C': collapse(Z['rows_C'].astype(f
           'flat_p0': np.zeros((n_cat, 5, 27))}
 E_C = {m: shape_err(P) for m, P in PRED_C.items()}
 
-# (5) per-cell linear model, leave one slot out
+def loo_residuals(X, yv):
+    """Leave-one-out OLS residuals y_j - x_j b(-j). NaN where x_j lies outside the row space of the other
+    rows: the fit without j cannot determine p_j (lstsq would return a minimum-norm extrapolation).
+    Returns residuals, the minimum-norm residuals at undetermined points (NaN elsewhere; kept only to
+    reproduce the superseded checkpoint value), number of rank-deficient fits, number of undetermined points."""
+    n, p = X.shape
+    out, mn = np.full(n, np.nan), np.full(n, np.nan)
+    n_rd = n_und = 0
+    for j in range(n):
+        o = np.arange(n) != j
+        beta, _, rank, _ = np.linalg.lstsq(X[o], yv[o], rcond=None)
+        if rank < p:
+            n_rd += 1
+            if np.linalg.matrix_rank(np.vstack([X[o], X[j:j + 1]])) > rank:
+                n_und += 1
+                mn[j] = yv[j] - X[j] @ beta
+                continue
+        out[j] = yv[j] - X[j] @ beta
+    return out, mn, n_rd, n_und
+
+
+# (5) per-cell linear model, leave one slot out (reference bound)
+BOUND = 'per_cell_linear_LOO_reference_bound'
 XC = np.column_stack([np.ones(27), SL_TOT[:27], SL_AR[:27], SL_R[:27]])
 E_LOO = np.full((n_cat, 5, 27), np.nan)
-n_rank_def, n_loo = 0, 0
+E_LOO_MINNORM = np.full((n_cat, 5, 27), np.nan)     # superseded: min-norm values at undetermined points
+UNDET = np.zeros((n_cat, 5, 27), bool)
+n_rank_def, n_undet, n_loo = 0, 0, 0
 for c, ti in np.argwhere(ELIG):
     idx = np.where(M3[c, ti])[0]
-    yv, X = SY3[c, ti, idx], XC[idx]
-    for j in range(len(idx)):
-        o = np.arange(len(idx)) != j
-        beta, _, rank, _ = np.linalg.lstsq(X[o], yv[o], rcond=None)
-        n_rank_def += rank < 4; n_loo += 1
-        E_LOO[c, ti, idx[j]] = yv[j] - X[j] @ beta
-E_C['per_cell_linear_LOO_reference_bound'] = E_LOO
+    res, mn, nrd, nun = loo_residuals(XC[idx], SY3[c, ti, idx])
+    E_LOO[c, ti, idx] = res
+    E_LOO_MINNORM[c, ti, idx] = np.where(np.isnan(res), mn, res)
+    UNDET[c, ti, idx] = np.isnan(res)
+    n_rank_def += nrd; n_undet += nun; n_loo += len(idx)
+assert int(UNDET.sum()) == n_undet and np.isfinite(E_LOO_MINNORM[UNDET]).all()
+MODELS_C = list(E_C)                      # (1)-(4) and flat: every eligible slot
 ref_mask = np.isfinite(E_C['lgbm_C'])
 for m, E in E_C.items():
     assert (np.isfinite(E) == ref_mask).all(), m
-MODELS_C = list(E_C)
+assert not (UNDET & ~ref_mask).any() and (np.isfinite(E_LOO) == (ref_mask & ~UNDET)).all()
+BOUND_SLOTS = np.isfinite(E_LOO)          # the bound's own slots: eligible and determined
 
 SHAPE_POPS = {'all_917': (POPS['all_917'], ELIG), 'EE_771': (POPS['EE_771'], ELIG),
               'ND_889': (POPS['ND_889'], ELIG), 'complete_27_slot_cells_all_917': (POPS['all_917'], COMPLETE)}
@@ -821,6 +915,7 @@ SHAPE = {}
 for pn, (cm, cellm) in SHAPE_POPS.items():
     S = {m: sse_cnt(E, cm, cellm) for m, E in E_C.items()}
     n_slots = int(S['lgbm_C'][1].sum())
+    assert all((v[1] == S['lgbm_C'][1]).all() for v in S.values())
     blk = {'n_catalysts': int((S['lgbm_C'][1] > 0).sum()), 'n_cells': int((cm[:, None] & cellm).sum()),
            'n_slots': n_slots,
            'within_shape_rmse_seed_averaged': {m: float(np.sqrt(v[0].sum() / n_slots)) for m, v in S.items()}}
@@ -828,10 +923,23 @@ for pn, (cm, cellm) in SHAPE_POPS.items():
     blk['share_of_flat_sse_explained'] = {m: float(1 - v[0].sum() / null) for m, v in S.items()}
     blk['vs_lgbm_C_catalyst_bootstrap'] = {f'{m}_minus_lgbm_C': boot_rmse_diff(S[m][0], S['lgbm_C'][0], S['lgbm_C'][1])
                                            for m in MODELS_C if m != 'lgbm_C'}
-    r_ = blk['within_shape_rmse_seed_averaged']
-    gap = r_['shared_effect'] - r_['per_cell_linear_LOO_reference_bound']
-    blk['lgbm_C_share_of_shared_to_reference_gap_closed'] = (
-        float((r_['shared_effect'] - r_['lgbm_C']) / gap) if gap != 0 else None)
+    # reference bound: its own (determined) slots, with the models on exactly the same slots
+    SB = {m: sse_cnt(np.where(BOUND_SLOTS, E, np.nan), cm, cellm) for m, E in E_C.items()}
+    SB[BOUND] = sse_cnt(E_LOO, cm, cellm)
+    assert all((v[1] == SB[BOUND][1]).all() for v in SB.values())
+    nb = int(SB[BOUND][1].sum())
+    rb = {m: float(np.sqrt(v[0].sum() / nb)) for m, v in SB.items()}
+    gap = rb['shared_effect'] - rb[BOUND]
+    blk['reference_bound_on_determined_slots'] = {
+        'what': ('REFERENCE BOUND, uses the held-out catalyst\'s own cell data. Scored on the eligible slots whose '
+                 'leave-one-out prediction is determined; lgbm_C, shared_effect, flat_p0 etc. on the same slots. '
+                 'Do not compare with within_shape_rmse_seed_averaged, which uses every eligible slot.'),
+        'n_slots': nb, 'n_slots_excluded_undetermined': n_slots - nb,
+        'within_shape_rmse_seed_averaged_same_slots': rb,
+        'reference_bound_minus_lgbm_C_catalyst_bootstrap': boot_rmse_diff(SB[BOUND][0], SB['lgbm_C'][0],
+                                                                          SB['lgbm_C'][1]),
+        'lgbm_C_share_of_shared_to_reference_gap_closed': (
+            float((rb['shared_effect'] - rb['lgbm_C']) / gap) if gap != 0 else None)}
     SHAPE[pn] = blk
 
 RULE_C = {'rule': ('pursue only if a model among shared_effect, lgbm_Cp, amplitude has, on all_917: RMSE(lgbm_C) '
@@ -844,14 +952,18 @@ for m in ['shared_effect', 'lgbm_Cp', 'amplitude']:
                                [b['ci95_low'], b['ci95_high']],
                                'meets_rule': bool(imp >= 0.05 and b['ci95_high'] < 0)}
 _rs = SHAPE['all_917']['within_shape_rmse_seed_averaged']
+_rb = SHAPE['all_917']['reference_bound_on_determined_slots']
+PL = 'seed-averaged' if NSEED > 1 else '1 seed, --dev'
 if any(v['meets_rule'] for v in RULE_C['candidates'].values()):
     RULE_C['verdict'] = 'pursue: ' + ', '.join(m for m, v in RULE_C['candidates'].items() if v['meets_rule'])
 else:
     RULE_C['verdict'] = 'stop: headroom too small'
-RULE_C['numbers'] = (f"all_917 within-shape RMSE (seed-averaged): lgbm_C {_rs['lgbm_C']:.3f}, lgbm_Cp "
-                     f"{_rs['lgbm_Cp']:.3f}, amplitude {_rs['amplitude']:.3f}, shared_effect "
-                     f"{_rs['shared_effect']:.3f}; reference bound (per-cell LOO, uses the catalyst's own data) "
-                     f"{_rs['per_cell_linear_LOO_reference_bound']:.3f}; flat {_rs['flat_p0']:.3f}")
+RULE_C['numbers'] = (f"all_917 within-shape RMSE ({PL}, {SHAPE['all_917']['n_slots']} eligible slots): lgbm_C "
+                     f"{_rs['lgbm_C']:.3f}, lgbm_Cp {_rs['lgbm_Cp']:.3f}, amplitude {_rs['amplitude']:.3f}, "
+                     f"shared_effect {_rs['shared_effect']:.3f}, flat {_rs['flat_p0']:.3f}. Reference bound (per-cell "
+                     f"LOO, uses the catalyst's own data) on its {_rb['n_slots']} determined slots "
+                     f"{_rb['within_shape_rmse_seed_averaged_same_slots'][BOUND]:.3f} vs lgbm_C on the same slots "
+                     f"{_rb['within_shape_rmse_seed_averaged_same_slots']['lgbm_C']:.3f}")
 
 # in-sample row-level framing, for comparison with the audit's "4.6 of 19.9 points"
 TI_ROW = ROW_SLOT // 27
@@ -878,35 +990,44 @@ def row_shape_err(p):
 
 
 def row_loo(Xr, cells):
+    """Leave-one-row-out per-cell OLS residuals; NaN outside `cells` and at undetermined rows."""
     out = np.full(N, np.nan)
+    fitted = np.zeros(N, bool)
     o_ = np.argsort(CELL_ROW, kind='stable')
     bnd = np.r_[0, np.cumsum(np.bincount(CELL_ROW[o_], minlength=n_cat * 5))]
+    n_und = 0
     for ci in cells:
         idx = o_[bnd[ci]:bnd[ci + 1]]
-        X, yy = Xr[idx], y[idx]
-        for j in range(len(idx)):
-            o = np.arange(len(idx)) != j
-            out[idx[j]] = yy[j] - X[j] @ np.linalg.lstsq(X[o], yy[o], rcond=None)[0]
-    return out
+        res, _, _, nun = loo_residuals(Xr[idx], y[idx])
+        out[idx] = res; fitted[idx] = True; n_und += nun
+    return out, fitted, n_und
 
 
 ROWP = {m: PRED_C[m].reshape(n_cat, NS)[groups, ROW_SLOT]
         for m in ['shared_effect', 'lgbm_C', 'lgbm_Cp', 'amplitude']}
 E_ROW = {m: row_shape_err(p) for m, p in ROWP.items()}
-E_ROW['per_cell_linear_LOO_design_axes'] = row_loo(
-    np.column_stack([np.ones(N), SL_TOT[ROW_SLOT], SL_AR[ROW_SLOT], SL_R[ROW_SLOT]]), np.where(NROW_CELL >= 8)[0])
-E_ROW['per_cell_linear_LOO_raw_flows'] = row_loo(
-    np.column_stack([np.ones(N)] + [df[c].values.astype(float) for c in COND_COLS]), np.where(NROW_CELL == 27)[0])
+ROW_LOO = {
+    'per_cell_linear_LOO_design_axes': row_loo(
+        np.column_stack([np.ones(N), SL_TOT[ROW_SLOT], SL_AR[ROW_SLOT], SL_R[ROW_SLOT]]), np.where(NROW_CELL >= 8)[0]),
+    'per_cell_linear_LOO_raw_flows': row_loo(
+        np.column_stack([np.ones(N)] + [df[c].values.astype(float) for c in COND_COLS]), np.where(NROW_CELL == 27)[0])}
 AUDIT_CONV = {'what': ('ADDED CHECK, audit convention, not the metric: rows instead of slot means (the 1,906 '
                        'duplicated slots enter twice and "other rows" include the other run), cells by row count. '
                        'per_cell_linear_LOO_raw_flows = per-cell OLS on intercept + raw Ar, CH4, O2 flows, leave '
-                       'one row out; complete 27-row cells only (ill-conditioned in small cells).'),
+                       'one row out; complete 27-row cells only (ill-conditioned in small cells). The LOO entries '
+                       'are scored on their determined rows only (undetermined rows dropped, count stored); the '
+                       'model entries use every row of the set.'),
               'seed_averaging': 'same seed-averaged predictions as the metric'}
 for lab, rm in (('rows_cells_ge_8_rows_all_917', NROW_CELL[CELL_ROW] >= 8),
                 ('rows_cells_with_27_rows_all_917', NROW_CELL[CELL_ROW] == 27)):
-    AUDIT_CONV[lab] = {'n_rows': int(rm.sum()),
-                       **{m: float(np.sqrt(np.mean(E[rm] ** 2))) for m, E in E_ROW.items()
-                          if np.isfinite(E[rm]).all()}}
+    blk = {'n_rows': int(rm.sum()), **{m: float(np.sqrt(np.mean(E[rm] ** 2))) for m, E in E_ROW.items()}}
+    for m, (E, fitted, _) in ROW_LOO.items():
+        if fitted[rm].all():                      # the LOO was run on every row of this set
+            ok = rm & np.isfinite(E)
+            blk[m] = float(np.sqrt(np.mean(E[ok] ** 2)))
+            blk[f'{m}_n_rows_excluded_undetermined'] = int((rm & ~ok).sum())
+    AUDIT_CONV[lab] = blk
+AUDIT_CONV['n_undetermined_rows'] = {m: int(v[2]) for m, v in ROW_LOO.items()}
 
 RES['c_composition_x_condition'] = {
     'metric': ('e_r = (y_r - mean y over the cell\'s other measured slots) - (p_r - mean p over the same slots); '
@@ -917,8 +1038,20 @@ RES['c_composition_x_condition'] = {
     'amplitude_model': {'training_cells_per_fold_mean': float(np.mean(amp_train_cells)),
                         'per_fold_pearson_a_hat_vs_a_heldout_eligible_cells': amp_r,
                         'per_fold_pearson_mean': float(np.mean(amp_r))},
-    'per_cell_linear_LOO': {'n_fits': int(n_loo), 'n_rank_deficient_fits': int(n_rank_def),
-                            'note': 'REFERENCE BOUND: uses the held-out catalyst\'s own cell data'},
+    'per_cell_linear_LOO': {
+        'n_fits': int(n_loo), 'n_rank_deficient_fits': int(n_rank_def),
+        'n_undetermined_points_excluded': int(n_undet),
+        'note': ('REFERENCE BOUND: uses the held-out catalyst\'s own cell data. A rank-deficient fit whose left-out '
+                 'design row lies in the row space of the other rows gives a unique prediction and is kept. An '
+                 'undetermined point (left-out row outside that row space: the slot holds the only instance of an '
+                 'axis level among the cell\'s measured slots) is excluded; lstsq would return a minimum-norm '
+                 'extrapolation there. Results: results.<population>.reference_bound_on_determined_slots.'),
+        'superseded_all_917_rmse_with_min_norm_extrapolations': {
+            'value': float(np.sqrt(np.nanmean(E_LOO_MINNORM ** 2))),
+            'n_slots': int(np.isfinite(E_LOO_MINNORM).sum()),
+            'max_abs_e_at_undetermined_points': float(np.abs(E_LOO_MINNORM[UNDET]).max()) if n_undet else None,
+            'note': ('SUPERSEDED, do not quote. The convention of checkpoint commit ca58c53: every eligible slot, '
+                     'minimum-norm lstsq predictions at the undetermined points. Recomputed here for traceability.')}},
     'results': SHAPE, 'rule_c': RULE_C, 'in_sample_row_level_framing': INSAMPLE,
     'audit_convention_check_rows': AUDIT_CONV}
 log(f"(c) rule: {RULE_C['verdict']}; {RULE_C['numbers']}")
@@ -1044,13 +1177,18 @@ REFN = [
      'audit label/baseline not stated; vs B_max also stored'),
     ('c complete cells shared effect [metric: slot means, 27-slot cells]', 1.481,
      SH['complete_27_slot_cells_all_917']['within_shape_rmse_seed_averaged']['shared_effect'], 'metric convention'),
-    ('c complete cells per-cell slopes [metric: design axes]', 1.155,
-     SH['complete_27_slot_cells_all_917']['within_shape_rmse_seed_averaged']['per_cell_linear_LOO_reference_bound'], 'metric convention'),
+    ('c complete cells per-cell slopes [metric: design axes, determined slots]', 1.155,
+     SH['complete_27_slot_cells_all_917']['reference_bound_on_determined_slots']['within_shape_rmse_seed_averaged_same_slots'][BOUND],
+     'metric convention'),
     ('c complete cells LGBM C [metric]', 1.249, SH['complete_27_slot_cells_all_917']['within_shape_rmse_seed_averaged']['lgbm_C'], 'metric convention'),
     ('c cells >= 8 shared effect [metric: slot means, >= 8 slots]', 1.620, SH['all_917']['within_shape_rmse_seed_averaged']['shared_effect'], 'metric convention'),
-    ('c cells >= 8 per-cell slopes [metric: design axes]', 1.426, SH['all_917']['within_shape_rmse_seed_averaged']['per_cell_linear_LOO_reference_bound'], 'metric convention'),
+    ('c cells >= 8 per-cell slopes [metric: design axes, determined slots]', 1.426,
+     SH['all_917']['reference_bound_on_determined_slots']['within_shape_rmse_seed_averaged_same_slots'][BOUND],
+     'metric convention; undetermined slots excluded'),
     ('c cells >= 8 LGBM C [metric]', 1.481, SH['all_917']['within_shape_rmse_seed_averaged']['lgbm_C'], 'metric convention'),
-    ('c LGBM share of shared-to-slopes gap closed [metric, cells >= 8]', 0.70, SH['all_917']['lgbm_C_share_of_shared_to_reference_gap_closed'], 'metric convention'),
+    ('c LGBM share of shared-to-slopes gap closed [metric, cells >= 8, determined slots]', 0.70,
+     SH['all_917']['reference_bound_on_determined_slots']['lgbm_C_share_of_shared_to_reference_gap_closed'],
+     'metric convention; all three RMSEs on the same determined slots'),
     ('c 27-row cells shared effect [audit convention: rows]', 1.481, AUDIT_CONV['rows_cells_with_27_rows_all_917']['shared_effect'], ''),
     ('c 27-row cells per-cell slopes, raw flows [audit convention]', 1.155,
      AUDIT_CONV['rows_cells_with_27_rows_all_917']['per_cell_linear_LOO_raw_flows'], 'audit slopes were on raw flows'),
@@ -1114,6 +1252,14 @@ for sc in SCORINGS:
             parts.append(f"{a.split('_')[0]}-{'C' if b == 'model_C_per_seed' else 'Cp'} {r['mean_diff']:+.3f} "
                          f"[{r['ci95_low']:+.3f}, {r['ci95_high']:+.3f}]")
         print(f"    {sc:10s} k={k}: " + '; '.join(parts))
+print("    family-Cp sets a per-seed rule against a 5-seed ensemble; it is not a design-axes effect.")
+print("    ADDED CHECK (outside the rule), design axes with both 5-seed ensembles, model_C_seed_averaged - "
+      "model_Cp_seed_averaged, all_917:")
+for sc in SCORINGS:
+    print(f"    {sc:10s} " + '; '.join(
+        f"k={k} {r['mean_diff']:+.3f} [{r['ci95_low']:+.3f}, {r['ci95_high']:+.3f}] {r['reading']}"
+        for k in KS_REC for r in [A_['comparisons_catalyst_bootstrap'][sc][f'k{k}']['all_917'][
+            'model_C_seed_averaged_minus_model_Cp_seed_averaged']]))
 for r_ in [RULE_A['primary_k3_headline_all_917']] + RULE_A['secondary_same_evaluation']:
     tag = 'RULE (a)' if r_ is RULE_A['primary_k3_headline_all_917'] else 'secondary'
     print(f"    {tag:9s} {r_['scoring']:10s} k={r_['k']}: family - model_C_per_seed {r_['mean_edge']:+.3f} "
@@ -1122,15 +1268,24 @@ for r_ in [RULE_A['primary_k3_headline_all_917']] + RULE_A['secondary_same_evalu
 
 print("\n(b) Designed reduced protocol, all_917, seed mean of pooled OOF. CAVEAT: optimistic about prospective use.")
 print(f"    {'chooser':16s} {'K':>3s} {'cover':>6s} {'rho miss':>9s} {'prec miss':>9s} {'rho zero-all':>12s} | "
-      f"{'rand rho mean':>13s} {'rand p97.5':>10s}  verdict")
+      f"{'rand rho mean':>13s} {'rand p97.5':>10s}  RULE (b) verdict | secondary: rho miss > per-seed p97.5")
 for ch in CHOOSERS:
     for K in KS_PROT:
         p = PROT[ch][f'K{K}']['all_917']['seed_mean_of_pooled_oof']
         rr = RAND[f'K{K}']['all_917']['headline_missing_spearman']
+        rb_ = RULE_B['results'][f'{ch}_K{K}']
         print(f"    {ch:16s} {K:3d} {p['coverage']:6.3f} {p['headline_missing_spearman']:9.4f} "
               f"{p['headline_missing_precision_top10pct']:9.3f} {p['zero_imputed_all_spearman']:12.4f} | "
-              f"{rr['seed_mean_draws_mean']:13.4f} {rr['seed_mean_draws_p97_5']:10.4f}  "
-              f"{RULE_B['results'][f'{ch}_K{K}']['verdict']}")
+              f"{rr['seed_mean_draws_mean']:13.4f} {rr['seed_mean_draws_p97_5']:10.4f}  {rb_['verdict']} | "
+              f"{rr['per_seed_draws_p97_5_stricter_secondary']:.4f} {'yes' if rb_['secondary_vs_per_seed_p97_5'] else 'no'}")
+print("    rand p97.5 = 97.5th percentile of the random seed-mean Spearmans (the rule's reference).")
+print("    ADDED CHECK (outside the rule), matched coverage: designed - random Spearman on catalysts covered by "
+      "both; mean over draws of the seed mean [share of draws > 0]:")
+for ch in CHOOSERS:
+    print(f"      {ch:16s} " + '; '.join(
+        f"K={K} {v['mean_over_draws_of_seed_mean_spearman_diff']:+.4f} "
+        f"[{v['share_of_draws_with_positive_seed_mean_diff']:.3f}]"
+        for K in KS_PROT for v in [MATCHED['results'][f'{ch}_K{K}']]))
 for K in KS_PROT:
     rr = RAND[f'K{K}']['all_917']
     print(f"    random K={K:2d}: coverage {rr['coverage_mean']:.3f}; zero-imputed-all rho mean "
@@ -1139,22 +1294,28 @@ print("    rho miss = headline (missing), covered catalysts only; rho zero-all =
 print("    Training objective (greedy's own objective, training catalysts, mean over seed-fold pairs) greedy vs "
       "most_often_max: " + '; '.join(f"K={K} {TRAIN_OBJ[f'K{K}']['greedy']:.4f} vs {TRAIN_OBJ[f'K{K}']['most_often_max']:.4f}"
                                      for K in KS_PROT))
-print("    Composition model (65 cols) on greedy K-slot labels vs observed row max; seed-averaged predictions; "
-      "delta vs B_median [CI]:")
+print(f"    Composition model (65 cols) on greedy K-slot labels vs observed row max; {PL} predictions; "
+      "Spearman delta [CI]. 'vs control' = cost of the reduction alone; vs B_median / B_max also contain the "
+      "label statistic:")
 for vn in list(variants):
     for pn in POPS:
         e = CM_[vn][pn]
-        b = e['minus_B_median_spearman_seed_averaged']; bm = e['minus_B_max_spearman_seed_averaged']
-        print(f"      {vn:34s} {pn:8s} rho {e['seed_averaged_predictions']['spearman']:.4f} | vs B_median "
-              f"{b['delta_point']:+.4f} [{b['ci95_low']:+.4f}, {b['ci95_high']:+.4f}] | vs B_max "
-              f"{bm['delta_point']:+.4f} [{bm['ci95_low']:+.4f}, {bm['ci95_high']:+.4f}]")
+        parts = [f"rho {e['seed_averaged_predictions']['spearman']:.4f}"]
+        if vn != CONTROL:
+            bc = e[f'minus_{CONTROL}_spearman_seed_averaged']
+            parts.append(f"vs control {bc['delta_point']:+.4f} [{bc['ci95_low']:+.4f}, {bc['ci95_high']:+.4f}]")
+        for bn in ('B_median', 'B_max'):
+            b = e[f'minus_{bn}_spearman_seed_averaged']
+            parts.append(f"vs {bn} {b['delta_point']:+.4f} [{b['ci95_low']:+.4f}, {b['ci95_high']:+.4f}]")
+        print(f"      {vn:34s} {pn:8s} " + ' | '.join(parts))
 if not DEV:
     pc = CM_['pipeline_check_B_retrained_here_vs_npz']
     print("    Pipeline check, B retrained here vs npz (seed-averaged): " + ', '.join(
         f"{k} max |diff| {v['max_abs_diff_seed_averaged_predictions']:.2e}" for k, v in pc.items()))
 
-print("\n(c) Within-shape RMSE, seed-averaged predictions (cells >= 8 measured slots; complete = 27 slots):")
+print(f"\n(c) Within-shape RMSE, {PL} predictions (cells >= 8 measured slots; complete = 27 slots), every eligible slot:")
 print(f"    {'model':38s} " + ' '.join(f"{pn[:14]:>14s}" for pn in SHAPE_POPS))
+print(f"    {'n slots':38s} " + ' '.join(f"{SHAPE[pn]['n_slots']:14d}" for pn in SHAPE_POPS))
 for m in MODELS_C:
     print(f"    {m:38s} " + ' '.join(f"{SHAPE[pn]['within_shape_rmse_seed_averaged'][m]:14.4f}" for pn in SHAPE_POPS))
 print("    vs lgbm_C, all_917, RMSE(model) - RMSE(lgbm_C) [95% catalyst-bootstrap CI]:")
@@ -1164,11 +1325,26 @@ for m in MODELS_C:
     b = SHAPE['all_917']['vs_lgbm_C_catalyst_bootstrap'][f'{m}_minus_lgbm_C']
     print(f"      {m:38s} {b['rmse_diff_point']:+.4f} [{b['ci95_low']:+.4f}, {b['ci95_high']:+.4f}] {b['reading']}")
 print(f"    RULE (c): {RULE_C['verdict']}")
+print("    REFERENCE BOUND (per-cell LOO on the design axes; uses the catalyst's own data), on its determined slots "
+      "only, with lgbm_C and shared_effect on the same slots:")
+print(f"    {'':38s} " + ' '.join(f"{pn[:14]:>14s}" for pn in SHAPE_POPS))
+_RB = {pn: SHAPE[pn]['reference_bound_on_determined_slots'] for pn in SHAPE_POPS}
+print(f"    {'n slots (n undetermined excluded)':38s} " + ' '.join(
+    f"{_RB[pn]['n_slots']:>8d} ({_RB[pn]['n_slots_excluded_undetermined']:2d})" for pn in SHAPE_POPS))
+for m in (BOUND, 'lgbm_C', 'shared_effect'):
+    print(f"    {m:38s} " + ' '.join(f"{_RB[pn]['within_shape_rmse_seed_averaged_same_slots'][m]:14.4f}"
+                                     for pn in SHAPE_POPS))
+_bb = _RB['all_917']['reference_bound_minus_lgbm_C_catalyst_bootstrap']
+print(f"    bound - lgbm_C, all_917, same slots: {_bb['rmse_diff_point']:+.4f} [{_bb['ci95_low']:+.4f}, "
+      f"{_bb['ci95_high']:+.4f}]; lgbm_C closes {_RB['all_917']['lgbm_C_share_of_shared_to_reference_gap_closed']:.3f} "
+      f"of the shared-to-bound gap. Superseded checkpoint value with min-norm extrapolations (do not quote): "
+      f"{RES['c_composition_x_condition']['per_cell_linear_LOO']['superseded_all_917_rmse_with_min_norm_extrapolations']['value']:.4f}")
 print(f"    In-sample row-level framing (descriptive): within-cell {INSAMPLE['within_cell_pct_of_total_variance']:.1f}% "
       f"of variance; shared effect explains {INSAMPLE['pct_points_explained_by_shared_effect']:.1f} points.")
 for lab in ('rows_cells_ge_8_rows_all_917', 'rows_cells_with_27_rows_all_917'):
-    print(f"    Audit-convention check ({lab}, rows not slot means; not the metric): " + ', '.join(
-        f"{k} {v:.3f}" for k, v in AUDIT_CONV[lab].items() if k != 'n_rows'))
+    print(f"    Audit-convention check ({lab}, {AUDIT_CONV[lab]['n_rows']} rows, rows not slot means; not the metric): "
+          + ', '.join(f"{k} {v:.3f}" if isinstance(v, float) else f"{k} {v}"
+                      for k, v in AUDIT_CONV[lab].items() if k != 'n_rows'))
 
 print("\n(d) Argmax shares, all_917 (S1 single highest row / S2 top-3 mean per level / S3 per-level mean at best T):")
 for a in ['ch4_o2', 'total_flow', 'ar_fraction', 'Temperature_C']:

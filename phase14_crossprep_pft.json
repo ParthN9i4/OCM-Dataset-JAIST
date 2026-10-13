@@ -1,13 +1,30 @@
 {
  "meta": {
-  "question": "can a two-stage (PFT) design close the gap to a plain merge on the cross-preparation test set T2?",
+  "question": "can a two-stage design (C4_pft_raw, C4q_pft_qn, C6_merge_oof_prior) close the gap to a plain merge on the cross-preparation test set T2?",
+  "relation_to_project_PFT": "no arm here is the project's PFT. The project's PFT filtered the literature with DRST, quantile-normalised literature labels, and trained stage 1 jointly with lab training rows (taniike_validation.py s1_kind=qn_joint, use_filter=True); that joint training is the leakage channel named in the work note section 1, where the PFT gain was withdrawn. \"pft\" in arm names means PFT-style two-stage.",
+  "C4q_relation_to_project_PFT": "the QN label treatment of the project's PFT, with a literature-only stage 1 and no DRST filter. The project's PFT also filtered the literature with DRST and trained stage 1 jointly with lab rows; that joint training is the leakage channel named in the work note section 1. Neither is tested here.",
   "data": "phase7_prep_ood.py data block, unchanged (formulation B, labels = max, prep_enc dropped, lab-duplicate guard)",
   "populations": {
    "T2_1003": "non-impregnation literature compositions (test only)",
    "TRAIN_LIT_742": "impregnation literature compositions (training only)",
    "lab_917": "lab catalysts (training only)",
    "T2_twin_in_TRAIN_LIT": 83,
-   "T2_preparation_na": 292
+   "T2_preparation_na": 292,
+   "n_T2": 1003,
+   "n_TRAIN_LIT": 742,
+   "n_lab": 917,
+   "n_elements": 65,
+   "n_lit_dropped_as_lab_duplicates": 9
+  },
+  "guard_limits_and_T2_structure": {
+   "TRAIN_LIT_groups_identical_at_4dp_kept_separate": 3,
+   "TRAIN_LIT_rows_in_those_groups": 6,
+   "TRAIN_LIT_compositions_matching_a_lab_catalyst_at_2dp": 1,
+   "T2_compositions_matching_a_lab_catalyst_at_2dp": 0,
+   "T2_distinct_element_vectors_4dp": 899,
+   "T2_groups_sharing_one_element_vector": 72,
+   "T2_compositions_in_those_groups": 176,
+   "note": "inherited from phase7 and kept for exact reproduction. Shared-element-vector groups in T2 get identical predictions from every arm; the paired bootstrap treats them as independent units, so CIs may be slightly too narrow (no clustered bootstrap run here)."
   },
   "scoring": "truth = literature max yield per T2 composition; spearman, enrichment@10%, precision@20 from cat_metrics",
   "per_seed_mean_vs_seed_averaged": "per_seed_mean = mean of per-seed metrics; seed_averaged = metric of the 5-seed mean prediction",
@@ -23,14 +40,15 @@
   "n_jobs": 2,
   "dev_run": false,
   "stage2": "TUNED LightGBM (grouped_tuning.json)",
-  "stage1": "XGBoost xgb_params(seed)",
+  "stage1": "XGBoost xgb_params(seed, n_jobs=2)",
   "C6_stage1_labels": "raw TRAIN_LIT max yields",
   "gas_flow_conditions": "cannot enter this analysis: the literature file has no condition columns (not possible from the current CSV); checked in code",
   "rules": {
    "R_help": "per-seed (arm - C1) Spearman >= 0.02 in >= 4/5 seeds; phase7 coded form also reported",
-   "R_close": "PFT arms C4, C4q, C6: per-seed (arm - C2) Spearman >= 0.02 in >= 4/5 seeds AND paired bootstrap CI of Spearman(arm) - Spearman(C2) lower end > 0",
-   "R_beat_merge": "same test as R_close for C3, C5, C7; not the R_close verdict"
+   "R_close": "two-stage (PFT-style) arms C4, C4q, C6: per-seed (arm - C2) Spearman >= 0.02 in >= 4/5 seeds AND paired bootstrap CI of Spearman(arm) - Spearman(C2) lower end > 0",
+   "R_beat_merge": "ADDED by the implementer, not in the spec, not pre-registered; same criterion as R_close, applied to C3, C5, C7; Spearman only; not the R_close verdict"
   },
+  "precision_at20_note": "differences between arms are a few picks out of 20 and have no bootstrap; reported, not used to rank arms",
   "rmse_caveat": "lab labels are max-of-~97 measurements, literature labels max-of-~2.2; absolute RMSE across that boundary compares two estimators, not two skill levels; C4q and C7 also change the label scale"
  },
  "reproduction_of_phase7": {
@@ -89,6 +107,13 @@
    "reproduced": true
   },
   "T1_742_C1_lab_only": {
+   "phase7_per_seed_spearman": [
+    0.3889396391157773,
+    0.40227671306697044,
+    0.3958838364176021,
+    0.39418958041567065,
+    0.40865634545441953
+   ],
    "here_per_seed_spearman": [
     0.3889396391157773,
     0.40227671306697044,
@@ -96,6 +121,7 @@
     0.39418958041567065,
     0.40865634545441953
    ],
+   "max_abs_diff": 0.0,
    "per_seed_mean": 0.397989222894088,
    "reproduced": true
   }
@@ -972,8 +998,10 @@
     ],
     "n_seeds_delta_ge_0.02": 5,
     "HELPS": true,
+    "passes_on_exactly_4_of_5_seeds": false,
+    "smallest_per_seed_delta_vs_C1": 0.14313118475225578,
     "phase7_coded_form": {
-     "mean_delta": 0.14985263739009097,
+     "mean_over_seeds_of_per_seed_delta": 0.14985263739009097,
      "n_seeds_delta_gt_0": 5,
      "HELPS": true
     },
@@ -990,8 +1018,10 @@
     ],
     "n_seeds_delta_ge_0.02": 5,
     "HELPS": true,
+    "passes_on_exactly_4_of_5_seeds": false,
+    "smallest_per_seed_delta_vs_C1": 0.055748939546774345,
     "phase7_coded_form": {
-     "mean_delta": 0.07960659572408182,
+     "mean_over_seeds_of_per_seed_delta": 0.07960659572408182,
      "n_seeds_delta_gt_0": 5,
      "HELPS": true
     },
@@ -1008,8 +1038,10 @@
     ],
     "n_seeds_delta_ge_0.02": 5,
     "HELPS": true,
+    "passes_on_exactly_4_of_5_seeds": false,
+    "smallest_per_seed_delta_vs_C1": 0.05832990537178029,
     "phase7_coded_form": {
-     "mean_delta": 0.07416380431228319,
+     "mean_over_seeds_of_per_seed_delta": 0.07416380431228319,
      "n_seeds_delta_gt_0": 5,
      "HELPS": true
     },
@@ -1026,8 +1058,10 @@
     ],
     "n_seeds_delta_ge_0.02": 4,
     "HELPS": true,
+    "passes_on_exactly_4_of_5_seeds": true,
+    "smallest_per_seed_delta_vs_C1": 0.0007347984773285743,
     "phase7_coded_form": {
-     "mean_delta": 0.060752275366591516,
+     "mean_over_seeds_of_per_seed_delta": 0.060752275366591516,
      "n_seeds_delta_gt_0": 5,
      "HELPS": true
     },
@@ -1044,8 +1078,10 @@
     ],
     "n_seeds_delta_ge_0.02": 5,
     "HELPS": true,
+    "passes_on_exactly_4_of_5_seeds": false,
+    "smallest_per_seed_delta_vs_C1": 0.1477251618250161,
     "phase7_coded_form": {
-     "mean_delta": 0.1620610952302096,
+     "mean_over_seeds_of_per_seed_delta": 0.1620610952302096,
      "n_seeds_delta_gt_0": 5,
      "HELPS": true
     },
@@ -1062,8 +1098,10 @@
     ],
     "n_seeds_delta_ge_0.02": 5,
     "HELPS": true,
+    "passes_on_exactly_4_of_5_seeds": false,
+    "smallest_per_seed_delta_vs_C1": 0.10408199192929274,
     "phase7_coded_form": {
-     "mean_delta": 0.12267222653388558,
+     "mean_over_seeds_of_per_seed_delta": 0.12267222653388558,
      "n_seeds_delta_gt_0": 5,
      "HELPS": true
     },
@@ -1080,8 +1118,10 @@
     ],
     "n_seeds_delta_ge_0.02": 5,
     "HELPS": true,
+    "passes_on_exactly_4_of_5_seeds": false,
+    "smallest_per_seed_delta_vs_C1": 0.17568473498454473,
     "phase7_coded_form": {
-     "mean_delta": 0.18363509811603348,
+     "mean_over_seeds_of_per_seed_delta": 0.18363509811603348,
      "n_seeds_delta_gt_0": 5,
      "HELPS": true
     },
@@ -1100,13 +1140,21 @@
     ],
     "n_seeds_delta_ge_0.02": 0,
     "part_a_seed_rule": false,
-    "bootstrap_delta_point": -0.06423575049102032,
-    "bootstrap_ci95": [
+    "bootstrap_spearman_delta_point_seed_averaged": -0.06423575049102032,
+    "bootstrap_spearman_ci95": [
      -0.10493320410732743,
      -0.025308635741178826
     ],
     "part_b_ci_above_zero": false,
-    "PASSES": false
+    "PASSES": false,
+    "not_part_of_rule_enrichment_vs_C2_seed_averaged": {
+     "delta_point": -0.8,
+     "ci95": [
+      -1.4999999999999996,
+      -0.10000000000000009
+     ],
+     "verdict": "arm lower (CI below zero)"
+    }
    },
    "C4q_pft_qn": {
     "per_seed_delta_vs_C2": [
@@ -1118,13 +1166,21 @@
     ],
     "n_seeds_delta_ge_0.02": 0,
     "part_a_seed_rule": false,
-    "bootstrap_delta_point": -0.07528811723218543,
-    "bootstrap_ci95": [
+    "bootstrap_spearman_delta_point_seed_averaged": -0.07528811723218543,
+    "bootstrap_spearman_ci95": [
      -0.11383052357906195,
      -0.03595414502499199
     ],
     "part_b_ci_above_zero": false,
-    "PASSES": false
+    "PASSES": false,
+    "not_part_of_rule_enrichment_vs_C2_seed_averaged": {
+     "delta_point": -0.8,
+     "ci95": [
+      -1.5,
+      -0.10000000000000009
+     ],
+     "verdict": "arm lower (CI below zero)"
+    }
    },
    "C6_merge_oof_prior": {
     "per_seed_delta_vs_C2": [
@@ -1136,13 +1192,21 @@
     ],
     "n_seeds_delta_ge_0.02": 0,
     "part_a_seed_rule": false,
-    "bootstrap_delta_point": -0.011855359207191662,
-    "bootstrap_ci95": [
+    "bootstrap_spearman_delta_point_seed_averaged": -0.011855359207191662,
+    "bootstrap_spearman_ci95": [
      -0.033887130877884176,
      0.009521237694715263
     ],
     "part_b_ci_above_zero": false,
-    "PASSES": false
+    "PASSES": false,
+    "not_part_of_rule_enrichment_vs_C2_seed_averaged": {
+     "delta_point": -0.10000000000000009,
+     "ci95": [
+      -0.7,
+      0.5000000000000002
+     ],
+     "verdict": "no detectable change"
+    }
    }
   },
   "R_beat_merge": {
@@ -1156,13 +1220,21 @@
     ],
     "n_seeds_delta_ge_0.02": 0,
     "part_a_seed_rule": false,
-    "bootstrap_delta_point": -0.057594632094463416,
-    "bootstrap_ci95": [
+    "bootstrap_spearman_delta_point_seed_averaged": -0.057594632094463416,
+    "bootstrap_spearman_ci95": [
      -0.0980791669249935,
      -0.016581850370207266
     ],
     "part_b_ci_above_zero": false,
-    "PASSES": false
+    "PASSES": false,
+    "not_part_of_rule_enrichment_vs_C2_seed_averaged": {
+     "delta_point": -0.8,
+     "ci95": [
+      -1.4024999999999992,
+      -0.10000000000000009
+     ],
+     "verdict": "arm lower (CI below zero)"
+    }
    },
    "C5_merge_source_flag": {
     "per_seed_delta_vs_C2": [
@@ -1174,13 +1246,21 @@
     ],
     "n_seeds_delta_ge_0.02": 0,
     "part_a_seed_rule": false,
-    "bootstrap_delta_point": 0.012771097322470393,
-    "bootstrap_ci95": [
+    "bootstrap_spearman_delta_point_seed_averaged": 0.012771097322470393,
+    "bootstrap_spearman_ci95": [
      -0.0012793977007518414,
      0.02678139183065756
     ],
     "part_b_ci_above_zero": false,
-    "PASSES": false
+    "PASSES": false,
+    "not_part_of_rule_enrichment_vs_C2_seed_averaged": {
+     "delta_point": 0.0,
+     "ci95": [
+      -0.19999999999999973,
+      0.3999999999999999
+     ],
+     "verdict": "no detectable change"
+    }
    },
    "C7_merge_qn_labels": {
     "per_seed_delta_vs_C2": [
@@ -1192,15 +1272,24 @@
     ],
     "n_seeds_delta_ge_0.02": 5,
     "part_a_seed_rule": true,
-    "bootstrap_delta_point": 0.033974604029407274,
-    "bootstrap_ci95": [
+    "bootstrap_spearman_delta_point_seed_averaged": 0.033974604029407274,
+    "bootstrap_spearman_ci95": [
      0.01813505996842453,
      0.05000052315730547
     ],
     "part_b_ci_above_zero": true,
-    "PASSES": true
+    "PASSES": true,
+    "not_part_of_rule_enrichment_vs_C2_seed_averaged": {
+     "delta_point": 0.10000000000000009,
+     "ci95": [
+      -0.30000000000000004,
+      0.5999999999999999
+     ],
+     "verdict": "no detectable change"
+    }
    }
-  }
+  },
+  "R_beat_merge_status": "added by the implementer, not in the spec, not pre-registered; same criterion and thresholds as R_close; Spearman only; one of 6 arm-vs-C2 Spearman comparisons, CIs not adjusted for multiplicity; T2 only"
  },
  "diagnostics_stage1_prior": {
   "C3_prior": {
@@ -2435,8 +2524,10 @@
      ],
      "n_seeds_delta_ge_0.02": 5,
      "HELPS": true,
+     "passes_on_exactly_4_of_5_seeds": false,
+     "smallest_per_seed_delta_vs_C1": 0.1736256273404221,
      "phase7_coded_form": {
-      "mean_delta": 0.18710450847418333,
+      "mean_over_seeds_of_per_seed_delta": 0.18710450847418333,
       "n_seeds_delta_gt_0": 5,
       "HELPS": true
      },
@@ -2453,8 +2544,10 @@
      ],
      "n_seeds_delta_ge_0.02": 5,
      "HELPS": true,
+     "passes_on_exactly_4_of_5_seeds": false,
+     "smallest_per_seed_delta_vs_C1": 0.07103353288735029,
      "phase7_coded_form": {
-      "mean_delta": 0.08323427601194837,
+      "mean_over_seeds_of_per_seed_delta": 0.08323427601194837,
       "n_seeds_delta_gt_0": 5,
       "HELPS": true
      },
@@ -2471,8 +2564,10 @@
      ],
      "n_seeds_delta_ge_0.02": 5,
      "HELPS": true,
+     "passes_on_exactly_4_of_5_seeds": false,
+     "smallest_per_seed_delta_vs_C1": 0.04971292302750799,
      "phase7_coded_form": {
-      "mean_delta": 0.0637503812549632,
+      "mean_over_seeds_of_per_seed_delta": 0.0637503812549632,
       "n_seeds_delta_gt_0": 5,
       "HELPS": true
      },
@@ -2489,8 +2584,10 @@
      ],
      "n_seeds_delta_ge_0.02": 5,
      "HELPS": true,
+     "passes_on_exactly_4_of_5_seeds": false,
+     "smallest_per_seed_delta_vs_C1": 0.06444254673327135,
      "phase7_coded_form": {
-      "mean_delta": 0.07615578677695797,
+      "mean_over_seeds_of_per_seed_delta": 0.07615578677695797,
       "n_seeds_delta_gt_0": 5,
       "HELPS": true
      },
@@ -2507,8 +2604,10 @@
      ],
      "n_seeds_delta_ge_0.02": 5,
      "HELPS": true,
+     "passes_on_exactly_4_of_5_seeds": false,
+     "smallest_per_seed_delta_vs_C1": 0.17449506032248494,
      "phase7_coded_form": {
-      "mean_delta": 0.1845723228912088,
+      "mean_over_seeds_of_per_seed_delta": 0.1845723228912088,
       "n_seeds_delta_gt_0": 5,
       "HELPS": true
      },
@@ -2525,8 +2624,10 @@
      ],
      "n_seeds_delta_ge_0.02": 5,
      "HELPS": true,
+     "passes_on_exactly_4_of_5_seeds": false,
+     "smallest_per_seed_delta_vs_C1": 0.16106568692097353,
      "phase7_coded_form": {
-      "mean_delta": 0.1779449820863377,
+      "mean_over_seeds_of_per_seed_delta": 0.1779449820863377,
       "n_seeds_delta_gt_0": 5,
       "HELPS": true
      },
@@ -2543,8 +2644,10 @@
      ],
      "n_seeds_delta_ge_0.02": 5,
      "HELPS": true,
+     "passes_on_exactly_4_of_5_seeds": false,
+     "smallest_per_seed_delta_vs_C1": 0.20895544761987997,
      "phase7_coded_form": {
-      "mean_delta": 0.21629813449359747,
+      "mean_over_seeds_of_per_seed_delta": 0.21629813449359747,
       "n_seeds_delta_gt_0": 5,
       "HELPS": true
      },
@@ -2563,13 +2666,21 @@
      ],
      "n_seeds_delta_ge_0.02": 0,
      "part_a_seed_rule": false,
-     "bootstrap_delta_point": -0.11504811169110457,
-     "bootstrap_ci95": [
+     "bootstrap_spearman_delta_point_seed_averaged": -0.11504811169110457,
+     "bootstrap_spearman_ci95": [
       -0.15758794540178991,
       -0.07225653667033312
      ],
      "part_b_ci_above_zero": false,
-     "PASSES": false
+     "PASSES": false,
+     "not_part_of_rule_enrichment_vs_C2_seed_averaged": {
+      "delta_point": -0.8,
+      "ci95": [
+       -1.4999999999999998,
+       -0.09999999999999987
+      ],
+      "verdict": "arm lower (CI below zero)"
+     }
     },
     "C4q_pft_qn": {
      "per_seed_delta_vs_C2": [
@@ -2581,13 +2692,21 @@
      ],
      "n_seeds_delta_ge_0.02": 0,
      "part_a_seed_rule": false,
-     "bootstrap_delta_point": -0.10250329631057192,
-     "bootstrap_ci95": [
+     "bootstrap_spearman_delta_point_seed_averaged": -0.10250329631057192,
+     "bootstrap_spearman_ci95": [
       -0.14311048497823967,
       -0.06128326182175078
      ],
      "part_b_ci_above_zero": false,
-     "PASSES": false
+     "PASSES": false,
+     "not_part_of_rule_enrichment_vs_C2_seed_averaged": {
+      "delta_point": -0.9000000000000001,
+      "ci95": [
+       -1.5999999999999999,
+       -0.19999999999999984
+      ],
+      "verdict": "arm lower (CI below zero)"
+     }
     },
     "C6_merge_oof_prior": {
      "per_seed_delta_vs_C2": [
@@ -2599,13 +2718,21 @@
      ],
      "n_seeds_delta_ge_0.02": 0,
      "part_a_seed_rule": false,
-     "bootstrap_delta_point": 0.005546424068032574,
-     "bootstrap_ci95": [
+     "bootstrap_spearman_delta_point_seed_averaged": 0.005546424068032574,
+     "bootstrap_spearman_ci95": [
       -0.016288079595581328,
       0.02730644490029529
      ],
      "part_b_ci_above_zero": false,
-     "PASSES": false
+     "PASSES": false,
+     "not_part_of_rule_enrichment_vs_C2_seed_averaged": {
+      "delta_point": -0.30000000000000004,
+      "ci95": [
+       -0.6000000000000002,
+       0.19999999999999996
+      ],
+      "verdict": "no detectable change"
+     }
     }
    },
    "R_beat_merge": {
@@ -2619,13 +2746,21 @@
      ],
      "n_seeds_delta_ge_0.02": 0,
      "part_a_seed_rule": false,
-     "bootstrap_delta_point": -0.0936262503420573,
-     "bootstrap_ci95": [
+     "bootstrap_spearman_delta_point_seed_averaged": -0.0936262503420573,
+     "bootstrap_spearman_ci95": [
       -0.13358533236530432,
       -0.05314153548141985
      ],
      "part_b_ci_above_zero": false,
-     "PASSES": false
+     "PASSES": false,
+     "not_part_of_rule_enrichment_vs_C2_seed_averaged": {
+      "delta_point": -0.9000000000000001,
+      "ci95": [
+       -1.5999999999999996,
+       -0.19999999999999984
+      ],
+      "verdict": "arm lower (CI below zero)"
+     }
     },
     "C5_merge_source_flag": {
      "per_seed_delta_vs_C2": [
@@ -2637,13 +2772,21 @@
      ],
      "n_seeds_delta_ge_0.02": 0,
      "part_a_seed_rule": false,
-     "bootstrap_delta_point": -0.0021064275904408847,
-     "bootstrap_ci95": [
+     "bootstrap_spearman_delta_point_seed_averaged": -0.0021064275904408847,
+     "bootstrap_spearman_ci95": [
       -0.010419101847028756,
       0.0061330884561783304
      ],
      "part_b_ci_above_zero": false,
-     "PASSES": false
+     "PASSES": false,
+     "not_part_of_rule_enrichment_vs_C2_seed_averaged": {
+      "delta_point": 0.19999999999999973,
+      "ci95": [
+       -0.20000000000000018,
+       0.5
+      ],
+      "verdict": "no detectable change"
+     }
     },
     "C7_merge_qn_labels": {
      "per_seed_delta_vs_C2": [
@@ -2655,16 +2798,37 @@
      ],
      "n_seeds_delta_ge_0.02": 5,
      "part_a_seed_rule": true,
-     "bootstrap_delta_point": 0.03011099554689106,
-     "bootstrap_ci95": [
+     "bootstrap_spearman_delta_point_seed_averaged": 0.03011099554689106,
+     "bootstrap_spearman_ci95": [
       0.01094579739027659,
       0.04861811061986811
      ],
      "part_b_ci_above_zero": true,
-     "PASSES": true
+     "PASSES": true,
+     "not_part_of_rule_enrichment_vs_C2_seed_averaged": {
+      "delta_point": 0.10000000000000009,
+      "ci95": [
+       -0.20000000000000018,
+       0.5
+      ],
+      "verdict": "no detectable change"
+     }
     }
-   }
+   },
+   "R_beat_merge_status": "added by the implementer, not in the spec, not pre-registered; same criterion and thresholds as R_close; Spearman only; one of 6 arm-vs-C2 Spearman comparisons, CIs not adjusted for multiplicity; T2 only"
   }
+ },
+ "caveats": {
+  "C7_merge_qn_labels.passes_R_beat_merge": "new positive result: T2_1003 Spearman minus C2_merge (seed-averaged predictions) +0.0340 [+0.0181, +0.0500]. Enrichment minus C2_merge +0.10 [-0.30, +0.60]: no detectable change. precision@20 not tested. R_beat_merge was added by the implementer and is not pre-registered; this is one of 6 arm-vs-C2 Spearman comparisons (CIs not adjusted for multiplicity), on T2 only. Review before quoting, and quote both metrics.",
+  "C4q_pft_qn.R_help_on_exactly_4_of_5_seeds": "HELPS rests on exactly 4 of 5 seeds; the fifth seed's delta vs C1 is +0.0007. One more seed below 0.02 would flip the verdict.",
+  "estimator_sign_disagreements_vs_C2.main_T2_1003": {},
+  "estimator_sign_disagreements_vs_C2.S1_B_median": {
+   "C6_merge_oof_prior": {
+    "spearman_minus_C2_per_seed_mean": -0.009159526387845618,
+    "spearman_minus_C2_seed_averaged": 0.005546424068032574
+   }
+  },
+  "precision_at20": "few picks out of 20 separate arms; no bootstrap; not used to rank arms"
  },
  "key_numbers": {
   "T2_1003.C1_lab_only.spearman.per_seed_mean": 0.23845236721078752,
@@ -2783,12 +2947,12 @@
   "rule.R_help.C5_merge_source_flag.HELPS": true,
   "rule.R_help.C6_merge_oof_prior.HELPS": true,
   "rule.R_help.C7_merge_qn_labels.HELPS": true,
-  "rule.R_close.C4_pft_raw.PASSES": false,
-  "rule.R_close.C4q_pft_qn.PASSES": false,
-  "rule.R_close.C6_merge_oof_prior.PASSES": false,
-  "rule.R_beat_merge.C3_prior.PASSES": false,
-  "rule.R_beat_merge.C5_merge_source_flag.PASSES": false,
-  "rule.R_beat_merge.C7_merge_qn_labels.PASSES": true,
+  "rule.R_close.C4_pft_raw.PASSES_on_T2_spearman": false,
+  "rule.R_close.C4q_pft_qn.PASSES_on_T2_spearman": false,
+  "rule.R_close.C6_merge_oof_prior.PASSES_on_T2_spearman": false,
+  "rule.R_beat_merge_ADDED_not_in_spec.C3_prior.PASSES_on_T2_spearman": false,
+  "rule.R_beat_merge_ADDED_not_in_spec.C5_merge_source_flag.PASSES_on_T2_spearman": false,
+  "rule.R_beat_merge_ADDED_not_in_spec.C7_merge_qn_labels.PASSES_on_T2_spearman": true,
   "S2.T2_no_twin_920.C2_merge.spearman.seed_averaged": 0.3546773989997234,
   "S2.T2_no_twin_920.C4q_pft_qn.spearman.seed_averaged": 0.28258045161828377,
   "S2.T2_no_twin_920.C6_merge_oof_prior.spearman.seed_averaged": 0.33728216861594673,
@@ -2830,5 +2994,5 @@
    0.04861811061986811
   ]
  },
- "runtime_minutes": 3.9605979402860005
+ "runtime_minutes": 3.85923947095871
 }
