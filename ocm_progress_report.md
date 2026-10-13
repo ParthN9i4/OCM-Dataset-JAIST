@@ -2,7 +2,7 @@
 
 **From:** Parth Nagar
 **To:** Dr. M S Srinath
-**Date:** 31 August 2026
+**Date:** 31 August 2026 (§11 added 13 October 2026)
 **Covers:** all work from the start of the project to today, including everything done after Prof. Taniike's review
 
 ---
@@ -209,7 +209,7 @@ We caught all of these before sending anything. Every number in the corrected no
 
 1. **Send the corrected work note and reply to Prof. Taniike.** Both are ready.
 2. **Run the prospective validation.** He offered to synthesise our candidates. This is the strongest path to publication.
-3. **Ask for the missing condition data.** Each catalyst is run at 5 temperatures under about 27 reaction-condition settings each. That is 135 runs per catalyst, and it matches the number Prof. Taniike quotes. We can see the structure in the row counts: 15 catalysts hold exactly 135 rows, and every one of them splits as exactly 27 rows at each of the 5 temperatures. But the file does not record what those 27 settings are. Because they are missing, 19.9% of the yield variance cannot be explained by composition and temperature alone. This is not noise. It is real chemistry we simply cannot see. Getting those columns would help more than any modelling change.
+3. **Ask for the missing condition data.** Done. Prof. Taniike sent it. See §11.
 
 ---
 
@@ -222,3 +222,33 @@ We can claim three things.
 3. **A scoping result.** Literature data does not help where our own coverage is good. It does help where our coverage is absent.
 
 We cannot claim that PFT improves prediction. We tested it properly, and it does not.
+
+---
+
+## 11. After the condition data (added 13 October 2026)
+
+Prof. Taniike sent the data with the gas-flow conditions for every measurement. He also explained that
+missing rows were removed because of poor mass balance.
+
+**What the data showed.**
+- Each catalyst was tested at 5 temperatures and 27 gas-flow conditions per temperature.
+- The 27 conditions form a full 3 × 3 × 3 design: total flow, Ar fraction and CH₄:O₂ ratio, each at three levels.
+- So the readings at one temperature are different conditions, not repeats.
+
+**What we found.**
+
+| Question | Answer |
+|---|---|
+| Do the conditions make single measurements easier to predict? | Yes. RMSE falls from 2.90 to 2.66. |
+| Do they help rank catalysts by best yield? | No detectable change, when every catalyst is scored on the same 18 conditions. |
+| Can the model suggest which conditions to run? | Yes, slightly better than a simple rule (0.15 yield points). |
+| Can fewer conditions be run? | In a test on past data, 10 of 135 conditions keep the ranking (rank correlation 0.969). |
+| Does literature data help across preparation methods? | Rescaling literature yields to the lab scale before merging helps: 0.388 to 0.422. This is exploratory. |
+
+**What we corrected in our own work.** An early result said the conditions improved the ranking. That
+result came from scoring only the conditions that passed the mass-balance check. Scored fairly, the gain
+disappears. We withdrew it before it reached any document sent out.
+
+**What is drafted.** Work note v3 and a reply email. Both ask two questions: whether 28 catalysts with
+two sets of runs have batch records, and whether the excluded records still exist. Nothing has been sent yet.
+

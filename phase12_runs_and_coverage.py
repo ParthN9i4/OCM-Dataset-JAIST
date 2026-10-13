@@ -145,7 +145,7 @@ dev_axes = {'total_flow': float(np.abs(tot - ax.total_flow.values).max()),
             'ch4_o2': float(np.abs(raw[:, 1] / raw[:, 2] - ax.ch4_o2.values).max())}
 assert max(dev_axes.values()) < 1e-6
 RES['design'] = {
-    'grid': '3x3x3: total flow 10/15/20 mL/min x Ar fraction 0.70/0.40/0.15 x CH4:O2 2/4/6',
+    'grid': '3x3x3: total flow 10/15/20 (file units) x Ar fraction 0.70/0.40/0.15 x CH4:O2 2/4/6',
     'n_conditions': 27, 'each_combination_exactly_once': True, 'temperatures_C': TEMPS,
     'n_slots_per_catalyst': 135,
     'max_abs_deviation_raw_flows_vs_design_axes_all_rows': dev_axes}

@@ -101,7 +101,7 @@ P = np.mean(per_seed_real, axis=0)                                  # real model
 E = np.mean([oof(n_rows.astype(float), s) for s in SEEDS], axis=0)  # EFFORT-ONLY control
 
 # MEDIAN-TRAINED ARM. The adopted label is the median WITHIN each (catalyst, temperature) cell --
-# i.e. across the group of near-identical readings -- then the maximum of those per-cell medians
+# i.e. across the 27 gas-flow conditions of that temperature -- then the maximum of those per-cell medians
 # across the catalyst's temperatures. This is phase8's q=0.50 variant, NOT the plain median of all
 # of a catalyst's rows, which is a different and weaker label (phase8 scored that separately).
 # phase8 evaluated this on all 917 catalysts only, so its equal-effort score was missing; without

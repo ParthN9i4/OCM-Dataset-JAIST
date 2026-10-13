@@ -13,7 +13,7 @@ PROTOCOL RULES (established after Prof. Taniike's validation round — see SESSI
 - Catalyst-level metrics (max-yield Spearman, enrichment@10%, precision@20) are primary for the
   screening objective; row RMSE is secondary and must be labeled as such. Each (catalyst,
   temperature) cell holds up to 27 measurements taken under 27 DIFFERENT gas-flow conditions: an
-  exact 3x3x3 design of total flow (10/15/20 mL/min) x Ar fraction (0.70/0.40/0.15) x CH4:O2
+  exact 3x3x3 design of total flow (10/15/20, units as recorded in the file) x Ar fraction (0.70/0.40/0.15) x CH4:O2
   (2/4/6), so 5 x 27 = 135 conditions per catalyst. Rows with poor mass balance were excluded by
   the lab, so cells hold <= 27 distinct conditions. DATA_PATH does not record the conditions;
   load_with_conditions() restores them. With composition and temperature only, 19.9% of yield

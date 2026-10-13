@@ -4,13 +4,13 @@
 was re-read from a stored JSON during the handoff pass — none is quoted from memory. Where a number
 could be confused with a similar one, both are given and labelled.
 
-**Branch:** `claude/add-catalyst-dataset-orerR`. **Commits:** 108. **Tree:** clean.
-**Last two commits:** `f3dedc5` (coverage-corrected headline), `b7a18ec` (noise-floor arithmetic and
-the repeats/conditions framing).
+**Branch:** `claude/add-catalyst-dataset-orerR`. Check `git log` for the current head.
 
-**Status in one line.** The original claim has been withdrawn and the corrected study is complete and
-internally consistent. Nothing has been sent to Prof. Taniike since the withdrawal — the corrected
-work note and the reply are **drafted, not sent**.
+**Status in one line.** Work note v2 (`e41e42b`, 3 pages) and its email **were sent**. Prof. Taniike
+replied with `OCM_data.csv` (gas-flow conditions per measurement; now `OCM_data_with_conditions.csv`)
+and explained that missing rows were excluded for poor mass balance. The condition data has been
+analysed and verified (§5C). **Work note v3 and the reply email are drafted, not sent**
+(`ocm_worknote_v3.md`, `ocm_email_reply_v3.md`).
 
 ---
 
@@ -226,8 +226,37 @@ catalyst and is **not** a headroom target.
 **Target choice re-tested and settled.** Spearman is flat at 0.766–0.768 for every within-cell
 quantile from 0.50 to 0.95 and falls to 0.761 only at q=1.00; enrichment shows no trend (4.15–4.43×);
 the q=0.50 label does not clear zero under a catalyst-level bootstrap; and **seed-averaging alone,
-with no target change, gains +0.0065 — the size of the whole effect.** **Decision: keep the observed
-maximum.** Report the sweep as a robustness result. Do not re-litigate.
+with no target change, gains +0.0065 — the size of the whole effect.** ~~Decision: keep the observed
+maximum.~~ **Superseded:** the PI adopted the per-temperature median, then the max over temperatures
+(stated in the sent v2 note). The committed record is `phase8b_label_sweep.json` → `verdict`: median
+vs max +0.0049 [−0.0021, +0.0120], no detectable loss. This is the only place the label decision lives.
+
+### C. After the condition data (Oct 2026) — verified results
+
+Each script below was checked by two independent verifiers (reproduce; leakage/statistics).
+
+- **Design.** 27 gas-flow conditions per temperature = exact 3 × 3 × 3: total flow 10/15/20 (file units;
+  do not assume mL/min) × Ar fraction 0.70/0.40/0.15 × CH₄:O₂ 2/4/6. 135 slots per catalyst.
+- **Row RMSE** (`phase11`): A (composition + temperature) 2.8975 → C (+ flows) 2.6615, per-seed means.
+  A − C +0.236 [0.217, 0.256]. Mostly within-cell.
+- **Screening** (`phase11`): **no detectable change** from conditions. Headline = fixed slot set (18
+  slots, CH₄:O₂ = 2 at 800/850 °C; 465 complete catalysts; chosen by coverage only): C − A +0.0047
+  [−0.0066, +0.0154]. The `a9fffc7` "+0.0215 gain" was a measured-rows artifact and is withdrawn.
+- **Condition choice** (`phase13` a): top-3 edge over the per-support-family rule +0.150 [+0.071,
+  +0.232] yield points, 5/5 seeds; about 1.4% of mean best yield. Real, small.
+- **Reduced set** (`phase13` b): 10 "most often max" slots rank at 0.969 vs random p97.5 0.925.
+  Optimistic: truth comes from the same runs.
+- **Composition × condition model** (`phase13` c): stop; headroom too small.
+- **Cross-preparation** (`phase14`): two-stage designs do not beat the merge. Merge with literature
+  labels quantile-normalised onto the lab distribution (C7): 0.388 → 0.422 per-seed mean; +0.034
+  [+0.018, +0.050]. **Exploratory** (rule added after the spec). No arm is the project's PFT.
+- **28 doubled catalysts** (`phase12`): two runs with a run-level offset (median hi/lo 2.3×) that share
+  the condition pattern. Not a noise estimate. 10/92 top-decile vs 2.8 expected; 4 if pairs averaged.
+- **Mass-balance exclusion** (`phase12` R4): coupled to performance between catalysts (ρ −0.29),
+  not within a catalyst by the pre-set rule.
+- **Withdrawn:** the 0.595 "floor" (came entirely from the 28 doubled catalysts), "not seed noise"
+  (seed SD is not a test), "Not 3x3x3", "500 trees" (TUNED uses 300).
+- **Config note:** TUNED's `subsample` has never been active (LightGBM needs `subsample_freq`). Left as is.
 
 ### B. The headline was coverage-inflated
 
@@ -290,6 +319,13 @@ confirm or refute the model.
 | `phase9_equal_effort_eval.py` | `phase9_equal_effort_eval.json` | coverage correction + effort control |
 | `feedback_experiments.py` | `feedback_results.json` | pre-review presentation feedback |
 | `qn_tradeoff.py` | `qn_tradeoff.json` | **SUPERSEDED — do not quote.** Row-level protocol; retained only as a record |
+| `build_name_map.py` | `build_name_map.json` | regenerates and checks the Name → composition join |
+| `phase11_condition_baseline.py` | `phase11_condition_baseline.json` + `phase11_predictions.npz` | what conditions buy (rewritten; supersedes the `a9fffc7` version) |
+| `phase12_runs_and_coverage.py` | `phase12_runs_and_coverage.json` | design, two-run catalysts, exclusion test, precision, floors |
+| `phase8b_label_sweep.py` | `phase8b_label_sweep.json` | all label arms; **the label decision** |
+| `phase13_condition_value.py` | `phase13_condition_value.json` | condition choice, reduced set, response models, argmax |
+| `phase14_crossprep_pft.py` | `phase14_crossprep_pft.json` | two-stage designs vs merge across preparations |
+| `doc_number_trace.py` | — | asserts every number in work note v3 and the email against its JSON |
 
 Plus `ocm_eval.py` (shared module) and 16 builder/patcher scripts. **No orphan JSONs; every declared
 output exists.**
@@ -301,6 +337,10 @@ output exists.**
   repeats" and concluded two summarised targets beat the observed max — **both framing and conclusion
   were wrong**.
 - `phase7_prep_ood.json` **supersedes** `qn_tradeoff.json` (never requote 6.531 / 6.772 / 6.047 / 3.615).
+- `phase11_condition_baseline.json` (current) **supersedes** its `a9fffc7` version (never requote
+  +0.0215, 0.595, or "not seed noise").
+- `phase8b_label_sweep.json` → `verdict` **supersedes** the phase8 verdict "KEEP the observed maximum".
+- The 2-seed audit figures (+0.008 for median / mean-of-five) are superseded by phase8b's 5-seed values.
 - `fig_protocol_comparison.png` retires `fig_repeated_runs.png`.
 
 ### Protocol rules (verbatim from `ocm_eval.py`)
@@ -322,7 +362,9 @@ pipeline copies — `taniike_validation.py` (the file it was extracted *from*),
 
 ### Documents
 
-- `ocm_worknote_taniike.md` (+ docx/pdf/html) — **the document for Prof. Taniike. Drafted, not sent.**
+- `ocm_worknote_taniike.md` (+ docx/pdf/html) — work note v2. **Sent** (as committed in `e41e42b`). Do not edit.
+- `ocm_worknote_v3.md` (+ docx/pdf/html) and `ocm_email_reply_v3.md` — **drafted, not sent.** Render with
+  `python3 build_worknote_render.py ocm_worknote_v3.md --compact`; check with `python3 doc_number_trace.py`.
 - `ocm_progress_report.md` (+ docx/pdf/html) — for Dr. M S Srinath. Simple sentences, active voice.
 - `ocm_results_walkthrough.ipynb` — **the presentable notebook.** 16 code cells, all executed, zero
   errors, every number computed live. Built by `build_presentation_nb.py`. Bundle with companions:
@@ -345,24 +387,15 @@ PDF rendering: no LaTeX in-container. Use pandoc → HTML (`--embed-resources`) 
 
 ## 7. How to continue — ranked by value per unit effort
 
-1. **Ask JAIST for the condition metadata.** Highest value, lowest cost, one email. It converts 19.9%
-   of currently unreachable variance into modellable signal, makes row-level RMSE a well-posed target
-   again, turns 917 training examples back into 89,074, and would let us predict *which condition* to
-   run rather than only a catalyst ceiling. The work note already asks.
-2. **Settle distinct-conditions vs time-on-stream.** Unresolvable from the file; two independent
-   analyses tried. If the 27 slots are successive time-on-stream samples at one condition rather than
-   27 distinct conditions, then a catalyst's observed maximum is a **fresh-catalyst transient, not an
-   achievable optimum** — and formulation B targets the wrong quantity. This is the largest live
-   uncertainty in the project.
-3. **Ask why coverage is incomplete** — 186 catalyst-temperature cells absent, sizes 1–54, only 811 of
-   917 catalysts have all five temperatures. Decides whether the bias is correctable or itself
-   informative.
-4. **Re-scope the campaign before reactor time is spent** (gated on #2). Retrospective replay on the
-   lab's own archive: 20 runs per catalyst (4 temperatures × 5 conditions) reproduces the full-135
-   ranking at ρ **0.955**, buying ~72 catalysts plus a randomised control arm for the same reactor
-   budget as 17 exhaustive ones. Under the time-on-stream reading the saving is analytical rather than
-   thermal and the arithmetic changes.
-5. **Send the corrected work note.** It is complete and verified.
+1. **Send work note v3 and the reply email** once the PI approves them. Both questions in them matter:
+   run/batch records for the 28 two-run catalysts, and whether mass-balance-excluded records exist.
+2. **Build on the label-shift result** (`phase14` C7, exploratory). Add the remaining two-stage
+   elements to the quantile-normalised merge one at a time (DRST filter; out-of-fold prior), with a
+   rule fixed before running. This is the one route where the PFT ideas show a measurable gain.
+3. **Prepare the 10-condition set** (`phase13` b) for prospective testing, if JAIST wants it. Its
+   retrospective numbers are optimistic; only a prospective run can test it.
+4. **Condition choice** (`phase13` a) is real but small (+0.15 yield points). Improve only if cheap.
+5. Untried: physicochemical descriptors (proposed in the presentation, never implemented).
 
 ### Do not re-litigate — already piloted, all null
 
@@ -389,6 +422,13 @@ PDF rendering: no LaTeX in-container. Use pandoc → HTML (`--embed-resources`) 
 - Verify PDF/DOCX content by structured extraction (`pypdf`, `zipfile`+XML), never `strings`.
 - When an internal copy and an externally-sent copy of a document both exist, **find the sent one**.
 - Local absence of a file is not evidence it never existed — check the remote before concluding.
+- **Screening with conditions:** never score a catalyst by its max over *measured* rows; that set
+  depends on mass balance. Use a fixed common slot set (phase11 estimator iii).
+- **Excluded slots are missing, not zero** (phase12 R4).
+- **Per-seed mean vs seed-averaged:** e.g. merge 0.3883 (per-seed mean) vs 0.3886 (seed-averaged).
+  Label which one.
+- **"607 collisions"** = 672 rows in 65 shared (temperature, yield) keys; 551 of them are zero yields.
+- **Flow units** are not stated in the data file. Do not write mL/min.
 
 ### Honest posture
 
