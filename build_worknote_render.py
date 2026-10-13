@@ -1,9 +1,15 @@
-"""Render ocm_worknote_taniike.md -> self-contained HTML (base64 figures) -> PDF (Chromium headless)."""
-import base64, os, re, subprocess, markdown
+"""Render a work note (default ocm_worknote_taniike.md) -> self-contained HTML (base64 figures) -> PDF (Chromium headless)."""
+import base64, os, re, subprocess, sys, markdown
 
-MD = 'ocm_worknote_taniike.md'
-HTML = 'ocm_worknote_taniike.html'
-PDF = 'ocm_worknote_taniike.pdf'
+# usage: python3 build_worknote_render.py [note.md]   (default: the v2 note)
+# add --compact for the tighter layout used to keep update notes within 3 pages
+ARGS = [a for a in sys.argv[1:] if not a.startswith('--')]
+COMPACT = '--compact' in sys.argv
+MD = ARGS[0] if ARGS else 'ocm_worknote_taniike.md'
+STEM = MD[:-3]
+HTML = STEM + '.html'
+PDF = STEM + '.pdf'
+DOCX = STEM + '.docx'
 CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
 
 text = open(MD).read()
@@ -34,6 +40,11 @@ blockquote{border-left:4px solid #e0b25f;background:#fff8ec;margin:12px 0;paddin
 strong{color:#12325a}
 @page{margin:14mm}
 """
+if COMPACT:
+    CSS += ("body{font-size:12.5px;line-height:1.4;padding:10px 22px;max-width:none}"
+            "h1{font-size:19px;margin:4px 0 6px}h2{font-size:15px;margin-top:14px;margin-bottom:6px}"
+            "p,ul{margin:5px 0}li{margin:1px 0}table{margin:8px 0;font-size:12px}th,td{padding:3px 7px}"
+            "hr{margin:8px 0}@page{margin:11mm}")
 html = f"<!doctype html><html><head><meta charset='utf-8'><style>{CSS}</style></head><body>{body}</body></html>"
 open(HTML, 'w').write(html)
 print(f"wrote {HTML} ({os.path.getsize(HTML)//1024} KB)")
@@ -52,8 +63,8 @@ else:
 # ---- editable DOCX via pandoc (pypandoc) ----
 try:
     import pypandoc
-    pypandoc.convert_file(MD, 'docx', outputfile='ocm_worknote_taniike.docx',
+    pypandoc.convert_file(MD, 'docx', outputfile=DOCX,
                           extra_args=['--resource-path=.', '--toc', '--toc-depth=2'])
-    print(f"wrote ocm_worknote_taniike.docx ({os.path.getsize('ocm_worknote_taniike.docx')//1024} KB)")
+    print(f"wrote {DOCX} ({os.path.getsize(DOCX)//1024} KB)")
 except Exception as e:
     print("docx skipped:", e)

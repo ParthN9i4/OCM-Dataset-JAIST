@@ -1,0 +1,149 @@
+<!doctype html><html><head><meta charset='utf-8'><style>
+body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;
+ max-width:820px;margin:0 auto;padding:32px 40px;line-height:1.55;font-size:14px}
+h1{font-size:22px;border-bottom:3px solid #1f4e79;padding-bottom:8px;color:#12325a}
+h2{font-size:17px;color:#12325a;border-bottom:1px solid #ccc;padding-bottom:4px;margin-top:28px}
+h3{font-size:15px;color:#1f4e79;margin-top:20px}
+img{max-width:88%;display:block;margin:14px auto;border:1px solid #e2e2e2;border-radius:4px}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13px}
+th,td{border:1px solid #ccc;padding:6px 9px;text-align:left}
+th{background:#1f4e79;color:#fff}
+tr:nth-child(even){background:#f6f8fa}
+code{background:#eef1f4;padding:1px 4px;border-radius:3px;font-size:12.5px}
+blockquote{border-left:4px solid #e0b25f;background:#fff8ec;margin:12px 0;padding:8px 14px;color:#4a3c1a}
+strong{color:#12325a}
+@page{margin:14mm}
+body{font-size:12.5px;line-height:1.4;padding:10px 22px;max-width:none}h1{font-size:19px;margin:4px 0 6px}h2{font-size:15px;margin-top:14px;margin-bottom:6px}p,ul{margin:5px 0}li{margin:1px 0}table{margin:8px 0;font-size:12px}th,td{padding:3px 7px}hr{margin:8px 0}@page{margin:11mm}</style></head><body><h1>Work Note v3 — Analysis of the Gas-Flow Condition Data</h1>
+<p><strong>To:</strong> Prof. Taniike<br />
+<strong>Follows:</strong> Work Note v2 and your reply with <code>OCM_data.csv</code>. This note reports only what is new.<br />
+<strong>Code:</strong> <code>phase11_condition_baseline.py</code>, <code>phase12_runs_and_coverage.py</code>, <code>phase8b_label_sweep.py</code>,
+<code>phase13_condition_value.py</code>, <code>phase14_crossprep_pft.py</code>. Every number below is stored in the JSON file
+of the same name.</p>
+<p><strong>Protocol.</strong> Unchanged from v2. All measurements of a catalyst stay in one fold. Five repeats with
+different fold assignments. A difference between two models is reported with a 95% confidence interval
+from resampling catalysts.</p>
+<hr />
+<h2>1. What the condition data settled</h2>
+<ul>
+<li>Each catalyst was tested at 5 temperatures (700–900 °C) and 27 gas-flow conditions per temperature.</li>
+<li>The 27 conditions form a full 3 × 3 × 3 design:<ul>
+<li>total flow of 10, 15 or 20 (in the units recorded in the file)</li>
+<li>Ar fraction of 0.70, 0.40 or 0.15</li>
+<li>CH₄:O₂ ratio of 2, 4 or 6</li>
+</ul>
+</li>
+<li>The readings within one temperature are therefore 27 distinct conditions. Version 2 (§5) called them
+  near-identical readings. That description was wrong. The training label is unchanged (§5 below). Only
+  the reason for it changes.</li>
+<li>Incomplete groups come from runs excluded for poor mass balance, as you explained. This answers both
+  questions in version 2 (§8).</li>
+</ul>
+<h2>2. Prediction of individual measurements</h2>
+<p>Adding the three gas-flow columns lowers the prediction error for unseen catalysts:</p>
+<ul>
+<li>RMSE falls from 2.90 to 2.66, a reduction of 8.1%.</li>
+<li>The 95% confidence interval of the reduction is 0.22 to 0.26.</li>
+</ul>
+<p>Most of the gain comes from predicting how yield changes between conditions at the same temperature.</p>
+<h2>3. Ranking of catalysts</h2>
+<p>The conditions do not improve the ranking of catalysts by best yield.</p>
+<ul>
+<li>A fair comparison needs the same conditions for every catalyst. We used the 18 conditions with
+  CH₄:O₂ = 2 at 800 and 850 °C. 465 catalysts were measured at all of them. We chose this set by
+  measurement coverage alone, before comparing any models.</li>
+<li>The change in rank correlation is +0.005 (95% CI −0.007 to +0.015). We find no detectable change.</li>
+<li>Scoring each catalyst only over the conditions that passed the mass-balance check shows an apparent
+  gain. That gain disappears on catalysts with comparable measurement effort, so we do not report it.</li>
+</ul>
+<h2>4. Where the conditions add value</h2>
+<p><strong>Choosing conditions for a new catalyst.</strong> The model ranks a new catalyst's 135 conditions (5 temperatures
+× 27).</p>
+<table>
+<thead>
+<tr>
+<th>Rule for choosing three conditions to run</th>
+<th>Mean shortfall from the catalyst's best yield</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model ranking</td>
+<td>1.75 yield points</td>
+</tr>
+<tr>
+<td>Best three conditions for the same support oxide, taken from other catalysts</td>
+<td>1.90 yield points</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>The model's advantage is 0.15 yield points (95% CI 0.07 to 0.23). It holds in all five repeats.</li>
+<li>The effect is consistent but small: about 1.4% of the mean best yield (10.4%).</li>
+<li>A chosen condition that was never measured counts as a failed run.</li>
+</ul>
+<p><strong>A reduced measurement set.</strong> We chose 10 of the 135 conditions, using only training catalysts: the 10
+that most often give a training catalyst its best yield.</p>
+<ul>
+<li>On held-out catalysts, the best yield over these 10 conditions ranks catalysts with a rank correlation
+  of 0.969 against the full data. This is the mean over five repeats; 92% of catalysts had at least one
+  of the 10 measured.</li>
+<li>Ten random conditions reach at most 0.925 (97.5th percentile).</li>
+<li>This estimate is optimistic. The full-data best yield comes from the same runs.</li>
+<li>A ranking model trained on 10-condition labels shows no detectable loss (−0.009, 95% CI −0.018 to
+  +0.001).</li>
+</ul>
+<p><strong>Per-catalyst response models.</strong> A model that predicts each catalyst's response to the conditions
+directly did not improve on the current model. The current model already captures most of the learnable
+pattern, so we have stopped this line.</p>
+<h2>5. Training label</h2>
+<p>We keep the per-temperature median, then the highest of these medians, as stated in v2.</p>
+<ul>
+<li><strong>Reason.</strong> The label rests on many readings, not one. Removing each catalyst's single highest reading
+  moves the median label by 0.01 yield points. It moves the maximum by 0.38 points. Both figures are
+  medians over catalysts.</li>
+<li><strong>Ranking.</strong> The median versus the maximum: +0.005 (95% CI −0.002 to +0.012), no detectable
+  difference. The upper quartile: +0.006 (95% CI +0.001 to +0.012).</li>
+<li><strong>One caution.</strong> 84.5% of catalysts reach their highest yield at CH₄:O₂ = 2, the lowest ratio tested.
+  For most catalysts the best yield therefore lies at the edge of the tested conditions.</li>
+</ul>
+<h2>6. Literature data across preparation methods</h2>
+<p>In v2, a plain merge of laboratory and impregnation literature data ranked non-impregnation literature
+better than our two-stage model (rank correlation 0.388 versus 0.318).</p>
+<ul>
+<li><strong>Two-stage designs.</strong> We tested three further designs, including one in which every stage-1 prediction
+  comes from a model that did not see that row. None ranked better than the plain merge. Two ranked
+  lower, and one showed no detectable difference.</li>
+<li><strong>Label-shift correction.</strong> One element of our two-stage method does help. Before merging, the literature
+  yields are rescaled onto the laboratory yield distribution (quantile normalisation). Rank correlation
+  rises from 0.388 to 0.422. The difference is +0.034 (95% CI +0.018 to +0.050), and it holds in all
+  five repeats and under the median label.</li>
+<li><strong>Enrichment</strong> of top performers shows no detectable change.</li>
+<li><strong>Status.</strong> This comparison was added during the analysis, so we treat it as exploratory.</li>
+<li><strong>Scope.</strong> The literature file has no condition columns, so the gas-flow data cannot enter this part.</li>
+</ul>
+<h2>7. Two observations on the data</h2>
+<p><strong>Catalysts with a second set of runs.</strong>
+- For 28 catalysts, 1,906 conditions appear twice.
+- At a given temperature, one set is higher at every condition, by a median factor of 2.3. Both sets
+  follow the same pattern across conditions.
+- 10 of the 92 top-decile catalysts are among these 28; chance would give 2.8. If the paired readings
+  are averaged, 4 remain.</p>
+<p><strong>Excluded runs.</strong>
+- Exclusions are more frequent for weaker catalysts. The rank correlation between a catalyst's number
+  of missing conditions (out of 135) and its best yield is −0.29.
+- Within a catalyst, the excluded conditions do not appear to be its low-yield ones. The difference fell
+  below our pre-set threshold for all three CH₄:O₂ ratios.</p>
+<h2>8. Questions and next steps</h2>
+<p>Both questions concern records that are not in the data file.</p>
+<ol>
+<li><strong>For the 28 catalysts with two sets of runs, is there a record of the run date or catalyst batch?</strong>
+   About 6 of the 92 top-decile places depend on how the two sets are treated.</li>
+<li><strong>Are the records excluded for poor mass balance still available?</strong> They decide whether each
+   catalyst's best observed yield is complete. They also decide how a shorter protocol should treat a
+   failed run.</li>
+</ol>
+<p><strong>Next steps.</strong>
+- Build on the label-shift correction (§6). We will add the remaining elements of the two-stage method
+  one at a time and test each.
+- Prepare the 10-condition set (§4) for prospective testing, if useful to your group.
+- Continue refining accuracy for individual measurements and condition choice.</p></body></html>
